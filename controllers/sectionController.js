@@ -5,17 +5,32 @@ import Question from "../models/Question.js";
 export const getSections = async (req, res) => {
   try {
     const sections = await Section.find({ userId: req.userId });
-
+    
+    // Get question counts for each section
+    const sectionsWithCounts = await Promise.all(
+      sections.map(async (section) => {
+        const questionCount = await Question.countDocuments({
+          userId: req.userId,
+          sectionId: section._id
+        });
+        
+        return {
+          ...section.toObject(),
+          questionCount
+        };
+      })
+    );
+    
     res.json({
       success: true,
-      data: { sections },
-      count: sections.length,
+      data: { sections: sectionsWithCounts },
+      count: sectionsWithCounts.length
     });
   } catch (error) {
-    console.error("Get sections error:", error);
+    console.error('Get sections error:', error);
     res.status(500).json({
       success: false,
-      message: "Error fetching sections",
+      message: 'Error fetching sections'
     });
   }
 };
@@ -30,6 +45,8 @@ export const createSection = async (req, res) => {
       description,
       color,
     });
+
+
 
     await section.save();
 

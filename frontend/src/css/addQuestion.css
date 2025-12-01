@@ -1,0 +1,204 @@
+/* --- PAGE WRAPPER --- */
+.add-question-page {
+  min-height: 100vh;
+  padding: 40px;
+  background: radial-gradient(circle at top left, #1e3a8a, #0f172a 60%, #020617);
+  color: #e2e8f0;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInPage 0.6s ease forwards;
+  border-radius: 20px;
+}
+
+/* floating animated orbs */
+.add-question-page::before,
+.add-question-page::after {
+  content: "";
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59,130,246,0.4), transparent 70%);
+  animation: floatOrb 8s ease-in-out infinite alternate;
+  filter: blur(20px);
+}
+.add-question-page::before {
+  top: -80px;
+  left: -80px;
+}
+.add-question-page::after {
+  bottom: -100px;
+  right: -60px;
+  animation-delay: 2s;
+}
+
+@keyframes floatOrb {
+  from { transform: translateY(0) scale(1); }
+  to   { transform: translateY(-40px) scale(1.15); }
+}
+
+@keyframes fadeInPage {
+  from { opacity: 0; transform: scale(0.98); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* --- PAGE HEADER --- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  animation: fadeUp 0.7s ease forwards;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(255,255,255,0.15);
+}
+
+.back-button {
+  background: transparent;
+  color: #e2e8f0;
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.back-button:hover {
+  transform: translateX(-5px);
+  background: rgba(255,255,255,0.1);
+}
+.back-button:active {
+  transform: scale(0.96);
+}
+
+/* --- MESSAGE BANNER --- */
+.message {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  animation: slideDown 0.5s ease forwards;
+  font-weight: 600;
+  text-align: center;
+}
+
+.message.success {
+  background: rgba(34,197,94,0.2);
+  border: 1px solid rgba(34,197,94,0.4);
+}
+
+.message.error {
+  background: rgba(239,68,68,0.2);
+  border: 1px solid rgba(239,68,68,0.4);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- FORM CONTAINER --- */
+.question-form {
+  background: rgba(255,255,255,0.05);
+  padding: 28px;
+  border-radius: 18px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  animation: fadeUp 0.8s ease forwards;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- FORM ELEMENTS --- */
+.form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-weight: 600;
+}
+
+.question-form input,
+.question-form textarea,
+.question-form select {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.07);
+  color: #e2e8f0;
+  transition: all 0.25s ease;
+}
+
+.question-form input:focus,
+.question-form textarea:focus,
+.question-form select:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 10px rgba(96,165,250,0.4);
+  transform: scale(1.02);
+}
+
+/* --- BUTTONS --- */
+.form-actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 12px;
+}
+
+.submit-button,
+.secondary-button {
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+/* primary */
+.submit-button {
+  background: #3b82f6;
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(59,130,246,0.4);
+}
+.submit-button:hover {
+  transform: scale(1.05);
+  background: #2563eb;
+}
+.submit-button:active {
+  transform: scale(0.95);
+}
+
+/* secondary */
+.secondary-button {
+  background: rgba(255,255,255,0.15);
+  color: #e2e8f0;
+  border: 1px solid rgba(255,255,255,0.25);
+}
+.secondary-button:hover {
+  transform: scale(1.04);
+  background: rgba(255,255,255,0.22);
+}
+.secondary-button:active {
+  transform: scale(0.95);
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .add-question-page {
+    padding: 20px;
+  }
+  
+  .question-form {
+    padding: 20px;
+  }
+}
