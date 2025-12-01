@@ -1,0 +1,309 @@
+
+/* ===== Container ===== */
+.add-edit-section-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  background-color: var(--bg-background);
+  min-height: 100vh;
+  transition: background-color 0.3s ease;
+}
+
+/* ===== Card ===== */
+.section-form-card {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 800px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.section-form-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* ===== Header ===== */
+.section-form-header h1 {
+  color: var(--color-primary);
+  margin-bottom: 0.2rem;
+}
+
+.section-form-header .form-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ===== Messages ===== */
+.error-message,
+.success-message {
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.error-message {
+  background-color: rgba(255, 0, 0, 0.1);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.success-message {
+  background-color: rgba(0, 255, 0, 0.1);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+/* ===== Stats ===== */
+.section-stats-preview {
+  background: linear-gradient(135deg, var(--color-gradient-start), var(--color-gradient-end));
+  color: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.stats-grid {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  margin: 0.5rem;
+  text-align: center;
+}
+
+.stat-label {
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* ===== Form ===== */
+.section-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.section-form label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.form-input,
+.form-textarea,
+.color-hex-input {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.color-hex-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 6px var(--color-primary);
+}
+
+.char-count {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+  text-align: right;
+}
+
+/* ===== Color Picker ===== */
+.color-preview {
+  height: 40px;
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 500;
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
+  transition: background-color 0.3s ease;
+}
+
+.color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.color-option {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  margin: 0.2rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s ease, border-color 0.3s ease;
+}
+
+.color-option:hover {
+  transform: scale(1.2);
+}
+
+.color-option.selected {
+  border-color: var(--text-inverse);
+}
+
+.check-icon {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 0.8rem;
+}
+
+/* Color input group */
+.color-input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.color-picker {
+  width: 40px;
+  height: 40px;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+/* ===== Buttons ===== */
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.form-actions button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-actions button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.cancel-btn {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.save-btn {
+  background: var(--gradient-button);
+  color: #fff;
+}
+
+.duplicate-btn {
+  background-color: var(--color-accent);
+  color: #fff;
+}
+
+.delete-btn {
+  background-color: var(--color-error);
+  color: #fff;
+}
+
+/* Disabled buttons */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== Quick Tips & Actions ===== */
+.quick-tips {
+  margin-top: 2rem;
+  background-color: var(--bg-card);
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.quick-tips h3 {
+  margin-bottom: 0.5rem;
+}
+
+.quick-tips ul {
+  padding-left: 1.2rem;
+}
+
+.quick-tips li {
+  margin-bottom: 0.3rem;
+  color: var(--text-secondary);
+}
+
+.quick-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  background: var(--gradient-primary);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ===== Loading Spinner ===== */
+.loading-spinner,
+.spinner-small {
+  border: 3px solid rgba(0,0,0,0.1);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+.spinner-small {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

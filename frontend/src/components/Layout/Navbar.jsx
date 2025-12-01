@@ -17,11 +17,14 @@ const Navbar = () => {
         <NavLink to="/dashboard" className="nav-link">
           Dashboard
         </NavLink>
-        <NavLink to="/sessions/review" className="nav-link">
+        <NavLink to="/session/review" className="nav-link">
           Sessions
         </NavLink>
         <NavLink to="/sections" className="nav-link">
           Sections
+        </NavLink>
+        <NavLink to="/settings" className="nav-link">
+          Settings
         </NavLink>
       </nav>
       <div className="nav-user">

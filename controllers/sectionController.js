@@ -125,3 +125,82 @@ export const deleteSection = async (req, res) => {
     });
   }
 };
+
+export const getSectionStats = async (req, res) => {
+  try {
+    const { sectionId } = req.params;
+    
+    // Verify section belongs to user
+    const section = await Section.findOne({
+      _id: sectionId,
+      userId: req.userId
+    });
+
+    if (!section) {
+      return res.status(404).json({
+        success: false,
+        message: 'Section not found'
+      });
+    }
+
+    // Get question count
+    const questionCount = await Question.countDocuments({
+      userId: req.userId,
+      sectionId: sectionId
+    });
+
+    // Get performance stats
+    const performanceStats = await Question.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(req.userId),
+          sectionId: new mongoose.Types.ObjectId(sectionId)
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalCorrect: { $sum: '$totalCorrect' },
+          totalWrong: { $sum: '$totalWrong' },
+          totalAttempts: { $sum: { $add: ['$totalCorrect', '$totalWrong'] } },
+          lastReviewed: { $max: '$lastReviewed' }
+        }
+      }
+    ]);
+
+    const stats = performanceStats[0] || {};
+    const totalAttempts = stats.totalAttempts || 0;
+    const accuracy = totalAttempts > 0 
+      ? Math.round((stats.totalCorrect / totalAttempts) * 100)
+      : 0;
+
+    // Get recent questions
+    const recentQuestions = await Question.find({
+      userId: req.userId,
+      sectionId: sectionId
+    })
+    .sort({ lastReviewed: -1 })
+    .limit(5)
+    .select('question totalCorrect totalWrong lastReviewed');
+
+    res.json({
+      success: true,
+      data: {
+        questionCount,
+        accuracy,
+        totalCorrect: stats.totalCorrect || 0,
+        totalWrong: stats.totalWrong || 0,
+        totalAttempts,
+        lastActivity: stats.lastReviewed || null,
+        recentQuestions
+      }
+    });
+
+  } catch (error) {
+    console.error('Get section stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching section stats'
+    });
+  }
+};

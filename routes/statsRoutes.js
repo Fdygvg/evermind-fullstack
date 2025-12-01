@@ -15,4 +15,5 @@ router.get('/', getUserStats);
 router.get('/analytics', getDetailedAnalytics);
 router.get('/sessions', getSessionHistory);
 
+
 export default router;

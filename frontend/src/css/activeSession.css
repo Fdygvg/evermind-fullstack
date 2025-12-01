@@ -16,26 +16,26 @@
 .progress-bar {
   flex: 1;
   height: 8px;
-  background: #e5e7eb;
+  background: var(--color-border);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: #3b82f6;
+  background: var(--color-primary);
   transition: width 0.3s ease;
 }
 
 .progress-stats {
-  color: #6b7280;
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
   white-space: nowrap;
 }
 
 .end-session-btn {
-  background: #ef4444;
-  color: white;
+  background: var(--color-error);
+  color: var(--text-inverse);
   border: none;
   padding: 8px 16px;
   border-radius: 6px;
@@ -44,28 +44,29 @@
 }
 
 .end-session-btn:hover {
-  background: #dc2626;
+  background: var(--color-error);
+  opacity: 0.9;
 }
 
 /* Question Card */
 .question-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   padding: 24px;
   margin-bottom: 20px;
 }
 
 .question-section h2,
 .answer-section h2 {
-  color: #374151;
+  color: var(--color-text);
   margin-bottom: 12px;
   font-size: 1.125rem;
 }
 
 .question-section p,
 .answer-section p {
-  color: #1f2937;
+  color: var(--color-text);
   font-size: 1.125rem;
   line-height: 1.6;
   margin-bottom: 20px;
@@ -74,8 +75,8 @@
 /* Buttons */
 .show-answer-btn {
   width: 100%;
-  background: #3b82f6;
-  color: white;
+  background: var(--color-primary);
+  color: var(--text-inverse);
   border: none;
   padding: 16px;
   border-radius: 8px;
@@ -86,7 +87,7 @@
 }
 
 .show-answer-btn:hover {
-  background: #2563eb;
+  background: var(--color-secondary);
 }
 
 .answer-buttons {
@@ -107,21 +108,23 @@
 }
 
 .correct-btn {
-  background: #10b981;
-  color: white;
+  background: var(--color-success);
+  color: var(--text-inverse);
 }
 
 .correct-btn:hover:not(:disabled) {
-  background: #059669;
+  background: var(--color-success);
+  opacity: 0.9;
 }
 
 .wrong-btn {
-  background: #ef4444;
-  color: white;
+  background: var(--color-error);
+  color: var(--text-inverse);
 }
 
 .wrong-btn:hover:not(:disabled) {
-  background: #dc2626;
+  background: var(--color-error);
+  opacity: 0.9;
 }
 
 .correct-btn:disabled,
@@ -136,13 +139,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: #f9fafb;
+  background: var(--color-surface);
   border-radius: 8px;
 }
 
 .mode-badge {
-  background: #e0e7ff;
-  color: #3730a3;
+  background: var(--color-surface);
+  color: var(--color-primary);
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 0.875rem;
@@ -150,14 +153,14 @@
 }
 
 .progress-numbers {
-  color: #6b7280;
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
 }
 
 .loading {
   text-align: center;
   padding: 40px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 /* Responsive */

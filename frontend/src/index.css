@@ -6,7 +6,7 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   min-height: 100vh;
   padding: 20px;
 }
@@ -14,28 +14,28 @@ body {
 .dashboard {
   max-width: 800px;
   margin: 50px auto;
-  background: white;
+  background: var(--color-surface);
   padding: 40px;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
   text-align: center;
 }
 
 .dashboard h1 {
-  color: #1f2937;
+  color: var(--color-text);
   margin-bottom: 16px;
   font-size: 2.5rem;
 }
 
 
 .dashboard p {
-  color: #6b7280;
+  color: var(--color-text-secondary);
   font-size: 1.2rem;
   margin-bottom: 24px;
 }
 
 .dashboard nav a {
-  color: #3b82f6;
+  color: var(--color-primary);
   text-decoration: none;
   margin: 0 10px;
   font-weight: 500;

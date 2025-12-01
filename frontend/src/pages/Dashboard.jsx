@@ -5,6 +5,7 @@ import { authService } from '../services/auth';
 import { statsService } from '../services/stats';
 import { sectionService } from '../services/sections';
 import { sessionService } from '../services/sessions';
+import SearchBar from '../components/Common/SearchBar';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -25,7 +26,7 @@ const Dashboard = () => {
         const [profileResponse, statsResponse, sectionResponse] = await Promise.all([
           authService.getProfile(),
           statsService.getOverview(),
-          sectionService.getAll()
+          sectionService.getSections()
         ]);
 
         setProfile(profileResponse.data.data.user);
@@ -33,7 +34,7 @@ const Dashboard = () => {
         setSections(sectionResponse.data.data.sections || []);
 
         try {
-          const sessionResponse = await sessionService.getCurrent();
+          const sessionResponse = await sessionService.getCurrentSession();
           setActiveSession(sessionResponse.data.data.session);
         } catch (sessionError) {
           if (sessionError.response?.status !== 404) {
@@ -75,7 +76,9 @@ const Dashboard = () => {
   return (
     <div className="dashboard-page">
       {error && <div className="dashboard-error">{error}</div>}
-
+<section>
+  <SearchBar />
+</section>
       <section className="dashboard-hero">
         <span>Good to see you, {profile?.username || profile?.email} 👋</span>
         <h1>Your spaced repetition HQ</h1>
@@ -122,12 +125,28 @@ const Dashboard = () => {
         </div>
       </section>
 <section>
+
+       <div className="nav-buttons-container">
    <button
-      className="add-question-btn"
+      className={`nav-btn ${location.pathname === '/questions/add' ? 'active' : ''}`}
       onClick={() => navigate("/questions/add")}
     >
     + Add Question
     </button>
+      <button
+        className={`nav-btn ${location.pathname === '/analytics' ? 'active' : ''}`}
+        onClick={() => navigate('/analytics')}
+      >
+        📊 Analytics
+      </button>
+
+      <button
+        className={`nav-btn ${location.pathname === '/history' ? 'active' : ''}`}
+        onClick={() => navigate('/history')}
+      >
+        📅 Session History
+      </button>
+    </div>
 </section>
       <section className="dashboard-section">
         <header>

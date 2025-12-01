@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{TITLE}}</title>
+    <style>
+      :root {
+        --bg: #f0f4f8;
+        --card: #ffffff;
+        --text: #1e293b;
+        --muted: #64748b;
+        --accent: #6366f1;
+        --accent-2: #8b5cf6;
+        --ok: #10b981;
+        --bad: #ef4444;
+        --border: #e2e8f0;
+      }
+      html.light {
+        --bg: #f0f4f8;
+        --card: #ffffff;
+        --text: #1e293b;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 20px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      header {
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: white;
+        padding: 30px;
+        border-radius: 16px;
+        margin-bottom: 30px;
+        text-align: center;
+      }
+      h1 {
+        font-size: 32px;
+        margin-bottom: 20px;
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+        backdrop-filter: blur(10px);
+      }
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+      .btn.active {
+        background: white;
+        color: var(--accent);
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+      .stat-card {
+        background: var(--card);
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .stat-label {
+        font-size: 14px;
+        color: var(--muted);
+        margin-top: 8px;
+      }
+      .question-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+      }
+      .question-card {
+        background: var(--card);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+      .question-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+      .question-card.open {
+        border-color: var(--accent);
+      }
+      .question-text {
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+      .answer-text {
+        display: none;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 2px dashed var(--border);
+        color: var(--muted);
+        white-space: pre-line;
+      }
+      .question-card.open .answer-text {
+        display: block;
+      }
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-top: 10px;
+      }
+      .badge.correct {
+        background: #d1fae5;
+        color: var(--ok);
+      }
+      .badge.incorrect {
+        background: #fee2e2;
+        color: var(--bad);
+      }
+      .revision-mode {
+        display: none;
+      }
+      .revision-mode.active {
+        display: block;
+      }
+      .rev-card {
+        background: var(--card);
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        max-width: 700px;
+        margin: 0 auto;
+      }
+      .rev-question {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: white;
+        border-radius: 12px;
+      }
+      .rev-answer {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8fafc;
+        border-left: 4px solid var(--accent);
+        border-radius: 8px;
+        white-space: pre-line;
+        display: none;
+      }
+      .rev-answer.show {
+        display: block;
+      }
+      .rev-controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+        flex-wrap: wrap;
+      }
+      .rev-controls button {
+        flex: 1;
+        min-width: 120px;
+      }
+      .rev-controls .btn {
+        background: var(--accent);
+        color: white;
+      }
+      .rev-controls .btn:hover {
+        background: var(--accent-2);
+      }
+    </style>
+  </head>
+  <body{{THEME_CONFIG}}>
+    <div class="container">
+      <header>
+        <h1>{{TITLE}}</h1>
+        <div class="controls">
+          <button class="btn active" id="btnHome">Card View</button>
+          <button class="btn" id="btnRev">Revision Mode</button>
+          <button class="btn" id="toggleTheme">🌓 Theme</button>
+          <button class="btn" id="shuffleBtn">🔀 Shuffle</button>
+          <button class="btn" id="resetBtn">♻️ Reset</button>
+        </div>
+      </header>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-value" id="totalCount">0</div>
+          <div class="stat-label">Total Questions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--ok);" id="okCount">0</div>
+          <div class="stat-label">Correct</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--bad);" id="badCount">0</div>
+          <div class="stat-label">Incorrect</div>
+        </div>
+      </div>
+
+      <div id="homepage">
+        <div class="question-grid" id="questionGrid"></div>
+      </div>
+
+      <div id="revision" class="revision-mode">
+        <div class="rev-card">
+          <div class="rev-question" id="revQuestion">Question will appear here...</div>
+          <div class="rev-answer" id="revAnswer"></div>
+          <div class="rev-controls">
+            <button class="btn" id="revealBtn">Reveal Answer</button>
+            <button class="btn" id="markCorrect" style="display: none; background: var(--ok);">✓ Correct</button>
+            <button class="btn" id="markWrong" style="display: none; background: var(--bad);">✗ Incorrect</button>
+            <button class="btn" id="backBtn">← Back</button>
+            <button class="btn" id="nextBtn">Next →</button>
+          </div>
+          <div style="text-align: center; margin-top: 20px; color: var(--muted);" id="queueInfo"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const questions = []; // {{QUESTIONS_ARRAY}}
+      
+      const state = {
+        queue: [],
+        cursor: 0,
+        status: new Map(),
+        seen: new Set(),
+      };
+
+      function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      function saveTheme(theme) {
+        localStorage.setItem("rev.theme", theme);
+      }
+      function loadTheme() {
+        return localStorage.getItem("rev.theme");
+      }
+      function applyTheme() {
+        const t = loadTheme();
+        if (t === "light") document.documentElement.classList.add("light");
+        else document.documentElement.classList.remove("light");
+      }
+
+      function buildHomepage() {
+        const grid = document.getElementById("questionGrid");
+        grid.innerHTML = "";
+        questions.forEach((q, idx) => {
+          const card = document.createElement("div");
+          card.className = "question-card";
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          const st = state.status.get(q.id);
+          if (st === "correct") {
+            badge.classList.add("correct");
+            badge.textContent = "✓ Correct";
+          } else if (st === "incorrect") {
+            badge.classList.add("incorrect");
+            badge.textContent = "✗ Incorrect";
+          } else {
+            badge.style.display = "none";
+          }
+          card.innerHTML = `
+            <div class="question-text">#${idx + 1} ${q.question}</div>
+            <div class="answer-text">${q.answer}</div>
+          `;
+          card.appendChild(badge);
+          card.addEventListener("click", () => {
+            card.classList.toggle("open");
+          });
+          grid.appendChild(card);
+        });
+      }
+
+      function initSession() {
+        state.status = new Map();
+        state.seen = new Set();
+        state.cursor = 0;
+        state.queue = questions.map(q => q.id);
+        shuffle(state.queue);
+        updateStats();
+        buildHomepage();
+        loadCurrent();
+      }
+
+      function loadCurrent() {
+        const id = state.queue[state.cursor];
+        const q = questions.find(x => x.id === id);
+        if (!q) {
+          document.getElementById("revQuestion").textContent = "All done!";
+          return;
+        }
+        document.getElementById("revQuestion").textContent = q.question;
+        document.getElementById("revAnswer").textContent = q.answer;
+        document.getElementById("revAnswer").classList.remove("show");
+        document.getElementById("markCorrect").style.display = "none";
+        document.getElementById("markWrong").style.display = "none";
+        document.getElementById("queueInfo").textContent = `Question ${state.cursor + 1} of ${state.queue.length}`;
+      }
+
+      function mark(id, isCorrect) {
+        state.status.set(id, isCorrect ? "correct" : "incorrect");
+        state.seen.add(id);
+        if (!isCorrect) {
+          const insertAt = Math.min(state.cursor + 1 + 5, state.queue.length);
+          state.queue.splice(insertAt, 0, id);
+        }
+        updateStats();
+        buildHomepage();
+      }
+
+      function updateStats() {
+        const total = questions.length;
+        let ok = 0, bad = 0;
+        state.status.forEach(v => {
+          if (v === "correct") ok++;
+          else if (v === "incorrect") bad++;
+        });
+        document.getElementById("totalCount").textContent = total;
+        document.getElementById("okCount").textContent = ok;
+        document.getElementById("badCount").textContent = bad;
+      }
+
+      function next() {
+        if (state.cursor < state.queue.length - 1) {
+          state.cursor++;
+          loadCurrent();
+        }
+      }
+      function back() {
+        if (state.cursor > 0) {
+          state.cursor--;
+          loadCurrent();
+        }
+      }
+
+      function showHome() {
+        document.getElementById("homepage").style.display = "block";
+        document.getElementById("revision").classList.remove("active");
+        document.getElementById("btnHome").classList.add("active");
+        document.getElementById("btnRev").classList.remove("active");
+      }
+      function showRev() {
+        document.getElementById("homepage").style.display = "none";
+        document.getElementById("revision").classList.add("active");
+        document.getElementById("btnRev").classList.add("active");
+        document.getElementById("btnHome").classList.remove("active");
+      }
+
+      document.getElementById("btnHome").addEventListener("click", showHome);
+      document.getElementById("btnRev").addEventListener("click", showRev);
+      document.getElementById("toggleTheme").addEventListener("click", () => {
+        const isLight = document.documentElement.classList.toggle("light");
+        saveTheme(isLight ? "light" : "dark");
+      });
+      document.getElementById("shuffleBtn").addEventListener("click", () => {
+        shuffle(state.queue);
+        state.cursor = 0;
+        loadCurrent();
+      });
+      document.getElementById("resetBtn").addEventListener("click", initSession);
+      document.getElementById("revealBtn").addEventListener("click", () => {
+        document.getElementById("revAnswer").classList.add("show");
+        document.getElementById("markCorrect").style.display = "inline-block";
+        document.getElementById("markWrong").style.display = "inline-block";
+      });
+      document.getElementById("markCorrect").addEventListener("click", () => {
+        mark(state.queue[state.cursor], true);
+        next();
+      });
+      document.getElementById("markWrong").addEventListener("click", () => {
+        mark(state.queue[state.cursor], false);
+        next();
+      });
+      document.getElementById("nextBtn").addEventListener("click", next);
+      document.getElementById("backBtn").addEventListener("click", back);
+
+      window.addEventListener("keydown", (e) => {
+        if (document.getElementById("revision").classList.contains("active")) {
+          if (e.key === "ArrowRight") next();
+          if (e.key === "ArrowLeft") back();
+        }
+      });
+
+      applyTheme();
+      initSession();
+    </script>
+  </body>
+</html>
+

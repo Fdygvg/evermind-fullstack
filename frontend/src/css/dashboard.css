@@ -7,14 +7,14 @@
 }
 
 .dashboard-hero {
-  background: linear-gradient(135deg, #0f172a, #1d4ed8);
-  color: #ffffff;
+  background: var(--gradient-hero);
+  color: var(--text-inverse);
   border-radius: 20px;
   padding: 32px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  box-shadow: 0 25px 50px rgba(15, 23, 42, 0.35);
+  box-shadow: var(--shadow-xl);
 }
 
 .dashboard-hero h1 {
@@ -46,14 +46,14 @@
 }
 
 .dashboard-button.primary {
-  background: #fbbf24;
-  color: #0f172a;
-  box-shadow: 0 8px 20px rgba(251, 191, 36, 0.45);
+  background: var(--color-accent);
+  color: var(--color-text);
+  box-shadow: var(--shadow-md);
 }
 
 .dashboard-button.secondary {
   background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+  color: var(--text-inverse);
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
@@ -68,10 +68,10 @@
 }
 
 .stat-card {
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 18px;
   padding: 20px;
-  box-shadow: 0 15px 30px rgba(15, 23, 42, 0.1);
+  box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -79,25 +79,25 @@
 
 .stat-card span {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 .stat-card strong {
   font-size: 32px;
-  color: #0f172a;
+  color: var(--color-text);
   font-weight: 700;
 }
 
 .stat-trend {
   font-size: 13px;
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .dashboard-section {
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 18px;
   padding: 24px;
-  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -112,7 +112,7 @@
 .dashboard-section h2 {
   margin: 0;
   font-size: 20px;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .section-list {
@@ -124,13 +124,13 @@
 .section-card {
   border-radius: 16px;
   padding: 16px;
-  color: #ffffff;
+  color: var(--text-inverse);
   min-height: 120px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: linear-gradient(135deg, #1d4ed8, #9333ea);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-md);
   gap: 16px;
 }
 
@@ -165,11 +165,11 @@
   flex-wrap: wrap;
   gap: 12px;
   font-size: 14px;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .session-meta span {
-  background: #f1f5f9;
+  background: var(--color-surface);
   padding: 8px 12px;
   border-radius: 999px;
 }
@@ -186,28 +186,28 @@
   height: 12px;
   border-radius: 999px;
   appearance: none;
-  background: #e2e8f0;
+  background: var(--color-border);
   overflow: hidden;
 }
 
 .progress-meter::-webkit-progress-bar {
-  background: #e2e8f0;
+  background: var(--color-border);
 }
 
 .progress-meter::-webkit-progress-value {
-  background: linear-gradient(90deg, #34d399, #10b981);
+  background: var(--gradient-primary);
   border-radius: 999px;
 }
 
 .progress-meter::-moz-progress-bar {
-  background: linear-gradient(90deg, #34d399, #10b981);
+  background: var(--gradient-primary);
   border-radius: 999px;
 }
 
 .dashboard-error {
-  background: #fee2e2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
   padding: 16px;
   border-radius: 12px;
 }
@@ -218,7 +218,7 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  color: #ffffff;
+  color: var(--text-inverse);
   letter-spacing: 0.5px;
 }
 
@@ -233,35 +233,43 @@
 }
 
 
-/* Add Button css */
-.add-question-btn {
-  padding: 12px 20px;
-  font-size: 16px;
-  font-weight: 600;
-  border: none;
+/* Add Question || Analytics || Session History */
+
+.nav-buttons-container {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  padding: 0.6rem 1.4rem;
   border-radius: 8px;
-  background: #4a6cf7;
-  color: white;
+  border: none;
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, var(--color-gradient-start), var(--color-gradient-end));
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.3s ease, filter 0.3s ease;
 }
 
-/* Hover: slightly larger, brighter */
-.add-question-btn:hover {
-  background: #3a5ae0;
-  transform: scale(1.05);
+.nav-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  filter: brightness(1.1);
 }
 
-/* Active: pressed-down feeling */
-.add-question-btn:active {
-  transform: scale(0.97);
-  background: #2f4bbd;
+.nav-btn.active {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
-/* Optional: focus outline improve accessibility */
-.add-question-btn:focus {
-  outline: 2px solid #2f4bbd;
-  outline-offset: 3px;
+.nav-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: none;
 }
-

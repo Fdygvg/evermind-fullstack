@@ -5,7 +5,8 @@ import {
   getCurrentSession,
   getNextQuestion,
   submitAnswer,
-  endSession
+  endSession,
+  getLastSessionResults
 } from '../controllers/sessionController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -18,5 +19,6 @@ router.get('/current', getCurrentSession);
 router.get('/next-question', getNextQuestion);
 router.post('/answer', submitAnswer);
 router.delete('/current', endSession);
+router.get('/last-results', getLastSessionResults);
 
 export default router;

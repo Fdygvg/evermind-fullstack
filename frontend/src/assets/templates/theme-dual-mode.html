@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{TITLE}}</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --card: #111a2b;
+        --text: #e6edf6;
+        --muted: #9fb0c7;
+        --accent: #4aa3ff;
+        --accent-2: #7c4dff;
+        --ok: #1fbf75;
+        --bad: #ff4d6d;
+        --warn: #f59e0b;
+        --border: #23324a;
+      }
+      html.light {
+        --bg: #f7f9fc;
+        --card: #ffffff;
+        --text: #0b1220;
+        --muted: #5b6b82;
+        --accent: #0b6bcb;
+        --accent-2: #6b3df5;
+        --ok: #15803d;
+        --bad: #b91c1c;
+        --warn: #b45309;
+        --border: #e5e7eb;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu,
+          Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+        background: var(--bg);
+        color: var(--text);
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.35),
+          rgba(0, 0, 0, 0)
+        );
+        padding: 12px 16px 8px;
+        backdrop-filter: blur(8px);
+      }
+      .bar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .title {
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        font-size: 18px;
+        margin-right: auto;
+      }
+      .btn {
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        padding: 8px 12px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: 0.2s transform, 0.2s background;
+        font-weight: 600;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+      .btn.primary {
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        border-color: transparent;
+        color: white;
+      }
+      .btn.ghost {
+        background: transparent;
+      }
+      .seg {
+        display: inline-flex;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .seg button {
+        background: transparent;
+        padding: 8px 12px;
+        border: 0;
+        color: var(--muted);
+        font-weight: 700;
+      }
+      .seg button.active {
+        color: var(--text);
+        background: var(--card);
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+
+      /* Cards & layout */
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        margin: 12px 0;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .spacer {
+        flex: 1;
+      }
+
+      /* Homepage (All Qs) */
+      details.q {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0)
+        );
+      }
+      details.q summary {
+        cursor: pointer;
+        list-style: none;
+        font-weight: 700;
+      }
+      details.q[open] {
+        border-color: var(--accent);
+      }
+      .answer {
+        border-top: 1px dashed var(--border);
+        margin-top: 8px;
+        padding-top: 8px;
+      }
+
+      /* Revision Mode */
+      .rev-q {
+        font-size: 20px;
+        font-weight: 800;
+      }
+      textarea {
+        width: 100%;
+        min-height: 120px;
+        border-radius: 12px;
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 10px;
+        resize: vertical;
+      }
+      .ans-box {
+        display: none;
+        border: 1px dashed var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        margin-top: 8px;
+        white-space: pre-line;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+      .chip.ok {
+        background: rgba(31, 191, 117, 0.12);
+        color: var(--ok);
+        border-color: rgba(31, 191, 117, 0.35);
+      }
+      .chip.bad {
+        background: rgba(255, 77, 109, 0.12);
+        color: var(--bad);
+        border-color: rgba(255, 77, 109, 0.35);
+      }
+
+      /* Progress */
+      .progress {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+      .progress > div {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        transition: width 0.35s ease;
+      }
+
+      /* Badges */
+      .badge {
+        font-weight: 700;
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 999px;
+      }
+      .badge.green {
+        background: rgba(31, 191, 117, 0.15);
+        color: var(--ok);
+        border: 1px solid rgba(31, 191, 117, 0.35);
+      }
+      .badge.red {
+        background: rgba(255, 77, 109, 0.15);
+        color: var(--bad);
+        border: 1px solid rgba(255, 77, 109, 0.35);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        white-space: pre-line;
+      }
+      @media (min-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      footer {
+        opacity: 0.7;
+        padding: 20px;
+        text-align: center;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body{{THEME_CONFIG}}>
+    <header>
+      <div class="bar">
+        <div class="title">📘 {{TITLE}}</div>
+        <div class="seg" role="tablist" aria-label="Mode switch">
+          <button id="btnHome" class="active" aria-selected="true">
+            Homepage Mode
+          </button>
+          <button id="btnRev">Revision Mode</button>
+        </div>
+        <button id="toggleTheme" class="btn ghost" title="Toggle theme">
+          🌓 Theme
+        </button>
+        <button
+          id="shuffleAll"
+          class="btn ghost"
+          title="Shuffle (Revision Mode)"
+        >
+          🔀 Shuffle
+        </button>
+        <button id="resetSession" class="btn" title="Reset session stats">
+          ♻️ Reset
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <!-- SESSION STATS / PROGRESS -->
+      <div class="card" id="statsCard" aria-live="polite">
+        <div class="row">
+          <div class="chip">Total: <strong id="totalCount">0</strong></div>
+          <div class="chip ok">Correct: <strong id="okCount">0</strong></div>
+          <div class="chip bad">
+            Incorrect: <strong id="badCount">0</strong>
+          </div>
+          <div class="spacer"></div>
+          <div class="muted">Progress</div>
+        </div>
+        <div class="progress" style="margin-top: 8px">
+          <div id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- HOMEPAGE MODE -->
+      <section id="homepage" class="card" aria-labelledby="homeHeading">
+        <div class="row" style="margin-bottom: 10px">
+          <h2 id="homeHeading" style="margin: 0">
+            Homepage Mode – All Questions
+          </h2>
+          <div class="spacer"></div>
+          <button id="expandAll" class="btn">Expand All</button>
+          <button id="closeAll" class="btn ghost">Close All</button>
+        </div>
+        <div id="listContainer" class="grid" aria-live="polite"></div>
+      </section>
+
+      <!-- REVISION MODE -->
+      <section
+        id="revision"
+        class="card"
+        style="display: none"
+        aria-labelledby="revHeading"
+      >
+        <div class="row" style="margin-bottom: 10px">
+          <h2 id="revHeading" style="margin: 0">
+            Revision Mode – One Question at a Time
+          </h2>
+          <div class="spacer"></div>
+          <span id="queueInfo" class="muted"></span>
+        </div>
+        <div id="revContent">
+          <div id="revQuestion" class="rev-q">Question will appear here…</div>
+          <div style="margin-top: 8px">
+            <textarea
+              id="userAnswer"
+              placeholder="Type your answer here (optional)…"
+            ></textarea>
+          </div>
+          <div class="row" style="margin-top: 8px; gap: 8px">
+            <button id="revealBtn" class="btn">Reveal Answer</button>
+            <button
+              id="markCorrect"
+              class="btn"
+              style="
+                display: none;
+                background: linear-gradient(135deg, var(--ok), #2de8a1);
+                border-color: transparent;
+              "
+            >
+              Mark Correct ✓
+            </button>
+            <button
+              id="markWrong"
+              class="btn"
+              style="
+                display: none;
+                background: linear-gradient(135deg, var(--bad), #ff7a8f);
+                border-color: transparent;
+              "
+            >
+              Mark Incorrect ✗
+            </button>
+            <div class="spacer"></div>
+            <button id="backBtn" class="btn ghost" title="Left Arrow">
+              ← Back
+            </button>
+            <button id="nextBtn" class="btn primary" title="Right Arrow">
+              Next →
+            </button>
+          </div>
+          <div id="correctAnswer" class="ans-box"></div>
+        </div>
+      </section>
+
+      <footer class="muted">
+        Tip: In Revision Mode, use your keyboard: ← for Back, → for Next.
+        Incorrect (red) items will reappear after a few questions for spaced
+        repetition.
+      </footer>
+    </main>
+
+    <script>
+      // ====== DATA: Questions ======
+      const questions = []; // {{QUESTIONS_ARRAY}}
+
+      // ====== State ======
+      const state = {
+        order: [],
+        cursor: 0,
+        status: new Map(),
+        seen: new Set(),
+        queue: [],
+        reintDelay: 5,
+      };
+
+      // ====== Utilities ======
+      const byId = (id) => document.getElementById(id);
+      const $ = (sel, root = document) => root.querySelector(sel);
+      const $$ = (sel, root = document) =>
+        Array.from(root.querySelectorAll(sel));
+      function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+      function saveTheme(theme) {
+        localStorage.setItem("rev.theme", theme);
+      }
+      function loadTheme() {
+        return localStorage.getItem("rev.theme");
+      }
+
+      // ====== Theme ======
+      function applyTheme() {
+        const t = loadTheme();
+        if (!t) {
+          document.documentElement.classList.remove("light");
+          return;
+        }
+        if (t === "light") document.documentElement.classList.add("light");
+        else document.documentElement.classList.remove("light");
+      }
+
+      // ====== Homepage builder ======
+      function buildHomepage() {
+        const list = byId("listContainer");
+        list.innerHTML = "";
+        questions.forEach((q, idx) => {
+          const wrap = document.createElement("div");
+          const details = document.createElement("details");
+          details.className = "q";
+          const sum = document.createElement("summary");
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          const st = state.status.get(q.id);
+          if (st === "correct") {
+            badge.classList.add("green");
+            badge.textContent = "✓";
+          } else if (st === "incorrect") {
+            badge.classList.add("red");
+            badge.textContent = "✗";
+          } else {
+            badge.style.display = "none";
+          }
+          sum.innerHTML = `<span class="muted">#${idx + 1}</span> ${
+            q.question
+          } `;
+          sum.appendChild(badge);
+          const ans = document.createElement("div");
+          ans.className = "answer";
+          ans.textContent = q.answer;
+          details.appendChild(sum);
+          details.appendChild(ans);
+          wrap.appendChild(details);
+          list.appendChild(wrap);
+        });
+      }
+
+      // ====== Session / Queue ======
+      function initSession(randomize = true) {
+        state.status = new Map();
+        state.seen = new Set();
+        state.cursor = 0;
+        state.queue = questions.map((q) => q.id);
+        if (randomize) shuffle(state.queue);
+        updateStats();
+        buildHomepage();
+        loadCurrent();
+      }
+
+      function currentId() {
+        return state.queue[state.cursor];
+      }
+      function currentIndex() {
+        return state.cursor;
+      }
+
+      function loadCurrent() {
+        const id = currentId();
+        const q = questions.find((x) => x.id === id);
+        if (!q) {
+          byId("revQuestion").textContent =
+            "All done! Shuffle or Reset to start again.";
+          return;
+        }
+        byId("revQuestion").textContent = q.question;
+        byId("userAnswer").value = "";
+        const box = byId("correctAnswer");
+        box.style.display = "none";
+        box.innerHTML = `<strong>Answer:</strong> ${q.answer}`;
+        byId("markCorrect").style.display = "none";
+        byId("markWrong").style.display = "none";
+        byId("queueInfo").textContent = `Question ${state.cursor + 1} of ${
+          state.queue.length
+        }`;
+        highlightQueueChip(q.id);
+      }
+
+      function highlightQueueChip(id) {
+        /* no-op placeholder for future inline queue indicators */
+      }
+
+      function mark(id, isCorrect) {
+        state.status.set(id, isCorrect ? "correct" : "incorrect");
+        state.seen.add(id);
+        if (!isCorrect) {
+          const insertAt = Math.min(
+            state.cursor + 1 + state.reintDelay,
+            state.queue.length
+          );
+          state.queue.splice(insertAt, 0, id);
+        }
+        updateStats();
+        buildHomepage();
+      }
+
+      function updateStats() {
+        const total = questions.length;
+        let ok = 0,
+          bad = 0;
+        state.status.forEach((v) => {
+          if (v === "correct") ok++;
+          else if (v === "incorrect") bad++;
+        });
+        const seenCount = state.seen.size;
+        byId("totalCount").textContent = total;
+        byId("okCount").textContent = ok;
+        byId("badCount").textContent = bad;
+        const pct = Math.round((seenCount / total) * 100);
+        byId("progressFill").style.width = pct + "%";
+      }
+
+      // ====== Navigation ======
+      function next() {
+        if (state.cursor < state.queue.length - 1) {
+          state.cursor++;
+          loadCurrent();
+        }
+      }
+      function back() {
+        if (state.cursor > 0) {
+          state.cursor--;
+          loadCurrent();
+        }
+      }
+
+      // ====== Event wiring ======
+      function wire() {
+        byId("btnHome").addEventListener("click", () => {
+          showHome();
+        });
+        byId("btnRev").addEventListener("click", () => {
+          showRev();
+        });
+
+        byId("toggleTheme").addEventListener("click", () => {
+          const isLight = document.documentElement.classList.toggle("light");
+          saveTheme(isLight ? "light" : "dark");
+        });
+
+        byId("expandAll").addEventListener("click", () =>
+          $$("#listContainer details.q").forEach((d) => (d.open = true))
+        );
+        byId("closeAll").addEventListener("click", () =>
+          $$("#listContainer details.q").forEach((d) => (d.open = false))
+        );
+
+        byId("revealBtn").addEventListener("click", () => {
+          byId("correctAnswer").style.display = "block";
+          byId("markCorrect").style.display = "inline-flex";
+          byId("markWrong").style.display = "inline-flex";
+        });
+        byId("markCorrect").addEventListener("click", () => {
+          mark(currentId(), true);
+          next();
+        });
+        byId("markWrong").addEventListener("click", () => {
+          mark(currentId(), false);
+          next();
+        });
+        byId("nextBtn").addEventListener("click", next);
+        byId("backBtn").addEventListener("click", back);
+
+        window.addEventListener("keydown", (e) => {
+          if ($("#revision").style.display !== "none") {
+            if (e.key === "ArrowRight") {
+              next();
+            }
+            if (e.key === "ArrowLeft") {
+              back();
+            }
+          }
+        });
+
+        byId("shuffleAll").addEventListener("click", () => {
+          shuffle(state.queue);
+          state.cursor = 0;
+          loadCurrent();
+        });
+        byId("resetSession").addEventListener("click", () => {
+          initSession(true);
+        });
+      }
+
+      // ====== Mode visibility ======
+      function showHome() {
+        byId("homepage").style.display = "block";
+        byId("revision").style.display = "none";
+        byId("btnHome").classList.add("active");
+        byId("btnRev").classList.remove("active");
+      }
+      function showRev() {
+        byId("homepage").style.display = "none";
+        byId("revision").style.display = "block";
+        byId("btnRev").classList.add("active");
+        byId("btnHome").classList.remove("active");
+      }
+
+      // ====== Init ======
+      applyTheme();
+      buildHomepage();
+      wire();
+      initSession(true);
+    </script>
+  </body>
+</html>
+

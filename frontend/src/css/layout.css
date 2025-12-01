@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f8fafc;
+  background: var(--color-background);
 }
 
 .app-content {
@@ -14,8 +14,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 18px 32px;
-  background: rgba(2, 6, 23, 0.85);
-  color: #e2e8f0;
+  background: var(--bg-navbar);
+  color: var(--text-inverse);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -30,13 +30,13 @@
 .nav-logo {
   font-size: 20px;
   font-weight: 700;
-  color: #fbbf24;
+  color: var(--color-accent);
   text-decoration: none;
 }
 
 .nav-tagline {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
 }
 
 .nav-links {
@@ -46,12 +46,12 @@
 
 .nav-link {
   text-decoration: none;
-  color: #e2e8f0;
+  color: var(--text-inverse);
   font-weight: 500;
 }
 
 .nav-link.active {
-  color: #fbbf24;
+  color: var(--color-accent);
 }
 
 .nav-user {
@@ -63,19 +63,19 @@
 .nav-pill {
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(251, 191, 36, 0.15);
-  color: #fbbf24;
+  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  color: var(--color-accent);
   text-decoration: none;
   font-size: 13px;
-  border: 1px solid rgba(251, 191, 36, 0.5);
+  border: 1px solid var(--color-accent);
 }
 
 .nav-button {
   border: none;
   border-radius: 999px;
   padding: 8px 18px;
-  background: #fbbf24;
-  color: #0f172a;
+  background: var(--color-accent);
+  color: var(--color-text);
   font-weight: 600;
   cursor: pointer;
 }
@@ -83,14 +83,14 @@
 .nav-button.ghost {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.4);
-  color: #e2e8f0;
+  color: var(--text-inverse);
 }
 
 .site-footer {
   padding: 24px 32px;
   text-align: center;
-  color: #64748b;
-  background: #e2e8f0;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
 }
 
 .footer-links {

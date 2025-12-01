@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{TITLE}}</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --text: #1a1a1a;
+        --muted: #666666;
+        --accent: #2563eb;
+        --border: #e5e7eb;
+        --ok: #10b981;
+        --bad: #ef4444;
+      }
+      html.light {
+        --bg: #ffffff;
+        --text: #1a1a1a;
+        --muted: #666666;
+        --accent: #2563eb;
+        --border: #e5e7eb;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        padding: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--border);
+      }
+      h1 {
+        font-size: 28px;
+        margin-bottom: 10px;
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 20px;
+      }
+      .btn {
+        padding: 8px 16px;
+        border: 1px solid var(--border);
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      .btn:hover {
+        background: #f9fafb;
+        border-color: var(--accent);
+      }
+      .btn.active {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+      }
+      .stats {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        margin-bottom: 30px;
+        padding: 15px;
+        background: #f9fafb;
+        border-radius: 8px;
+      }
+      .stat {
+        text-align: center;
+      }
+      .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .stat-label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .question-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      .question-item {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 15px;
+        background: white;
+      }
+      .question-item summary {
+        font-weight: 600;
+        cursor: pointer;
+        list-style: none;
+        padding: 5px 0;
+      }
+      .question-item[open] {
+        border-color: var(--accent);
+      }
+      .answer {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        white-space: pre-line;
+      }
+      .revision-mode {
+        display: none;
+      }
+      .revision-mode.active {
+        display: block;
+      }
+      .rev-question {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding: 20px;
+        background: #f9fafb;
+        border-radius: 8px;
+      }
+      .rev-answer {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f0f9ff;
+        border-left: 4px solid var(--accent);
+        border-radius: 4px;
+        white-space: pre-line;
+        display: none;
+      }
+      .rev-answer.show {
+        display: block;
+      }
+      .rev-controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .rev-controls button {
+        flex: 1;
+      }
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 8px;
+      }
+      .badge.correct {
+        background: #d1fae5;
+        color: var(--ok);
+      }
+      .badge.incorrect {
+        background: #fee2e2;
+        color: var(--bad);
+      }
+    </style>
+  </head>
+  <body{{THEME_CONFIG}}>
+    <div class="container">
+      <header>
+        <h1>{{TITLE}}</h1>
+        <div class="controls">
+          <button class="btn active" id="btnHome">All Questions</button>
+          <button class="btn" id="btnRev">Revision Mode</button>
+          <button class="btn" id="toggleTheme">🌓 Theme</button>
+          <button class="btn" id="shuffleBtn">🔀 Shuffle</button>
+          <button class="btn" id="resetBtn">♻️ Reset</button>
+        </div>
+      </header>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="totalCount">0</div>
+          <div class="stat-label">Total</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" style="color: var(--ok);" id="okCount">0</div>
+          <div class="stat-label">Correct</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" style="color: var(--bad);" id="badCount">0</div>
+          <div class="stat-label">Incorrect</div>
+        </div>
+      </div>
+
+      <div id="homepage">
+        <div class="question-list" id="questionList"></div>
+      </div>
+
+      <div id="revision" class="revision-mode">
+        <div class="rev-question" id="revQuestion">Question will appear here...</div>
+        <div class="rev-answer" id="revAnswer"></div>
+        <div class="rev-controls">
+          <button class="btn" id="revealBtn">Reveal Answer</button>
+          <button class="btn" id="markCorrect" style="display: none; background: var(--ok); color: white;">✓ Correct</button>
+          <button class="btn" id="markWrong" style="display: none; background: var(--bad); color: white;">✗ Incorrect</button>
+          <button class="btn" id="backBtn">← Back</button>
+          <button class="btn active" id="nextBtn">Next →</button>
+        </div>
+        <div style="text-align: center; margin-top: 15px; color: var(--muted); font-size: 14px;" id="queueInfo"></div>
+      </div>
+    </div>
+
+    <script>
+      const questions = []; // {{QUESTIONS_ARRAY}}
+      
+      const state = {
+        queue: [],
+        cursor: 0,
+        status: new Map(),
+        seen: new Set(),
+      };
+
+      function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      function saveTheme(theme) {
+        localStorage.setItem("rev.theme", theme);
+      }
+      function loadTheme() {
+        return localStorage.getItem("rev.theme");
+      }
+      function applyTheme() {
+        const t = loadTheme();
+        if (t === "light") document.documentElement.classList.add("light");
+        else document.documentElement.classList.remove("light");
+      }
+
+      function buildHomepage() {
+        const list = document.getElementById("questionList");
+        list.innerHTML = "";
+        questions.forEach((q, idx) => {
+          const item = document.createElement("details");
+          item.className = "question-item";
+          const summary = document.createElement("summary");
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          const st = state.status.get(q.id);
+          if (st === "correct") {
+            badge.classList.add("correct");
+            badge.textContent = "✓";
+          } else if (st === "incorrect") {
+            badge.classList.add("incorrect");
+            badge.textContent = "✗";
+          } else {
+            badge.style.display = "none";
+          }
+          summary.innerHTML = `#${idx + 1} ${q.question} `;
+          summary.appendChild(badge);
+          const answer = document.createElement("div");
+          answer.className = "answer";
+          answer.textContent = q.answer;
+          item.appendChild(summary);
+          item.appendChild(answer);
+          list.appendChild(item);
+        });
+      }
+
+      function initSession() {
+        state.status = new Map();
+        state.seen = new Set();
+        state.cursor = 0;
+        state.queue = questions.map(q => q.id);
+        shuffle(state.queue);
+        updateStats();
+        buildHomepage();
+        loadCurrent();
+      }
+
+      function loadCurrent() {
+        const id = state.queue[state.cursor];
+        const q = questions.find(x => x.id === id);
+        if (!q) {
+          document.getElementById("revQuestion").textContent = "All done!";
+          return;
+        }
+        document.getElementById("revQuestion").textContent = q.question;
+        document.getElementById("revAnswer").textContent = q.answer;
+        document.getElementById("revAnswer").classList.remove("show");
+        document.getElementById("markCorrect").style.display = "none";
+        document.getElementById("markWrong").style.display = "none";
+        document.getElementById("queueInfo").textContent = `Question ${state.cursor + 1} of ${state.queue.length}`;
+      }
+
+      function mark(id, isCorrect) {
+        state.status.set(id, isCorrect ? "correct" : "incorrect");
+        state.seen.add(id);
+        if (!isCorrect) {
+          const insertAt = Math.min(state.cursor + 1 + 5, state.queue.length);
+          state.queue.splice(insertAt, 0, id);
+        }
+        updateStats();
+        buildHomepage();
+      }
+
+      function updateStats() {
+        const total = questions.length;
+        let ok = 0, bad = 0;
+        state.status.forEach(v => {
+          if (v === "correct") ok++;
+          else if (v === "incorrect") bad++;
+        });
+        document.getElementById("totalCount").textContent = total;
+        document.getElementById("okCount").textContent = ok;
+        document.getElementById("badCount").textContent = bad;
+      }
+
+      function next() {
+        if (state.cursor < state.queue.length - 1) {
+          state.cursor++;
+          loadCurrent();
+        }
+      }
+      function back() {
+        if (state.cursor > 0) {
+          state.cursor--;
+          loadCurrent();
+        }
+      }
+
+      function showHome() {
+        document.getElementById("homepage").style.display = "block";
+        document.getElementById("revision").classList.remove("active");
+        document.getElementById("btnHome").classList.add("active");
+        document.getElementById("btnRev").classList.remove("active");
+      }
+      function showRev() {
+        document.getElementById("homepage").style.display = "none";
+        document.getElementById("revision").classList.add("active");
+        document.getElementById("btnRev").classList.add("active");
+        document.getElementById("btnHome").classList.remove("active");
+      }
+
+      document.getElementById("btnHome").addEventListener("click", showHome);
+      document.getElementById("btnRev").addEventListener("click", showRev);
+      document.getElementById("toggleTheme").addEventListener("click", () => {
+        const isLight = document.documentElement.classList.toggle("light");
+        saveTheme(isLight ? "light" : "dark");
+      });
+      document.getElementById("shuffleBtn").addEventListener("click", () => {
+        shuffle(state.queue);
+        state.cursor = 0;
+        loadCurrent();
+      });
+      document.getElementById("resetBtn").addEventListener("click", initSession);
+      document.getElementById("revealBtn").addEventListener("click", () => {
+        document.getElementById("revAnswer").classList.add("show");
+        document.getElementById("markCorrect").style.display = "inline-block";
+        document.getElementById("markWrong").style.display = "inline-block";
+      });
+      document.getElementById("markCorrect").addEventListener("click", () => {
+        mark(state.queue[state.cursor], true);
+        next();
+      });
+      document.getElementById("markWrong").addEventListener("click", () => {
+        mark(state.queue[state.cursor], false);
+        next();
+      });
+      document.getElementById("nextBtn").addEventListener("click", next);
+      document.getElementById("backBtn").addEventListener("click", back);
+
+      window.addEventListener("keydown", (e) => {
+        if (document.getElementById("revision").classList.contains("active")) {
+          if (e.key === "ArrowRight") next();
+          if (e.key === "ArrowLeft") back();
+        }
+      });
+
+      applyTheme();
+      initSession();
+    </script>
+  </body>
+</html>
+

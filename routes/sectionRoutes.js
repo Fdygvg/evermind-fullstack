@@ -4,7 +4,8 @@ import {
   getSections, 
   createSection, 
   updateSection, 
-  deleteSection 
+  deleteSection,
+  getSectionStats 
 } from '../controllers/sectionController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -16,5 +17,5 @@ router.get('/', getSections);
 router.post('/', createSection);
 router.put('/:id', updateSection);
 router.delete('/:id', deleteSection);
-
+router.get('/:sectionId/stats', getSectionStats);
 export default router;

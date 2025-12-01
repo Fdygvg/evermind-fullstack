@@ -316,3 +316,50 @@ export const getCurrentSession = async (req, res) => {
     });
   }
 };
+
+export const getLastSessionResults = async (req, res) => {
+  try {
+    const lastSession = await ReviewSession.findOne({
+      userId: req.userId,
+      isActive: false
+    })
+    .sort({ endTime: -1 })  
+    .limit(1);
+
+    if (!lastSession) {
+      return res.status(404).json({
+        success: false,
+        message: 'No completed sessions found'
+      });
+    }
+
+    const totalQuestions = lastSession.correctCount + lastSession.wrongCount;
+    const accuracy = totalQuestions > 0 
+      ? Math.round((lastSession.correctCount / totalQuestions) * 100)
+      : 0;
+
+    const duration = lastSession.endTime 
+      ? Math.round((lastSession.endTime - lastSession.startTime) / 60000)  // minutes
+      : 0;
+
+    res.json({
+      success: true,
+      data: {
+        correct: lastSession.correctCount,
+        wrong: lastSession.wrongCount,
+        total: totalQuestions,
+        accuracy,
+        duration,
+        mode: lastSession.mode,
+        sections: lastSession.sectionIds,
+        date: lastSession.endTime
+      }
+    });
+  } catch (error) {
+    console.error('Get last session error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching last session'
+    });
+  }
+};

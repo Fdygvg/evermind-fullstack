@@ -63,9 +63,12 @@ const Sections = () => {
     <div className="sections-container">
       <div className="sections-header">
         <h1>My Sections</h1>
-        <Link to="/add-section" className="add-section-btn">
-          + New Section
-        </Link>
+        <div className="sections-header-actions">
+          <Link to="/sections/add" className="add-section-btn">
+            ➕ Add New Section
+          </Link>
+         
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -93,6 +96,14 @@ const Sections = () => {
                     {section.questionCount || 0} questions
                     {/* Section Question Count */}
                   </span>
+                   <button 
+  className="edit-btn"
+  onClick={() => navigate(`/sections/edit/${section._id}`, { 
+    state: { section } 
+  })}
+>
+  Edit
+</button> 
                 </div>
               </div>
             ))}
@@ -108,12 +119,26 @@ const Sections = () => {
                   Questions in{" "}
                   {sections.find((s) => s._id === selectedSection)?.name}
                 </h2>
-                <Link
-                  to={`/questions/add?sectionId=${selectedSection}`}
-                  className="add-question-btn"
-                >
-                  + Add Question
-                </Link>
+                <div className="questions-header-actions">
+                  <Link
+                    to={`/questions/add?sectionId=${selectedSection}`}
+                    className="add-question-btn"
+                  >
+                    + Add Question
+                  </Link>
+                  <Link
+                    to="/questions/bulk-import"
+                    className="add-question-btn secondary"
+                  >
+                    📥 Bulk Import
+                  </Link>
+                  <Link
+                    to="/questions/export"
+                    className="add-question-btn secondary"
+                  >
+                    📤 Export
+                  </Link>
+                </div>
               </div>
 
               {questions.length === 0 ? (
@@ -154,7 +179,9 @@ const Sections = () => {
                         <button
                           className="edit-btn"
                           onClick={() =>
-                            navigate(`/edit-question/${question._id}`)
+                            navigate(`/questions/edit/${question._id}`, {
+                              state: { question },
+                            })
                           }
                         >
                           Edit
@@ -184,3 +211,6 @@ const Sections = () => {
 };
 
 export default Sections;
+
+
+

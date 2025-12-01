@@ -1,7 +1,7 @@
 /* Full-page layout */
 .xmas404-page {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #0b1221, #0d1a2e, #0a101b);
+  background: var(--gradient-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -38,9 +38,9 @@
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 25px 55px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-xl);
   text-align: center;
-  color: #f1f5f9;
+  color: var(--text-inverse);
 }
 
 /* Brain icon with Christmas glow */
@@ -55,13 +55,13 @@
 .xmas404-card h1 {
   font-size: 32px;
   margin: 0 0 10px 0;
-  color: #fff0f0;
+  color: var(--text-inverse);
 }
 
 .xmas404-card p {
   margin: 0;
   line-height: 1.6;
-  color: #e2e8f0;
+  color: var(--text-inverse);
 }
 
 /* Buttons */
@@ -84,15 +84,15 @@
 
 /* Candy-cane primary button */
 .xmas404-btn.primary {
-  background: linear-gradient(135deg, #ff4d4d, #d41414);
-  color: white;
-  box-shadow: 0 12px 25px rgba(255, 60, 60, 0.35);
+  background: var(--gradient-button);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-md);
 }
 
 /* Frosted-glass secondary button */
 .xmas404-btn.secondary {
   border: 1px solid rgba(255,255,255,0.6);
-  color: #f0f9ff;
+  color: var(--text-inverse);
   backdrop-filter: blur(4px);
 }
 
