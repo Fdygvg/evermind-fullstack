@@ -1,0 +1,56 @@
+/* Code Block Styling */
+.code-block-container {
+  width: 100%;
+  margin: 12px 0;
+}
+
+.code-block-container .text-content {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.6;
+}
+
+.inline-code {
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  color: var(--color-primary);
+}
+
+/* Override Prism.js styles to match theme */
+.code-block-container pre {
+  margin: 0 !important;
+  padding: 16px !important;
+  border-radius: 8px !important;
+  overflow-x: auto !important;
+  background: #1e1e1e !important;
+}
+
+.code-block-container code {
+  font-family: 'Courier New', Courier, 'Fira Code', 'Consolas', monospace !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+/* Scrollbar styling for code blocks */
+.code-block-container pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+.code-block-container pre::-webkit-scrollbar-track {
+  background: #2d2d2d;
+  border-radius: 4px;
+}
+
+.code-block-container pre::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.code-block-container pre::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+

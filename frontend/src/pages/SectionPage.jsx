@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { sectionService } from "../services/sections";
 import { questionService } from "../services/question";
 import { useNavigate } from "react-router-dom";
+import CodeBlock from "../components/Common/CodeBlock";
 
 const Sections = () => {
   const [sections, setSections] = useState([]);
@@ -152,50 +153,57 @@ const Sections = () => {
                   </Link>
                 </div>
               ) : (
-                <div className="questions-list">
-                  {questions.map((question) => (
-                    <div key={question._id} className="question-card">
-                      <div className="question-content">
-                        <h4>Q: {question.question}</h4>
-                        <p>A: {question.answer}</p>
-                        <div className="question-stats">
-                          <span className="correct-stat">
-                            ✅ {question.totalCorrect || 0}
-                          </span>
-                          <span className="wrong-stat">
-                            ❌ {question.totalWrong || 0}
-                          </span>
-                          <span className="review-date">
-                            Last:{" "}
-                            {question.lastReviewed
-                              ? new Date(
-                                  question.lastReviewed
-                                ).toLocaleDateString()
-                              : "Never"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="question-actions">
-                        <button
-                          className="edit-btn"
-                          onClick={() =>
-                            navigate(`/questions/edit/${question._id}`, {
-                              state: { question },
-                            })
-                          }
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="delete-btn"
-                          onClick={() => deleteQuestion(question._id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="questions-list">
+  {questions.map((question) => (
+    <div key={question._id} className="question-card">
+      <div className="question-content">
+        <h4>Q: {question.question}</h4>
+
+        {question.isCode ? (
+          <CodeBlock text={question.answer} forceCode={true} />
+        ) : (
+          <p>A: {question.answer}</p>
+        )}
+
+        <div className="question-stats">
+          <span className="correct-stat">
+            ✅ {question.totalCorrect || 0}
+          </span>
+          <span className="wrong-stat">
+            ❌ {question.totalWrong || 0}
+          </span>
+          <span className="review-date">
+            Last:{" "}
+            {question.lastReviewed
+              ? new Date(question.lastReviewed).toLocaleDateString()
+              : "Never"}
+          </span>
+        </div>
+      </div>
+
+      <div className="question-actions">
+        <button
+          className="edit-btn"
+          onClick={() =>
+            navigate(`/questions/edit/${question._id}`, {
+              state: { question },
+            })
+          }
+        >
+          Edit
+        </button>
+
+        <button
+          className="delete-btn"
+          onClick={() => deleteQuestion(question._id)}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
+
               )}
             </>
           ) : (

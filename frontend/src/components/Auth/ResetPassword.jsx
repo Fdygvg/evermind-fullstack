@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { authService } from '../../services/auth';
 
 const ResetPassword = () => {
@@ -7,6 +8,8 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const [token, setToken] = useState(searchParams.get('token') || '');
   const [passwords, setPasswords] = useState({ password: '', confirm: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -79,24 +82,44 @@ const ResetPassword = () => {
               value={token}
               onChange={(event) => setToken(event.target.value)}
             />
-            <input
-              type="password"
-              name="password"
-              className="auth-input"
-              placeholder="New password"
-              value={passwords.password}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="password"
-              name="confirm"
-              className="auth-input"
-              placeholder="Confirm password"
-              value={passwords.confirm}
-              onChange={handleChange}
-              required
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                className="auth-input"
+                placeholder="New password"
+                value={passwords.password}
+                onChange={handleChange}
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+            <div className="password-input-wrapper">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirm"
+                className="auth-input"
+                placeholder="Confirm password"
+                value={passwords.confirm}
+                onChange={handleChange}
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
           </div>
 
             <button type="submit" className="auth-button" disabled={loading}>

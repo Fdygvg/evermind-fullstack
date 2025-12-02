@@ -1,0 +1,178 @@
+/* MiniPlayground.css */
+.mini-playground-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.mini-playground-modal {
+  background: #1e1e1e;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 1200px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.playground-header {
+  background: #252526;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #3e3e42;
+}
+
+.playground-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.header-controls {
+  display: flex;
+  gap: 12px;
+}
+
+.run-btn, .close-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.run-btn {
+  background: #007acc;
+  color: white;
+}
+
+.run-btn:hover {
+  background: #005a9e;
+}
+
+.close-btn {
+  background: #3e3e42;
+  color: #ccc;
+}
+
+.close-btn:hover {
+  background: #505050;
+}
+
+.playground-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-section, .preview-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.code-tabs {
+  display: flex;
+  background: #2d2d30;
+  border-bottom: 1px solid #3e3e42;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  border-right: 1px solid #3e3e42;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  background: #3e3e42;
+}
+
+.tab-btn.active {
+  background: #1e1e1e;
+  color: #fff;
+  border-bottom: 2px solid #007acc;
+}
+
+.code-editor {
+  flex: 1;
+  overflow: hidden;
+}
+
+.preview-section {
+  border-left: 1px solid #3e3e42;
+}
+
+.preview-pane, .console-pane {
+  padding: 16px;
+  border-bottom: 1px solid #3e3e42;
+}
+
+.preview-pane h4, .console-pane h4 {
+  margin: 0 0 12px 0;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.console-output {
+  background: #000;
+  color: #fff;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  padding: 12px;
+  border-radius: 6px;
+  height: 150px;
+  overflow-y: auto;
+}
+
+.log-entry {
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-entry.error {
+  color: #f48771;
+}
+
+.log-type {
+  font-size: 12px;
+}
+
+.playground-footer {
+  background: #252526;
+  padding: 12px 24px;
+  border-top: 1px solid #3e3e42;
+}
+
+.shortcuts {
+  color: #888;
+  font-size: 0.875rem;
+}
+
+kbd {
+  background: #3e3e42;
+  color: #ccc;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin: 0 4px;
+  font-family: monospace;
+}

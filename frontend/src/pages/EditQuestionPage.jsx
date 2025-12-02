@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { questionService } from "../services/question";
 import { sectionService } from "../services/sections";
+import { detectCodeInQuestion } from "../utils/codeDetector";
 
 const EditQuestionPage = () => {
   const { id } = useParams();
@@ -97,9 +98,13 @@ const EditQuestionPage = () => {
         .map((tag) => tag.trim())
         .filter((tag) => tag.length > 0);
 
+      // Auto-detect if question/answer contains code
+      const isCode = detectCodeInQuestion(formData.question, formData.answer);
+      
       const questionData = {
         ...formData,
         tags: tagsArray,
+        isCode: isCode,
       };
 
       if (id || questionToEdit) {

@@ -56,32 +56,40 @@ export const getUserStats = async (req, res) => {
 
 export const getSessionHistory = async (req, res) => {
   try {
-    const { limit = 10 } = req.query;
+    const { limit = 20, page = 1 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const sessions = await ReviewSession.find({
       userId: req.userId,
       isActive: false // Only completed sessions
     })
-    .sort({ endTime: -1 })
+    .sort({ endTime: -1, createdAt: -1 })
+    .skip(skip)
     .limit(parseInt(limit))
     .populate('sectionIds', 'name color')
     .select('mode correctCount wrongCount startTime endTime sectionIds');
 
-    const sessionHistory = sessions.map(session => ({
-      id: session._id,
-      mode: session.mode,
-      sections: session.sectionIds,
-      correct: session.correctCount,
-      wrong: session.wrongCount,
-      total: session.correctCount + session.wrongCount,
-      accuracy: session.correctCount + session.wrongCount > 0 
-        ? Math.round((session.correctCount / (session.correctCount + session.wrongCount)) * 100)
-        : 0,
-      duration: session.endTime 
-        ? Math.round((session.endTime - session.startTime) / 60000) // minutes
-        : 0,
-      date: session.endTime || session.startTime
-    }));
+    const sessionHistory = sessions.map(session => {
+      // Handle cases where startTime or endTime might be missing
+      const startTime = session.startTime || session.createdAt;
+      const endTime = session.endTime || new Date();
+      
+      return {
+        id: session._id,
+        mode: session.mode,
+        sections: session.sectionIds || [],
+        correct: session.correctCount || 0,
+        wrong: session.wrongCount || 0,
+        total: (session.correctCount || 0) + (session.wrongCount || 0),
+        accuracy: (session.correctCount || 0) + (session.wrongCount || 0) > 0 
+          ? Math.round((session.correctCount / ((session.correctCount || 0) + (session.wrongCount || 0))) * 100)
+          : 0,
+        duration: endTime && startTime
+          ? Math.round((endTime - startTime) / 60000) // minutes
+          : 0,
+        date: endTime || startTime || new Date()
+      };
+    });
 
     res.json({
       success: true,

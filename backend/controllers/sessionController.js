@@ -52,9 +52,11 @@ export const startSession = async (req, res) => {
       message: 'Session started successfully',
       data: { 
         session: {
+          _id: session._id,
           id: session._id,
           mode: session.mode,
           totalQuestions: session.allQuestions.length,
+          allQuestions: session.allQuestions,
           remainingQuestions: session.remainingQuestions.length
         }
       }
@@ -82,17 +84,6 @@ export const getNextQuestion = async (req, res) => {
       });
     }
 
-    // BUFFER MODE: Check if we need to reinsert wrong questions
-    if (session.mode === 'buffer' && session.remainingQuestions.length === 0 && session.wrongQuestions.length > 0) {
-      // Reinsert wrong questions after user has gone through all remaining questions
-      session.remainingQuestions = [...session.wrongQuestions];
-      session.wrongQuestions = [];
-      await session.save();
-      
-      // Re-populate after update
-      await session.populate('remainingQuestions');
-    }
-
     if (session.remainingQuestions.length === 0) {
       return res.json({
         success: true,
@@ -104,6 +95,9 @@ export const getNextQuestion = async (req, res) => {
     // Get next question (first in remainingQuestions)
     const nextQuestion = session.remainingQuestions[0];
     
+    // Calculate current question index
+    const currentIndex = session.allQuestions.length - session.remainingQuestions.length;
+    
     res.json({
       success: true,
       data: {
@@ -111,8 +105,10 @@ export const getNextQuestion = async (req, res) => {
         progress: {
           total: session.allQuestions.length,
           remaining: session.remainingQuestions.length,
+          currentQuestionIndex: currentIndex,
           correct: session.correctCount,
-          wrong: session.wrongCount
+          wrong: session.wrongCount,
+          completed: false
         }
       }
     });
@@ -141,6 +137,11 @@ export const submitAnswer = async (req, res) => {
       });
     }
 
+    // Find current position of question in remainingQuestions before removing it
+    const currentQuestionIndex = session.remainingQuestions.findIndex(
+      id => id.toString() === questionId
+    );
+
     // Update question stats
     const question = await Question.findById(questionId);
     if (question) {
@@ -152,9 +153,6 @@ export const submitAnswer = async (req, res) => {
         question.totalWrong += 1;
         session.wrongCount += 1;
         session.wrongQuestions.push(questionId);
-        
-        // BUFFER MODE: Add to wrong questions (will be reinserted later)
-        // We don't add back immediately - we'll handle in getNextQuestion
       }
       question.lastReviewed = new Date();
       await question.save();
@@ -171,8 +169,18 @@ export const submitAnswer = async (req, res) => {
       session.remainingQuestions.splice(randomPosition, 0, questionId);
     }
 
-    // BUFFER MODE: Wrong questions are tracked in wrongQuestions array
-    // They will be reinserted in getNextQuestion when appropriate
+    // BUFFER MODE: Reinsert wrong question after 5 questions (at position currentIndex + 1 + 5)
+    if (session.mode === 'buffer' && !isCorrect) {
+      const reintDelay = 5; // Questions to wait before reappearing
+      // Calculate insert position: current position + 1 + delay
+      // But don't go beyond the end of the array
+      const insertAt = Math.min(
+        currentQuestionIndex + 1 + reintDelay,
+        session.remainingQuestions.length
+      );
+      // Insert the question back at the calculated position
+      session.remainingQuestions.splice(insertAt, 0, questionId);
+    }
 
     await session.save();
 

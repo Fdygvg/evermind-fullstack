@@ -26,49 +26,89 @@
   margin-bottom: 16px;
   font-size: 1.25rem;
 }
-
 .mode-options {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.mode-card {
+  width: 220px;
+  perspective: 1000px;
+  position: relative;
+}
+
+.mode-card-front,
+.mode-card-back {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 12px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+  backface-visibility: hidden;
+  transition: transform 0.6s;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.mode-card-front {
+  transform: rotateY(0deg);
+  position: relative;
+}
+
+.mode-card-back {
+  transform: rotateY(180deg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.mode-card.flipped .mode-card-front {
+  transform: rotateY(180deg);
+}
+
+.mode-card.flipped .mode-card-back {
+  transform: rotateY(0deg);
 }
 
 .mode-option {
-  flex: 1;
-  min-width: 200px;
-  padding: 16px;
-  border: 2px solid var(--color-border);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.mode-option:hover {
-  border-color: var(--color-primary);
-}
-
-.mode-option input[type="radio"] {
-  margin-right: 8px;
-}
-
-.mode-option span {
-  font-weight: 600;
-  color: var(--color-text);
   display: block;
-  margin-bottom: 4px;
+  position: relative;
+  cursor: pointer;
+  padding: 0.5rem;
 }
 
-.mode-option small {
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
+.mode-option input {
+  margin-right: 0.5rem;
 }
 
-.mode-option input[type="radio"]:checked + span {
-  color: var(--color-primary);
+.question-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
+  color: var(--color-accent);
 }
 
-.mode-option input[type="radio"]:checked ~ small {
-  color: var(--color-primary);
+.mode-description {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mode-description button {
+  padding: 0.4rem 0.8rem;
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.mode-description button:hover {
+  background: var(--color-secondary);
 }
 
 /* Section Selection */
@@ -152,11 +192,11 @@
   .review-session-page {
     padding: 16px;
   }
-  
+
   .mode-options {
     flex-direction: column;
   }
-  
+
   .sections-grid {
     grid-template-columns: 1fr;
   }

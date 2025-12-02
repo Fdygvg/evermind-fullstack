@@ -1,0 +1,214 @@
+.session-timer-container {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  max-width: 420px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: 0.25s ease;
+}
+
+/* ------------------ TIMER DISPLAY ------------------ */
+
+.timer-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.circular-timer {
+  width: 180px;
+  height: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.circular-progress {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-size: cover;
+  box-shadow: var(--shadow-lg);
+}
+
+.circular-inner {
+  width: 140px;
+  height: 140px;
+  background: var(--bg-secondary);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: var(--shadow-md);
+}
+
+.time-text {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.timer-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* ------------------ TIME BREAKDOWN ------------------ */
+
+.time-breakdown {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.time-unit {
+  text-align: center;
+}
+
+.unit-value {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.unit-label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.time-separator {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: var(--text-secondary);
+}
+
+/* ------------------ CONTROLS ------------------ */
+
+.timer-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.3rem;
+}
+
+.control-btn {
+  background: var(--bg-button-secondary);
+  color: var(--text-inverse);
+  border: 1px solid var(--border-light);
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1.3rem;
+  transition: 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.control-btn:hover {
+  box-shadow: var(--shadow-md);
+  transform: scale(1.07);
+}
+
+.play-btn {
+  background: var(--bg-button-primary);
+}
+
+.pause-btn {
+  background: var(--color-warning);
+}
+
+.reset-btn {
+  background: var(--color-error);
+}
+
+.save-btn {
+  background: var(--color-success);
+}
+
+/* Disabled state */
+.control-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ------------------ STATUS ------------------ */
+
+.timer-status {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-indicator.running .status-dot {
+  background: var(--color-success);
+}
+
+.status-indicator.paused .status-dot {
+  background: var(--color-warning);
+}
+
+.status-indicator.stopped .status-dot {
+  background: var(--color-error);
+}
+
+.status-text {
+  color: var(--text-secondary);
+}
+
+.time-stats {
+  margin-top: 0.6rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* ------------------ PRESETS ------------------ */
+
+.time-presets {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.preset-btn {
+  padding: 0.5rem 0.8rem;
+  background: var(--color-accent);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: 0.2s ease;
+}
+
+.preset-btn:hover {
+  transform: scale(1.08);
+  box-shadow: var(--shadow-md);
+}

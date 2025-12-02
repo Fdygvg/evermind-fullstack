@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sectionService } from '../services/sections';
 import { questionService } from '../services/question';
+import { detectCodeInQuestion } from '../utils/codeDetector';
 
 const BulkImportPage = () => {
   const [sections, setSections] = useState([]);
@@ -228,11 +229,12 @@ const BulkImportPage = () => {
     setMessage('');
 
     try {
-      // Format questions with sectionId
+      // Format questions with sectionId and auto-detect code
       const questionsToImport = parsedQuestions.map(q => ({
         question: q.question,
         answer: q.answer,
-        sectionId: selectedSection
+        sectionId: selectedSection,
+        isCode: detectCodeInQuestion(q.question, q.answer)
       }));
 
       const response = await questionService.bulkImport(questionsToImport);

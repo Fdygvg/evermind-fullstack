@@ -37,6 +37,10 @@ const questionSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  isCode: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

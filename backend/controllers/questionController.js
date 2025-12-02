@@ -48,6 +48,7 @@ export const createQuestion = async (req, res) => {
       sectionId,
       question,
       answer,
+      isCode: req.body.isCode || false,
     });
 
     await newQuestion.save();
@@ -88,6 +89,7 @@ export const bulkImportQuestions = async (req, res) => {
       sectionId,
       question: q.question,
       answer: q.answer,
+      isCode: q.isCode || false,
     }));
 
     const insertedQuestions = await Question.insertMany(questionsToInsert);
@@ -109,11 +111,16 @@ export const bulkImportQuestions = async (req, res) => {
 export const updateQuestion = async (req, res) => {
   try {
     const { id } = req.params;
-    const { question, answer, sectionId } = req.body;
+    const { question, answer, sectionId, isCode } = req.body;
+
+    const updateData = { question, answer, sectionId };
+    if (isCode !== undefined) {
+      updateData.isCode = isCode;
+    }
 
     const updatedQuestion = await Question.findOneAndUpdate(
       { _id: id, userId: req.userId },
-      { question, answer, sectionId },
+      updateData,
       { new: true, runValidators: true }
     ).populate("sectionId");
 

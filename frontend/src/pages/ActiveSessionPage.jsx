@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "../hooks/useSession";
 import { sessionService } from "../services/sessions";
 import ProgressBar from "../components/Common/ProgressBar";
+import QuestionCard from "../components/Common/QuestionCard";
 
 const ActiveSession = () => {
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -13,11 +14,7 @@ const ActiveSession = () => {
   const { activeSession } = useSession();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadNextQuestion();
-  }, []);
-
-  const loadNextQuestion = async () => {
+  const loadNextQuestion = useCallback(async () => {
     try {
       const response = await sessionService.getNextQuestion();
       const { question, progress, completed } = response.data.data;
@@ -34,7 +31,11 @@ const ActiveSession = () => {
     } catch (error) {
       console.error("Failed to load question:", error);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    loadNextQuestion();
+  }, [loadNextQuestion]);
 
   const submitAnswer = async (isCorrect) => {
     setLoading(true);
@@ -72,21 +73,9 @@ const ActiveSession = () => {
     <div className="active-session">
       {/* Progress Bar */}
       <div className="session-header">
-        <div className="progress-bar">
-          <div
-            className="progress-fill"
-            style={{
-              width: `${
-                ((sessionProgress?.total - sessionProgress?.remaining) /
-                  sessionProgress?.total) *
-                100
-              }%`,
-            }}
-          ></div>
-        </div>
         <ProgressBar
-          current={sessionProgress?.currentQuestionIndex + 1 || 0}
-          total={activeSession?.allQuestions?.length || 0}
+          current={sessionProgress?.total - sessionProgress?.remaining + 1 || 0}
+          total={activeSession?.totalQuestions || sessionProgress?.total || 0}
           correct={sessionProgress?.correct || 0}
           wrong={sessionProgress?.wrong || 0}
         />
@@ -98,42 +87,15 @@ const ActiveSession = () => {
         </button>
       </div>
 
-      {/* Question Card */}
-      <div className="question-card">
-        <div className="question-section">
-          <h2>Question</h2>
-          <p>{currentQuestion.question}</p>
-        </div>
-
-        {showAnswer ? (
-          <div className="answer-section">
-            <h2>Answer</h2>
-            <p>{currentQuestion.answer}</p>
-            <div className="answer-buttons">
-              <button
-                className="correct-btn"
-                onClick={() => submitAnswer(true)}
-                disabled={loading}
-              >
-                ✅ Correct
-              </button>
-              <button
-                className="wrong-btn"
-                onClick={() => submitAnswer(false)}
-                disabled={loading}
-              >
-                ❌ Wrong
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            className="show-answer-btn"
-            onClick={() => setShowAnswer(true)}
-          >
-            Show Answer
-          </button>
-        )}
+      {/* Question Card with Swipe Overlay */}
+      <div className="question-card-wrapper" style={{ position: "relative" }}>
+        <QuestionCard
+          currentQuestion={currentQuestion}
+          showAnswer={showAnswer}
+          setShowAnswer={setShowAnswer}
+          submitAnswer={submitAnswer}
+          loading={loading}
+        />
       </div>
 
       {/* Session Info */}

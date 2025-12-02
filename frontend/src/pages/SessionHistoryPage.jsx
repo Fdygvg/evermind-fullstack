@@ -84,7 +84,7 @@ const SessionHistoryPage = () => {
           <p>Start your first review session to see history here</p>
           <button 
             className="start-session-btn"
-            onClick={() => navigate('/sessions/start')}
+            onClick={() => navigate('/session/start')}
           >
             Start Your First Session
           </button>

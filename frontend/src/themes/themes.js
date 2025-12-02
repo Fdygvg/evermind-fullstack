@@ -202,5 +202,5 @@ export const themes = {
   }
 };
 
-export const defaultTheme = 'roygbiv';
+export const defaultTheme = 'blackWhite';
 

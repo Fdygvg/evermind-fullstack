@@ -13,19 +13,8 @@
   flex-wrap: wrap;
 }
 
-.progress-bar {
-  flex: 1;
-  height: 8px;
-  background: var(--color-border);
-  border-radius: 4px;
-  overflow: hidden;
-}
 
-.progress-fill {
-  height: 100%;
-  background: var(--color-primary);
-  transition: width 0.3s ease;
-}
+
 
 .progress-stats {
   color: var(--color-text-secondary);
@@ -49,12 +38,17 @@
 }
 
 /* Question Card */
+.question-card-wrapper {
+  position: relative;
+  margin-bottom: 20px;
+}
+
 .question-card {
   background: var(--color-surface);
   border-radius: 12px;
   box-shadow: var(--shadow-md);
   padding: 24px;
-  margin-bottom: 20px;
+  position: relative;
 }
 
 .question-section h2,
@@ -70,6 +64,8 @@
   font-size: 1.125rem;
   line-height: 1.6;
   margin-bottom: 20px;
+  white-space: pre-line;
+
 }
 
 /* Buttons */
@@ -144,18 +140,33 @@
 }
 
 .mode-badge {
-  background: var(--color-surface);
-  color: var(--color-primary);
+  display: inline-block;
   padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border-radius: 6px;
+  font-weight: 600;
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
 }
 
 .progress-numbers {
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.85rem;
 }
+
+.progress-numbers span {
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
 
 .loading {
   text-align: center;

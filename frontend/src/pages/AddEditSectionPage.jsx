@@ -421,7 +421,7 @@ const fetchSectionStats = async (sectionId) => {
           </button>
           <button 
             className="action-btn"
-            onClick={() => navigate('/sessions/start', {
+            onClick={() => navigate('/session/start', {
               state: { 
                 sectionId: id || location.state?.section?._id,
                 autoStart: true 

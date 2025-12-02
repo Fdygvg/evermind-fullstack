@@ -1,0 +1,193 @@
+.question-card {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 600px;
+  margin: 2rem auto;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  perspective: 1000px; /* For 3D hover effects */
+}
+
+.question-card:hover {
+  transform: translateY(-8px) rotateX(2deg);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Section styling */
+.question-section,
+.answer-section {
+  margin-bottom: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.question-section h2,
+.answer-section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.8rem;
+  color: var(--text-primary);
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Question text */
+.question-section p,
+.answer-section p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* CodeBlock container override for interactive effect */
+.code-block {
+  background-color: var(--bg-primary);
+  color: var(--text-inverse);
+  padding: 1rem;
+  border-radius: 12px;
+  overflow-x: auto;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.code-block:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Show Answer button */
+.show-answer-btn {
+  padding: 0.8rem 1.6rem;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--text-inverse);
+  background: var(--gradient-button);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.show-answer-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  opacity: 0.95;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Answer buttons */
+.answer-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.correct-btn,
+.wrong-btn {
+  flex: 1;
+  padding: 0.8rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Correct button */
+.correct-btn {
+  background: var(--color-success);
+  color: var(--text-inverse);
+}
+
+.correct-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: var(--shadow-md);
+  opacity: 0.95;
+}
+
+/* Wrong button */
+.wrong-btn {
+  background: var(--color-error);
+  color: var(--text-inverse);
+}
+
+.wrong-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: var(--shadow-md);
+  opacity: 0.95;
+}
+
+/* Optional: subtle fade-in animation for answer section */
+.answer-section {
+  animation: fadeInUp 0.4s ease forwards;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Swipe Ghost Overlay */
+.swipe-ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  z-index: 1000;
+  transition: all 0.1s ease;
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.swipe-ghost-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.2s ease;
+}
+
+.swipe-action-text {
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.correct-text {
+  color: #10b981;
+}
+
+.wrong-text {
+  color: #ef4444;
+}
+
+/* Prevent text selection during swipe */
+.question-card.swiping,
+.question-card.swiping * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Responsive adjustments for swipe */
+@media (max-width: 768px) {
+  .swipe-action-text {
+    font-size: 1.5rem;
+  }
+}

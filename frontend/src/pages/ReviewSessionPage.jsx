@@ -3,12 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { sectionService } from "../services/sections";
 import { sessionService } from "../services/sessions";
 import { useSession } from '../hooks/useSession'
+import { FaQuestionCircle } from "react-icons/fa";
+
 
 const ReviewSessionPage = () => {
   const [sections, setSections] = useState([]);
   const [selectedSections, setSelectedSections] = useState([]);
   const [mode, setMode] = useState("buffer");
   const [loading, setLoading] = useState(false);
+  const [flipped, setFlipped] = useState(null); // tracks which card is flipped
+
   
   const { setActiveSession } = useSession()
   const navigate = useNavigate();
@@ -51,7 +55,7 @@ const ReviewSessionPage = () => {
       setActiveSession(response.data.data.session);
 
       // Navigate to active session page
-      navigate("/session/active");
+      navigate("/session/start");
     } catch (error) {
       console.error("Failed to start session:", error);
       alert(
@@ -69,29 +73,47 @@ const ReviewSessionPage = () => {
 
       <div className="mode-selection">
         <h2>Select Mode</h2>
-        <div className="mode-options">
-          <label className="mode-option">
-            <input
-              type="radio"
-              value="buffer"
-              checked={mode === "buffer"}
-              onChange={(e) => setMode(e.target.value)}
-            />
-            <span>Buffer Mode</span>
-            <small>Wrong answers reappear after other questions</small>
-          </label>
+    <div className="mode-options">
+  {["buffer", "random"].map((modeName) => (
+    <div
+      key={modeName}
+      className={`mode-card ${flipped === modeName ? "flipped" : ""}`}
+    >
+      <div className="mode-card-front">
+        <label className="mode-option">
+          <input
+            type="radio"
+            value={modeName}
+            checked={mode === modeName}
+            onChange={(e) => setMode(e.target.value)}
+          />
+          <span>{modeName === "buffer" ? "Buffer Mode" : "Random Mode"}</span>
+          <small>
+            {modeName === "buffer"
+              ? "Wrong answers reappear after other questions"
+              : "Questions appear randomly"}
+          </small>
+          <FaQuestionCircle
+            className="question-icon"
+            onClick={() => setFlipped(flipped === modeName ? null : modeName)}
+          />
+        </label>
+      </div>
 
-          <label className="mode-option">
-            <input
-              type="radio"
-              value="random"
-              checked={mode === "random"}
-              onChange={(e) => setMode(e.target.value)}
-            />
-            <span>Random Mode</span>
-            <small>Wrong answers reappear randomly</small>
-          </label>
+      <div className="mode-card-back">
+        <div className="mode-description">
+          <h3>{modeName === "buffer" ? "Buffer Mode" : "Random Mode"}</h3>
+          <p>
+            {modeName === "buffer"
+              ? "Wrong answers reappear after 5 other questions."
+              : "Questions are displayed randomly."}
+          </p>
+          <button onClick={() => setFlipped(null)}>Close</button>
         </div>
+      </div>
+    </div>
+  ))}
+</div>
       </div>
 
       <div className="section-selection">

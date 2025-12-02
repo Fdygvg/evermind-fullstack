@@ -299,7 +299,7 @@ const SearchPage = () => {
                           Edit
                         </button>
                         <button 
-                          onClick={() => navigate('/sessions/start', {
+                          onClick={() => navigate('/session/start', {
                             state: { 
                               sectionId: question.sectionId?._id,
                               autoStart: true 

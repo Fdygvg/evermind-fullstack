@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -59,15 +62,26 @@ const Login = () => {
               value={formData.email}
               onChange={handleChange}
             />
-            <input
-              name="password"
-              type="password"
-              required
-              className="auth-input"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-            />
+            <div className="password-input-wrapper">
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                required
+                className="auth-input"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+
+              </button>
+            </div>
           </div>
           <button type="submit" disabled={loading} className="auth-button">
             {loading ? 'Signing in...' : 'Sign in'}

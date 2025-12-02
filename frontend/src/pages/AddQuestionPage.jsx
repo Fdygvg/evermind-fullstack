@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { sectionService } from '../services/sections'
 import { questionService } from '../services/question'
+import { detectCodeInQuestion } from '../utils/codeDetector'
 
 const AddQuestion = () => {
   const [sections, setSections] = useState([])
@@ -48,11 +49,15 @@ const AddQuestion = () => {
 
     setLoading(true)
     try {
+      // Auto-detect if question/answer contains code
+      const isCode = detectCodeInQuestion(formData.question, formData.answer);
+      
       await questionService.createQuestion({
         sectionId: selectedSection,
         question: formData.question,
         answer: formData.answer,
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        isCode: isCode
       })
 
       setMessage('Question added successfully!')

@@ -89,7 +89,7 @@ const SessionResultsPage = () => {
 
             <div className="action-buttons">
               <button 
-                onClick={() => navigate('/sessions/start')}
+                onClick={() => navigate('/session/start')}
                 className="btn-primary"
               >
                 Start New Session
@@ -106,7 +106,7 @@ const SessionResultsPage = () => {
           <div className="no-results">
             <p>No session results available.</p>
             <button 
-              onClick={() => navigate('/sessions/start')}
+              onClick={() => navigate('/session/start')}
               className="btn-primary"
             >
               Start Your First Session

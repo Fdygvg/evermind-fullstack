@@ -188,6 +188,60 @@
     transform: translateY(0);
   }
 }
+/* Timer */
+.timer-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  backdrop-filter: blur(10px); 
+  -webkit-backdrop-filter: blur(10px); 
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-md);
+}
+
+.timer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-button-primary);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.timer-btn:hover {
+  background: var(--gradient-button);
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
+.reset-btn {
+  background: var(--bg-button-secondary);
+}
+
+.reset-btn:hover {
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
+/* Optional: Icon spacing inside buttons */
+.timer-btn svg {
+  width: 1.2em;
+  height: 1.2em;
+}
+
+
+/*  */
+
 
 /* Responsive */
 @media (max-width: 768px) {
