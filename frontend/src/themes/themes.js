@@ -40,6 +40,46 @@ export const themes = {
       shadow: 'rgba(0, 0, 0, 0.2)',
     }
   },
+  black: {
+    name: 'Black',
+    description: 'Pure black theme',
+    colors: {
+      primary: '#000000',
+      secondary: '#1a1a1a',
+      accent: '#333333',
+      background: '#000000',
+      surface: '#1a1a1a',
+      text: '#ffffff',
+      textSecondary: '#cccccc',
+      border: '#333333',
+      error: '#ff4444',
+      success: '#44ff44',
+      warning: '#ffaa44',
+      gradientStart: '#000000',
+      gradientEnd: '#1a1a1a',
+      shadow: 'rgba(255, 255, 255, 0.1)',
+    }
+  },
+  white: {
+    name: 'White',
+    description: 'Pure white theme',
+    colors: {
+      primary: '#ffffff',
+      secondary: '#f5f5f5',
+      accent: '#e0e0e0',
+      background: '#ffffff',
+      surface: '#f9f9f9',
+      text: '#000000',
+      textSecondary: '#333333',
+      border: '#e0e0e0',
+      error: '#cc0000',
+      success: '#00cc00',
+      warning: '#cc8800',
+      gradientStart: '#ffffff',
+      gradientEnd: '#f5f5f5',
+      shadow: 'rgba(0, 0, 0, 0.1)',
+    }
+  },
   roygbivMixed: {
     name: 'ROYGBIV Mixed',
     description: 'All rainbow colors blended',

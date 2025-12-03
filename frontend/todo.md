@@ -24,6 +24,10 @@
 - **Add a mute button** – Simple state toggle  
 - **Fix verification/token issues** – Bug fixing  
 - ***Add  CAPTCHA**
+- ***Add flash card mode**
+- ***Apart from export with html. Figure out a way for people  to share sections**
+- ***Create a profile page||Copy quizlet**
+- ***Add preset sections based on user selection during registration**
 
 # 🔥 Significant Features (1-2 days)
 - **Work on your homepage** – Full landing page (you started this!)  
@@ -134,3 +138,26 @@ ___
 
 
 mini laygorunf css
+
+
+
+
+
+can you explain this code to me like ima  fucking idiot , #include <stdio.h>
+
+union U {
+    int i;
+    float f;
+    char c[4];
+};
+
+int main() {
+    union U u;
+    u.i = 0x41424344;    // set raw bytes (hex)
+    printf("as int: %d\n", u.i);
+    printf("as chars: %c%c%c%c\n", u.c[0], u.c[1], u.c[2], u.c[3]);
+    u.f = 3.14f;         // now f is the active member
+    printf("as float: %f\n", u.f);
+    // reading other member than last-written is allowed but may be implementation-defined for some types
+    return 0;
+}

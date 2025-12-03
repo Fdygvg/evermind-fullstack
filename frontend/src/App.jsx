@@ -33,6 +33,7 @@ import ExportPage from "./pages/ExportPage";
 import ProtectedRoute from "./components/Common/ProtectedRoute";
 import MainLayout from "./components/Layout/MainLayout";
 import HomePage from "./pages/HomePage";
+import PreferencesPage from "./pages/PreferencesPage";
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
                       path="/session/review"
                       element={<ReviewSessionPage />}
                     />
+                    <Route path="/preferences" element={<PreferencesPage />} />
                     <Route
                       path="/session/start"
                       element={<ActiveSessionPage />}

@@ -20,6 +20,17 @@ const QuestionCard = ({
   const startTimeRef = useRef(0);
   const SWIPE_THRESHOLD = 60; // Minimum distance to trigger action
 
+  // Log when question changes (component remounts due to key prop, so state auto-resets)
+  useEffect(() => {
+    console.log("[CARD] QuestionCard rendered/re-rendered");
+    console.log("[CARD] Current question:", {
+      id: currentQuestion?._id,
+      question: currentQuestion?.question?.substring(0, 50) + "...",
+      hasAnswer: !!currentQuestion?.answer
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestion?._id]);
+
   // Check if touch/click is in the swipe zone (top 50% height, middle 40% width)
   const isInSwipeZone = useCallback((clientX, clientY) => {
     if (!cardRef.current) return false;
@@ -84,15 +95,29 @@ const QuestionCard = ({
   );
 
   const handleEnd = useCallback(() => {
-    if (!isDragging || loading) return;
+    console.log("[SWIPE] handleEnd called", { isDragging, loading, swipeOffset });
+    
+    if (!isDragging || loading) {
+      console.log("[SWIPE] handleEnd blocked - isDragging:", isDragging, "loading:", loading);
+      return;
+    }
 
     const deltaTime = Date.now() - startTimeRef.current;
-    const velocity = Math.abs(swipeOffset) / deltaTime;
+    const velocity = Math.abs(swipeOffset) / Math.max(deltaTime, 1);
+    console.log("[SWIPE] Swipe metrics:", {
+      offset: swipeOffset,
+      deltaTime,
+      velocity,
+      threshold: SWIPE_THRESHOLD
+    });
 
     setIsDragging(false);
 
     // Check if threshold reached (distance and velocity)
     if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD && velocity > 0.1) {
+      const isCorrect = swipeOffset > 0;
+      console.log("[SWIPE] Swipe threshold reached! Submitting:", isCorrect ? "CORRECT" : "WRONG");
+      
       if (swipeOffset > 0) {
         // Swiped right = Correct
         playSound("correct");
@@ -102,6 +127,8 @@ const QuestionCard = ({
         playSound("wrong");
         submitAnswer(false);
       }
+    } else {
+      console.log("[SWIPE] Swipe threshold NOT reached");
     }
 
     // Reset
@@ -233,6 +260,9 @@ const QuestionCard = ({
             <button
               className="correct-btn"
               onClick={() => {
+                console.log("[BUTTON] Correct button clicked");
+                console.log("[BUTTON] Current question ID:", currentQuestion?._id);
+                console.log("[BUTTON] Loading state:", loading);
                 playSound("correct");
                 submitAnswer(true);
               }}
@@ -243,6 +273,9 @@ const QuestionCard = ({
             <button
               className="wrong-btn"
               onClick={() => {
+                console.log("[BUTTON] Wrong button clicked");
+                console.log("[BUTTON] Current question ID:", currentQuestion?._id);
+                console.log("[BUTTON] Loading state:", loading);
                 playSound("wrong");
                 submitAnswer(false);
               }}
@@ -289,6 +322,7 @@ const QuestionCard = ({
           </div>
         </div>
       )}
+
     </div>
   );
 };

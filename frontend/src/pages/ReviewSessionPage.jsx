@@ -17,9 +17,32 @@ const ReviewSessionPage = () => {
   const { setActiveSession } = useSession()
   const navigate = useNavigate();
 
+  // Helper function to convert hex color to rgba with opacity
+  const hexToRgba = (hex, opacity) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  };
+
   useEffect(() => {
     loadSections();
   }, []);
+
+  useEffect(() => {
+  const cards = document.querySelectorAll('.section-card');
+  cards.forEach(card => {
+    card.addEventListener('click', function() {
+      if (this.classList.contains('selected')) {
+        this.classList.add('selected-remove');
+        setTimeout(() => this.classList.remove('selected-remove'), 300);
+      } else {
+        this.classList.add('selected-add');
+        setTimeout(() => this.classList.remove('selected-add'), 300);
+      }
+    });
+  });
+}, [sections]);
 
   const loadSections = async () => {
     try {
@@ -88,11 +111,7 @@ const ReviewSessionPage = () => {
             onChange={(e) => setMode(e.target.value)}
           />
           <span>{modeName === "buffer" ? "Buffer Mode" : "Random Mode"}</span>
-          <small>
-            {modeName === "buffer"
-              ? "Wrong answers reappear after other questions"
-              : "Questions appear randomly"}
-          </small>
+         
           <FaQuestionCircle
             className="question-icon"
             onClick={() => setFlipped(flipped === modeName ? null : modeName)}
@@ -126,7 +145,12 @@ const ReviewSessionPage = () => {
                 selectedSections.includes(section._id) ? "selected" : ""
               }`}
               onClick={() => toggleSection(section._id)}
-              style={{ borderLeftColor: section.color }}
+              style={{ 
+                borderLeftColor: section.color,
+                background: `linear-gradient(135deg, 
+                  ${hexToRgba(section.color, 0.2)}, 
+                  ${hexToRgba(section.color, 0.1)})`
+              }}
             >
               <h3>{section.name}</h3>
               <p>{section.description}</p>

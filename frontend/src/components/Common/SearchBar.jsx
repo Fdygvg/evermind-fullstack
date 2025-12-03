@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sectionService } from "../../services/sections.js";
 import { questionService } from "../../services/question";
-import './css/SearchBar.css';
+import "./css/searchBar.css"
 
 const SearchBar = ({ placeholder = "Search questions...", compact = false, onSearch }) => {
   const [query, setQuery] = useState('');

@@ -89,7 +89,7 @@ const SessionResultsPage = () => {
 
             <div className="action-buttons">
               <button 
-                onClick={() => navigate('/session/start')}
+                onClick={() => navigate('/session/review')}
                 className="btn-primary"
               >
                 Start New Session

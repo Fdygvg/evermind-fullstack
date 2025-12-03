@@ -1,136 +1,105 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FaArrowsSpin, FaPlay, FaPause } from 'react-icons/fa6';
-import './css/progressBar.css';
+// components/Common/SessionStatsBar.jsx
+import React, { useState, useEffect } from 'react';
+import { Flame, Timer, Target, BarChart } from 'lucide-react';
 
-const ProgressBar = ({ current, total, correct, wrong, height = 12 }) => {
-  const [seconds, setSeconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(true);
-  const intervalRef = useRef(null);
+const ProgressBar = ({
+  currentStreak = 0,
+  sessionTime = 0, // in seconds
+  currentCount = 0,
+  totalCount = 0,
+  correctCount = 0,
+  wrongCount = 0,
+  showAccuracy = true,
+  showTimer = true,
+  compact = false
+}) => {
+  const [animatedStreak, setAnimatedStreak] = useState(currentStreak);
+  const [previousStreak, setPreviousStreak] = useState(currentStreak);
 
-  const progress = total > 0 ? (current / total) * 100 : 0;
-  const correctPercentage = total > 0 ? (correct / total) * 100 : 0;
-  const wrongPercentage = total > 0 ? (wrong / total) * 100 : 0;
+  // Animate streak increase
+  useEffect(() => {
+    if (currentStreak > previousStreak) {
+      setAnimatedStreak(currentStreak);
+      // Trigger animation
+      const timer = setTimeout(() => {
+        setPreviousStreak(currentStreak);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStreak, previousStreak]);
 
   // Format time as MM:SS
-  const formatTime = (totalSeconds) => {
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Timer logic
-  useEffect(() => {
-    if (isRunning) {
-      intervalRef.current = setInterval(() => {
-        setSeconds(prev => prev + 1);
-      }, 1000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
+  // Calculate accuracy
+  const accuracy = correctCount + wrongCount > 0 
+    ? Math.round((correctCount / (correctCount + wrongCount)) * 100)
+    : 0;
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [isRunning]);
-
-  // Toggle timer
-  const toggleTimer = () => {
-    setIsRunning(!isRunning);
-  };
-
-  // Reset timer
-  const resetTimer = () => {
-    setSeconds(0);
-    if (!isRunning) {
-      setIsRunning(true);
-    }
-  };
+  // Progress percentage
+  const progress = totalCount > 0 
+    ? Math.round((currentCount / totalCount) * 100)
+    : 0;
 
   return (
-    <div className="progress-bar-container">
-      {/* Stats Display - Added Timer */}
-      <div className="progress-stats">
-        <div className="stat-item">
-          <span className="stat-number">{current}/{total}</span>
-          <span className="stat-label">Progress</span>
+    <div className={`session-stats-bar ${compact ? 'compact' : ''}`}>
+      {/* Streak Counter */}
+      <div className="stat-item streak-item">
+        <Flame className={`stat-icon ${animatedStreak > 0 ? 'active' : ''}`} size={compact ? 16 : 20} />
+        <div className="stat-content">
+          <span className={`stat-value ${currentStreak > previousStreak ? 'animate-streak' : ''}`}>
+            {currentStreak}
+          </span>
+          {!compact && <span className="stat-label">Streak</span>}
         </div>
-        <div className="stat-item correct-stat">
-          <span className="stat-number">{correct}</span>
-          <span className="stat-label">Correct</span>
-        </div>
-        <div className="stat-item wrong-stat">
-          <span className="stat-number">{wrong}</span>
-          <span className="stat-label">Wrong</span>
-        </div>
-        {/* Timer Stat */}
-        <div className="stat-item timer-stat">
-          <div className="timer-display">
-            <span className="stat-number">{formatTime(seconds)}</span>
-            <div className="timer-controls">
-              <button 
-                className="timer-btn" 
-                onClick={toggleTimer}
-                title={isRunning ? 'Pause timer' : 'Resume timer'}
-              >
-                {isRunning ? <FaPause /> : <FaPlay/>}
-              </button>
-              <button 
-                className="timer-btn reset-btn"
-                onClick={resetTimer}
-                title="Reset timer"
-              >
-                < FaArrowsSpin/>
-              </button>
-            </div>
+      </div>
+
+      {/* Timer */}
+      {showTimer && (
+        <div className="stat-item timer-item">
+          <Timer className="stat-icon" size={compact ? 16 : 20} />
+          <div className="stat-content">
+            <span className="stat-value">{formatTime(sessionTime)}</span>
+            {!compact && <span className="stat-label">Time</span>}
           </div>
-          <span className="stat-label">Time</span>
+        </div>
+      )}
+
+      {/* Progress */}
+      <div className="stat-item progress-item">
+        <BarChart className="stat-icon" size={compact ? 16 : 20} />
+        <div className="stat-content">
+          <span className="stat-value">{currentCount}/{totalCount}</span>
+          {!compact && (
+            <>
+              <span className="stat-label">Progress</span>
+              <div className="progress-bar-mini">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
-      
-      {/* Main Progress Bar */}
-      <div className="progress-bar-wrapper" style={{ height: `${height}px` }}>
-        <div 
-          className="progress-bar-background"
-          style={{ height: `${height}px` }}
-        >
-          {/* Correct Progress (Green) */}
-          <div 
-            className="progress-segment correct-progress"
-            style={{ width: `${correctPercentage}%` }}
-          ></div>
-          
-          {/* Wrong Progress (Red) */}
-          <div 
-            className="progress-segment wrong-progress"
-            style={{ width: `${wrongPercentage}%` }}
-          ></div>
-          
-          {/* Remaining Progress (Gray) */}
-          <div 
-            className="progress-segment remaining-progress"
-            style={{ width: `${100 - progress}%` }}
-          ></div>
+
+      {/* Accuracy */}
+      {showAccuracy && (
+        <div className="stat-item accuracy-item">
+          <Target className="stat-icon" size={compact ? 16 : 20} />
+          <div className="stat-content">
+            <span className={`stat-value ${accuracy >= 80 ? 'high' : accuracy >= 60 ? 'medium' : 'low'}`}>
+              {accuracy}%
+            </span>
+            {!compact && <span className="stat-label">Accuracy</span>}
+          </div>
         </div>
-        
-        {/* Progress Indicator */}
-        <div 
-          className="progress-indicator"
-          style={{ 
-            left: `${progress}%`,
-            height: `${height + 8}px`,
-            width: `${height + 8}px`
-          }}
-        >
-          <div className="indicator-glow"></div>
-        </div>
-      </div>
-      
-      {/* Percentage Display */}
-      <div className="progress-percentage">
-        {Math.round(progress)}% Complete
-      </div>
+      )}
     </div>
   );
 };

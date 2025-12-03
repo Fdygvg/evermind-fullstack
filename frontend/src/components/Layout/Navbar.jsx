@@ -1,47 +1,58 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="nav-shell">
-      <div className="nav-brand">
-        <Link to="/dashboard" className="nav-logo">
+    <header className="navbar">
+      <div className="navbar-brand">
+        <Link to="/dashboard" className="navbar-logo">
           EVERMIND
         </Link>
-        <span className="nav-tagline">memory, but upgraded</span>
+        <span className="navbar-tagline">memory, but upgraded</span>
       </div>
-      <nav className="nav-links">
-        <NavLink to="/dashboard" className="nav-link">
+
+      <button
+        className="navbar-toggle"
+        onClick={() => setMenuOpen(!menuOpen)}
+        aria-label="Toggle navigation"
+      >
+        <span className="hamburger"></span>
+      </button>
+
+      <nav className={`navbar-links ${menuOpen ? 'active' : ''}`}>
+        <NavLink to="/dashboard" className="navbar-link">
           Dashboard
         </NavLink>
-        <NavLink to="/session/review" className="nav-link">
+        <NavLink to="/session/review" className="navbar-link">
           Sessions
         </NavLink>
-        <NavLink to="/sections" className="nav-link">
+        <NavLink to="/sections" className="navbar-link">
           Sections
         </NavLink>
-        <NavLink to="/settings" className="nav-link">
+        <NavLink to="/settings" className="navbar-link">
           Settings
         </NavLink>
       </nav>
-      <div className="nav-user">
+
+      <div className="navbar-user">
         {user ? (
           <>
             {!user.isVerified && (
-              <Link to="/verify-email" className="nav-pill">
+              <Link to="/verify-email" className="navbar-pill">
                 Verify email
               </Link>
             )}
-            <span className="nav-username">{user.username || user.email}</span>
-            <button type="button" className="nav-button" onClick={logout}>
+            <span className="navbar-username">{user.username || user.email}</span>
+            <button className="navbar-button" onClick={logout}>
               Log out
             </button>
           </>
         ) : (
-          <Link to="/login" className="nav-button ghost">
+          <Link to="/login" className="navbar-button ghost">
             Log in
           </Link>
         )}
@@ -51,4 +62,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-

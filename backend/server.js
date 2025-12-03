@@ -11,7 +11,6 @@ import statsRoutes from "./routes/statsRoutes.js";
 
 dotenv.config();
 // app config
-const port = process.env.PORT || 5000;
 const app = express();
 
 //c0nect t0 database
