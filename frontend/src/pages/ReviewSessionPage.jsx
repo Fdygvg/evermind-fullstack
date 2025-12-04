@@ -10,6 +10,7 @@ const ReviewSessionPage = () => {
   const [sections, setSections] = useState([]);
   const [selectedSections, setSelectedSections] = useState([]);
   const [mode, setMode] = useState("buffer");
+  const [cardMode, setCardMode] = useState("normal"); // "normal" or "flashcard"
   const [loading, setLoading] = useState(false);
   const [flipped, setFlipped] = useState(null); // tracks which card is flipped
 
@@ -69,11 +70,14 @@ const ReviewSessionPage = () => {
 
     setLoading(true);
     try {
+      console.log("[REVIEW] Starting session with cardMode:", cardMode);
       const response = await sessionService.startSession({
         sectionIds: selectedSections,
         mode,
+        cardMode, // Pass card mode to session
       });
 
+      console.log("[REVIEW] Session created, response:", response.data.data.session);
       // STORE THE SESSION DATA FOR ACTIVE SESSION
       setActiveSession(response.data.data.session);
 
@@ -95,44 +99,85 @@ const ReviewSessionPage = () => {
       <h1>Start Revision Session</h1>
 
       <div className="mode-selection">
-        <h2>Select Mode</h2>
-    <div className="mode-options">
-  {["buffer", "random"].map((modeName) => (
-    <div
-      key={modeName}
-      className={`mode-card ${flipped === modeName ? "flipped" : ""}`}
-    >
-      <div className="mode-card-front">
-        <label className="mode-option">
-          <input
-            type="radio"
-            value={modeName}
-            checked={mode === modeName}
-            onChange={(e) => setMode(e.target.value)}
-          />
-          <span>{modeName === "buffer" ? "Buffer Mode" : "Random Mode"}</span>
-         
-          <FaQuestionCircle
-            className="question-icon"
-            onClick={() => setFlipped(flipped === modeName ? null : modeName)}
-          />
-        </label>
-      </div>
+        <h2>Select Review Mode</h2>
+        <div className="mode-options">
+          {["buffer", "random"].map((modeName) => (
+            <div
+              key={modeName}
+              className={`mode-card ${flipped === modeName ? "flipped" : ""}`}
+            >
+              <div className="mode-card-front">
+                <label className="mode-option">
+                  <input
+                    type="radio"
+                    value={modeName}
+                    checked={mode === modeName}
+                    onChange={(e) => setMode(e.target.value)}
+                  />
+                  <span>{modeName === "buffer" ? "Buffer Mode" : "Random Mode"}</span>
+                 
+                  <FaQuestionCircle
+                    className="question-icon"
+                    onClick={() => setFlipped(flipped === modeName ? null : modeName)}
+                  />
+                </label>
+              </div>
 
-      <div className="mode-card-back">
-        <div className="mode-description">
-          <h3>{modeName === "buffer" ? "Buffer Mode" : "Random Mode"}</h3>
-          <p>
-            {modeName === "buffer"
-              ? "Wrong answers reappear after 5 other questions."
-              : "Questions are displayed randomly."}
-          </p>
-          <button onClick={() => setFlipped(null)}>Close</button>
+              <div className="mode-card-back">
+                <div className="mode-description">
+                  <h3>{modeName === "buffer" ? "Buffer Mode" : "Random Mode"}</h3>
+                  <p>
+                    {modeName === "buffer"
+                      ? "Wrong answers reappear after 5 other questions."
+                      : "Questions are displayed randomly."}
+                  </p>
+                  <button onClick={() => setFlipped(null)}>Close</button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
-  ))}
-</div>
+
+      <div className="mode-selection">
+        <h2>Select Card Style</h2>
+        <div className="mode-options">
+          {["normal", "flashcard"].map((cardModeName) => (
+            <div
+              key={cardModeName}
+              className={`mode-card ${flipped === cardModeName ? "flipped" : ""}`}
+            >
+              <div className="mode-card-front">
+                <label className="mode-option">
+                  <input
+                    type="radio"
+                    value={cardModeName}
+                    checked={cardMode === cardModeName}
+                    onChange={(e) => setCardMode(e.target.value)}
+                  />
+                  <span>{cardModeName === "normal" ? "Normal Cards" : "Flashcard Style"}</span>
+                 
+                  <FaQuestionCircle
+                    className="question-icon"
+                    onClick={() => setFlipped(flipped === cardModeName ? null : cardModeName)}
+                  />
+                </label>
+              </div>
+
+              <div className="mode-card-back">
+                <div className="mode-description">
+                  <h3>{cardModeName === "normal" ? "Normal Cards" : "Flashcard Style"}</h3>
+                  <p>
+                    {cardModeName === "normal"
+                      ? "Traditional question and answer format with swipe gestures."
+                      : "Interactive flip cards with keyboard shortcuts."}
+                  </p>
+                  <button onClick={() => setFlipped(null)}>Close</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="section-selection">

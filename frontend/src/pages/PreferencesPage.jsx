@@ -1,7 +1,8 @@
 // src/pages/PreferencesPage.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, ArrowRight, ChevronLeft } from 'lucide-react';
+import { FaSave, FaArrowRight, FaChevronLeft } from 'react-icons/fa';
+import { userService } from '../services/user';
 
 const PreferencesPage = () => {
   const navigate = useNavigate();
@@ -103,23 +104,50 @@ const PreferencesPage = () => {
     }
   };
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Load existing preferences on mount
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        const response = await userService.getPreferences();
+        if (response.data.success && response.data.data.preferences) {
+          const savedPrefs = response.data.data.preferences;
+          setPreferences({
+            referralSource: savedPrefs.referralSource || '',
+            learningCategory: savedPrefs.learningCategory || '',
+            techStack: savedPrefs.techStack || [],
+            currentFocus: savedPrefs.currentFocus || '',
+            skillLevel: savedPrefs.skillLevel || '',
+            studyTime: savedPrefs.studyTime || ''
+          });
+          // If preferences are already completed, skip to dashboard
+          if (savedPrefs.completedOnboarding) {
+            // User can still access this page to update preferences
+          }
+        }
+      } catch (error) {
+        console.error('Error loading preferences:', error);
+      }
+    };
+    loadPreferences();
+  }, []);
+
   const handleSubmit = async () => {
+    setLoading(true);
+    setError('');
     try {
-      // Save preferences to backend
-      const response = await fetch('/api/user/preferences', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(preferences)
-      });
+      const response = await userService.updatePreferences(preferences);
       
-      if (response.ok) {
+      if (response.data.success) {
+        console.log('Preferences saved successfully');
         navigate('/dashboard');
       }
     } catch (error) {
       console.error('Error saving preferences:', error);
-      // Fallback to localStorage
-      localStorage.setItem('evermind_preferences', JSON.stringify(preferences));
-      navigate('/dashboard');
+      setError('Failed to save preferences. Please try again.');
+      setLoading(false);
     }
   };
 
@@ -272,11 +300,18 @@ const PreferencesPage = () => {
       <div className="preferences-card">
         {renderStep()}
         
+        {/* Error Message */}
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+        
         {/* Navigation Buttons */}
         <div className="navigation-buttons">
           {currentStep > 1 && (
             <button className="nav-btn back-btn" onClick={handleBack}>
-              <ChevronLeft size={18} />
+              <FaChevronLeft size={18} />
               Back
             </button>
           )}
@@ -285,6 +320,7 @@ const PreferencesPage = () => {
             className="nav-btn next-btn"
             onClick={handleNext}
             disabled={
+              loading ||
               (currentStep === 1 && !preferences.referralSource) ||
               (currentStep === 2 && !preferences.learningCategory) ||
               (currentStep === 4 && !preferences.skillLevel) ||
@@ -293,13 +329,13 @@ const PreferencesPage = () => {
           >
             {currentStep === 5 ? (
               <>
-                Complete Setup
-                <Save size={18} />
+                {loading ? 'Saving...' : 'Complete Setup'}
+                <FaSave size={18} />
               </>
             ) : (
               <>
                 Next
-                <ArrowRight size={18} />
+                <FaArrowRight size={18} />
               </>
             )}
           </button>

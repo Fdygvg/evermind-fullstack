@@ -42,7 +42,8 @@ const Register = () => {
         email: formData.email,
         password: formData.password
       });
-      navigate('/dashboard');
+      // Redirect to preferences page for onboarding
+      navigate('/preferences');
     } catch (error) {
       setError(error.response?.data?.message || 'Registration failed');
     } finally {

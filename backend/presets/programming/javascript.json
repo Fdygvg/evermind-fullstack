@@ -1,0 +1,41 @@
+{
+  "id": "js_basics",
+  "name": "JavaScript Basics",
+  "description": "Core JavaScript concepts every developer should know",
+  "category": "programming",
+  "tags": ["javascript", "basics", "web"],
+  "color": "#F7DF1E",
+  "emoji": "⚡",
+  "questions": [
+    {
+      "question": "What is hoisting in JavaScript?",
+      "answer": "The behavior of moving variable and function declarations to the top of their scope during compilation",
+      "tags": ["variables", "scope"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is a closure?",
+      "answer": "A function that remembers its lexical scope even when executed outside that scope",
+      "tags": ["functions", "scope"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "Difference between == and ===",
+      "answer": "== performs type coercion before comparison, === checks both value and type without coercion",
+      "tags": ["operators", "comparison"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What does 'this' refer to in JavaScript?",
+      "answer": "Refers to the object that is executing the current function",
+      "tags": ["this", "context"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What are the primitive data types in JS?",
+      "answer": "string, number, boolean, null, undefined, symbol, bigint",
+      "tags": ["types", "basics"],
+      "difficulty": "easy"
+    }
+  ]
+}

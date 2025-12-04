@@ -16,7 +16,12 @@ const reviewSessionSchema = new mongoose.Schema({
     enum: ['buffer', 'random'],
     default: 'buffer'
   },
-  // Session state - FIXED WITH correctQuestions
+  cardMode: {
+    type: String,
+    enum: ['normal', 'flashcard'],
+    default: 'normal'
+  },
+
   allQuestions: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Question'

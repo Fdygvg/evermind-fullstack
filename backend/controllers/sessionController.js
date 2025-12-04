@@ -5,7 +5,7 @@ import UserStats from '../models/UserStats.js';
 
 export const startSession = async (req, res) => {
   try {
-    const { sectionIds, mode = 'buffer' } = req.body;
+    const { sectionIds, mode = 'buffer', cardMode = 'normal' } = req.body;
     
     // End any existing active session
     await ReviewSession.findOneAndUpdate(
@@ -36,6 +36,7 @@ export const startSession = async (req, res) => {
       userId: req.userId,
       sectionIds,
       mode,
+      cardMode,
       allQuestions: questionIds,
       remainingQuestions: questionIds,
       correctQuestions: [],
@@ -55,6 +56,7 @@ export const startSession = async (req, res) => {
           _id: session._id,
           id: session._id,
           mode: session.mode,
+          cardMode: session.cardMode,
           totalQuestions: session.allQuestions.length,
           allQuestions: session.allQuestions,
           remainingQuestions: session.remainingQuestions.length
@@ -305,6 +307,8 @@ export const getCurrentSession = async (req, res) => {
         session: {
           id: session._id,
           mode: session.mode,
+          cardMode: session.cardMode,
+          totalQuestions: session.allQuestions.length,
           sections: session.sectionIds,
           progress: {
             total: session.allQuestions.length,

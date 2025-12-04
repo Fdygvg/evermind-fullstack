@@ -1,21 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { sectionService } from "../services/sections";
 import { questionService } from "../services/question";
-import SearchBar from '../components/Common/SearchBar';
+import SearchBar from "../components/Common/SearchBar";
+import CodeBlock from "../components/Common/CodeBlock";
 
 const SearchPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Initial filters from navigation state or URL params
   const [filters, setFilters] = useState({
-    query: location.state?.query || '',
-    sectionId: location.state?.sectionId || '',
-    tag: '',
-    sortBy: 'recent', // recent, correct, wrong, oldest
+    query: location.state?.query || "",
+    sectionId: location.state?.sectionId || "",
+    tag: "",
+    sortBy: "recent", // recent, correct, wrong, oldest
   });
-  
+
   const [results, setResults] = useState([]);
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,55 +37,55 @@ const SearchPage = () => {
       const response = await sectionService.getSections();
       setSections(response.data.data.sections);
     } catch (error) {
-      console.error('Failed to load sections:', error);
+      console.error("Failed to load sections:", error);
     }
   };
 
   const fetchResults = async (reset = false) => {
     try {
       setLoading(true);
-      
+
       const currentPage = reset ? 1 : page;
       const searchParams = {
         ...filters,
         page: currentPage,
-        limit: resultsPerPage
+        limit: resultsPerPage,
       };
 
       const response = await questionService.searchQuestions(searchParams);
       const newResults = response.data.data.questions || [];
       const total = response.data.count || 0;
-      
+
       if (reset) {
         setResults(newResults);
         setPage(1);
       } else {
-        setResults(prev => [...prev, ...newResults]);
+        setResults((prev) => [...prev, ...newResults]);
       }
-      
+
       setTotalResults(total);
       setHasMore(newResults.length === resultsPerPage);
     } catch (error) {
-      console.error('Search error:', error);
+      console.error("Search error:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
     // Reset page when filters change
     setPage(1);
   };
 
   const handleSearch = (searchData) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       query: searchData.query,
-      sectionId: searchData.sectionId
+      sectionId: searchData.sectionId,
     }));
   };
 
@@ -96,10 +97,10 @@ const SearchPage = () => {
 
   const clearFilters = () => {
     setFilters({
-      query: '',
-      sectionId: '',
-      tag: '',
-      sortBy: 'recent'
+      query: "",
+      sectionId: "",
+      tag: "",
+      sortBy: "recent",
     });
     setResults([]);
     setTotalResults(0);
@@ -107,25 +108,40 @@ const SearchPage = () => {
 
   const exportResults = () => {
     // Create CSV content
-    const headers = ['Question', 'Answer', 'Section', 'Correct', 'Wrong', 'Last Reviewed'];
+    const headers = [
+      "Question",
+      "Answer",
+      "Section",
+      "Type",
+      "Correct",
+      "Wrong",
+      "Last Reviewed",
+    ];
     const csvContent = [
-      headers.join(','),
-      ...results.map(q => [
-        `"${q.question.replace(/"/g, '""')}"`,
-        `"${q.answer.replace(/"/g, '""')}"`,
-        `"${q.sectionId?.name || 'Uncategorized'}"`,
-        q.totalCorrect || 0,
-        q.totalWrong || 0,
-        q.lastReviewed ? new Date(q.lastReviewed).toLocaleDateString() : 'Never'
-      ].join(','))
-    ].join('\n');
+      headers.join(","),
+      ...results.map((q) =>
+        [
+          `"${(q.question || "").replace(/"/g, '""')}"`,
+          `"${(q.answer || "").replace(/"/g, '""')}"`,
+          `"${q.sectionId?.name || "Uncategorized"}"`,
+          q.isCode ? "Code" : "Text",
+          q.totalCorrect || 0,
+          q.totalWrong || 0,
+          q.lastReviewed
+            ? new Date(q.lastReviewed).toLocaleDateString()
+            : "Never",
+        ].join(",")
+      ),
+    ].join("\n");
 
     // Download CSV
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `evermind-search-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `evermind-search-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -134,7 +150,7 @@ const SearchPage = () => {
 
   const getTagSuggestions = () => {
     // Extract unique tags from results
-    const allTags = results.flatMap(q => q.tags || []);
+    const allTags = results.flatMap((q) => q.tags || []);
     return [...new Set(allTags)].slice(0, 10);
   };
 
@@ -147,7 +163,7 @@ const SearchPage = () => {
 
       {/* Main Search Bar */}
       <div className="main-search-container">
-        <SearchBar 
+        <SearchBar
           placeholder="Search questions or answers..."
           onSearch={handleSearch}
           compact={false}
@@ -159,17 +175,19 @@ const SearchPage = () => {
         <div className="filters-sidebar">
           <div className="filters-section">
             <h3>Filters</h3>
-            
+
             {/* Section Filter */}
             <div className="filter-group">
               <label>Section</label>
               <select
                 value={filters.sectionId}
-                onChange={(e) => handleFilterChange('sectionId', e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange("sectionId", e.target.value)
+                }
                 className="filter-select"
               >
                 <option value="">All Sections</option>
-                {sections.map(section => (
+                {sections.map((section) => (
                   <option key={section._id} value={section._id}>
                     {section.name} ({section.questionCount || 0})
                   </option>
@@ -183,13 +201,13 @@ const SearchPage = () => {
               <input
                 type="text"
                 value={filters.tag}
-                onChange={(e) => handleFilterChange('tag', e.target.value)}
+                onChange={(e) => handleFilterChange("tag", e.target.value)}
                 placeholder="Enter a tag..."
                 className="filter-input"
                 list="tag-suggestions"
               />
               <datalist id="tag-suggestions">
-                {getTagSuggestions().map(tag => (
+                {getTagSuggestions().map((tag) => (
                   <option key={tag} value={tag} />
                 ))}
               </datalist>
@@ -200,7 +218,7 @@ const SearchPage = () => {
               <label>Sort by</label>
               <select
                 value={filters.sortBy}
-                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                onChange={(e) => handleFilterChange("sortBy", e.target.value)}
                 className="filter-select"
               >
                 <option value="recent">Most Recent</option>
@@ -212,18 +230,15 @@ const SearchPage = () => {
 
             {/* Action Buttons */}
             <div className="filter-actions">
-              <button 
-                onClick={clearFilters}
-                className="clear-filters-btn"
-              >
+              <button onClick={clearFilters} className="clear-filters-btn">
                 Clear Filters
               </button>
-              <button 
+              <button
                 onClick={() => fetchResults(true)}
                 className="apply-filters-btn"
                 disabled={loading}
               >
-                {loading ? 'Searching...' : 'Apply Filters'}
+                {loading ? "Searching..." : "Apply Filters"}
               </button>
             </div>
           </div>
@@ -253,13 +268,14 @@ const SearchPage = () => {
           {/* Results Header */}
           <div className="results-header">
             <h2>
-              {totalResults === 0 ? 'No results' : `${totalResults} result${totalResults !== 1 ? 's' : ''} found`}
+              {totalResults === 0
+                ? "No results"
+                : `${totalResults} result${
+                    totalResults !== 1 ? "s" : ""
+                  } found`}
             </h2>
             {totalResults > 0 && (
-              <button 
-                onClick={exportResults}
-                className="export-btn"
-              >
+              <button onClick={exportResults} className="export-btn">
                 📥 Export Results
               </button>
             )}
@@ -271,8 +287,8 @@ const SearchPage = () => {
               <div className="empty-state-icon">🔍</div>
               <h3>No questions found</h3>
               <p>Try changing your search terms or filters</p>
-              <button 
-                onClick={() => navigate('/questions/add')}
+              <button
+                onClick={() => navigate("/questions/add")}
                 className="add-question-btn"
               >
                 ➕ Add New Question
@@ -281,66 +297,112 @@ const SearchPage = () => {
           ) : (
             <>
               <div className="results-grid">
-                {results.map(question => (
+                {results.map((question) => (
                   <div key={question._id} className="question-result-card">
                     <div className="question-header">
-                      <span className="section-badge" style={{ 
-                        backgroundColor: question.sectionId?.color || '#6b7280' 
-                      }}>
-                        {question.sectionId?.name || 'Uncategorized'}
-                      </span>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "0.5rem",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span
+                          className="section-badge"
+                          style={{
+                            backgroundColor:
+                              question.sectionId?.color || "#6b7280",
+                          }}
+                        >
+                          {question.sectionId?.name || "Uncategorized"}
+                        </span>
+                       
+                      </div>
                       <div className="question-actions">
-                        <button 
-                          onClick={() => navigate(`/questions/edit/${question._id}`, { 
-                            state: { question } 
-                          })}
+                        <button
+                          onClick={() =>
+                            navigate(`/questions/edit/${question._id}`, {
+                              state: { question },
+                            })
+                          }
                           className="edit-btn"
                         >
                           Edit
                         </button>
-                        <button 
-                          onClick={() => navigate('/session/start', {
-                            state: { 
-                              sectionId: question.sectionId?._id,
-                              autoStart: true 
-                            }
-                          })}
+                        <button
+                          onClick={() =>
+                            navigate("/session/start", {
+                              state: {
+                                sectionId: question.sectionId?._id,
+                                autoStart: true,
+                              },
+                            })
+                          }
                           className="review-btn"
                         >
                           Review
                         </button>
                       </div>
                     </div>
-                    
+
                     <div className="question-content">
-                      <h4 className="question-text">{question.question}</h4>
-                      <p className="answer-text">{question.answer}</p>
-                      
+                      {/* Conditional rendering for the question */}
+                      {question.isCode ? (
+                        <div className="question-text">
+                          <h4>Question:</h4>
+                          <CodeBlock
+                            text={question.question}
+                            forceCode={true}
+                          />
+                        </div>
+                      ) : (
+                        <h4 className="question-text">{question.question}</h4>
+                      )}
+
+                      {/* Conditional rendering for the answer */}
+                      {question.isCode ? (
+                        <div className="answer-content">
+                          <h4>Answer:</h4>
+                          <CodeBlock text={question.answer} forceCode={true} />
+                        </div>
+                      ) : (
+                        <p className="answer-text">{question.answer}</p>
+                      )}
+
                       {question.tags && question.tags.length > 0 && (
                         <div className="tags-container">
-                          {question.tags.map(tag => (
-                            <span 
-                              key={tag} 
+                          {question.tags.map((tag) => (
+                            <span
+                              key={tag}
                               className="tag"
-                              onClick={() => handleFilterChange('tag', tag)}
+                              onClick={() => handleFilterChange("tag", tag)}
                             >
                               #{tag}
                             </span>
                           ))}
                         </div>
                       )}
-                      
+
                       <div className="question-stats">
-                        <span className="stat correct-stat" title="Correct answers">
+                        <span
+                          className="stat correct-stat"
+                          title="Correct answers"
+                        >
                           ✅ {question.totalCorrect || 0}
                         </span>
                         <span className="stat wrong-stat" title="Wrong answers">
                           ❌ {question.totalWrong || 0}
                         </span>
-                        <span className="stat last-reviewed" title="Last reviewed">
-                          📅 {question.lastReviewed 
-                            ? new Date(question.lastReviewed).toLocaleDateString() 
-                            : 'Never'}
+                        <span
+                          className="stat last-reviewed"
+                          title="Last reviewed"
+                        >
+                          📅{" "}
+                          {question.lastReviewed
+                            ? new Date(
+                                question.lastReviewed
+                              ).toLocaleDateString()
+                            : "Never"}
                         </span>
                       </div>
                     </div>
@@ -351,12 +413,12 @@ const SearchPage = () => {
               {/* Load More Button */}
               {hasMore && (
                 <div className="load-more-container">
-                  <button 
+                  <button
                     onClick={loadMore}
                     className="load-more-btn"
                     disabled={loading}
                   >
-                    {loading ? 'Loading...' : 'Load More Questions'}
+                    {loading ? "Loading..." : "Load More Questions"}
                   </button>
                 </div>
               )}

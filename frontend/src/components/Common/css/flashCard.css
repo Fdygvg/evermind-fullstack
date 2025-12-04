@@ -1,0 +1,299 @@
+/* FlashCard.css */
+.flashcard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.flashcard-container.compact {
+  padding: 1rem;
+  gap: 1rem;
+}
+
+/* Card counter */
+.card-counter {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Flashcard */
+.flashcard {
+  width: 100%;
+  height: 400px;
+  perspective: 1000px;
+  cursor: pointer;
+  position: relative;
+}
+
+.flashcard.compact {
+  height: 300px;
+}
+
+.flashcard.animating {
+  pointer-events: none;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.flashcard.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.card-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  margin: 0;
+}
+
+.question-text,
+.answer-text {
+  font-size: 1.5rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+/* Flip hint */
+.flip-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+.flip-hint svg {
+  color: var(--color-primary);
+}
+
+/* Answer instructions */
+.answer-instructions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border-color);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Action buttons */
+.answer-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  border: 2px solid;
+  background: var(--bg-card);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.action-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.action-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-btn kbd {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.wrong-btn {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.wrong-btn:hover:not(:disabled) {
+  background: var(--color-error);
+  color: white;
+}
+
+.flip-btn {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+}
+
+.flip-btn:hover:not(:disabled) {
+  background: var(--text-secondary);
+  color: white;
+}
+
+.correct-btn {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.correct-btn:hover:not(:disabled) {
+  background: var(--color-success);
+  color: white;
+}
+
+/* Flip only button */
+.flip-only-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.flip-only-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.flip-only-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Keyboard hints */
+.keyboard-hints {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+}
+
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.shortcut kbd {
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .flashcard {
+    height: 350px;
+  }
+
+  .card-front,
+  .card-back {
+    padding: 1.5rem;
+  }
+
+  .question-text,
+  .answer-text {
+    font-size: 1.25rem;
+  }
+
+  .action-btn {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .action-btn span {
+    display: none;
+  }
+
+  .keyboard-hints {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .flashcard {
+    height: 300px;
+  }
+
+  .question-text,
+  .answer-text {
+    font-size: 1.125rem;
+  }
+
+  .answer-actions {
+    gap: 0.5rem;
+  }
+}

@@ -47,6 +47,41 @@ const userSchema = new mongoose.Schema(
     emailVerificationExpires: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
+    // User Preferences
+    preferences: {
+      referralSource: {
+        type: String,
+        enum: ['TikTok', 'Instagram', 'Reddit', 'YouTube', 'ChatGPT', 'Google', 'Friend', 'Other', ''],
+        default: '',
+      },
+      learningCategory: {
+        type: String,
+        enum: ['programming', 'languages', 'geography', 'exams', 'custom', ''],
+        default: '',
+      },
+      techStack: {
+        type: [String],
+        default: [],
+      },
+      currentFocus: {
+        type: String,
+        default: '',
+      },
+      skillLevel: {
+        type: String,
+        enum: ['beginner', 'intermediate', 'advanced', ''],
+        default: '',
+      },
+      studyTime: {
+        type: String,
+        enum: ['10min', '30min', '1hr', '2hr', 'depends', ''],
+        default: '',
+      },
+      completedOnboarding: {
+        type: Boolean,
+        default: false,
+      },
+    },
   },
   {
     timestamps: true,
@@ -72,6 +107,7 @@ userSchema.methods.getProfile = function () {
     email: this.email,
     isVerified: this.isVerified,
     subscription: this.subscription,
+    preferences: this.preferences,
     createdAt: this.createdAt,
   };
 };

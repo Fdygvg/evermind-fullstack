@@ -4,6 +4,7 @@ import helmet from "helmet";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import sectionRoutes from "./routes/sectionRoutes.js";
 import questionRoutes from "./routes/questionRoutes.js";
 import sessionRoutes from "./routes/sessionRoutes.js";
@@ -24,6 +25,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/", authRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/sections", sectionRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/sessions", sessionRoutes);

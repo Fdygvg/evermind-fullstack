@@ -73,6 +73,15 @@
   border: 2px solid var(--border-color);
 }
 
+.error-message {
+  color: var(--color-error);
+  text-align: center;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+}
+
 .step-content {
   min-height: 400px;
   display: flex;

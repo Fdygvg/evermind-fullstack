@@ -4,6 +4,8 @@ import { useSession } from "../hooks/useSession";
 import { sessionService } from "../services/sessions";
 import ProgressBar from "../components/Common/ProgressBar";
 import QuestionCard from "../components/Common/QuestionCard";
+import FlashCard from "../components/Common/FlashCard";
+import CodeBlock from "../components/Common/CodeBlock";
 
 const ActiveSession = () => {
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -19,6 +21,11 @@ const ActiveSession = () => {
 
   const { activeSession } = useSession();
   const navigate = useNavigate();
+
+  // Debug: Log cardMode
+  useEffect(() => {
+    console.log("[SESSION] Active session cardMode:", activeSession?.cardMode);
+  }, [activeSession?.cardMode]);
 
   const loadNextQuestion = useCallback(async () => {
     // Prevent multiple simultaneous loads
@@ -200,16 +207,32 @@ const ActiveSession = () => {
         </button>
       </div>
 
-      {/* Question Card with Swipe Overlay */}
+      {/* Question Card with Swipe Overlay or FlashCard */}
       <div className="question-card-wrapper" style={{ position: "relative" }}>
-        <QuestionCard
-          key={`${currentQuestion._id}-${questionKey}`}
-          currentQuestion={currentQuestion}
-          showAnswer={showAnswer}
-          setShowAnswer={setShowAnswer}
-          submitAnswer={submitAnswer}
-          loading={loading}
-        />
+        {activeSession?.cardMode === "flashcard" ? (
+          <FlashCard
+            key={`${currentQuestion._id}-${questionKey}`}
+            question={currentQuestion.question}
+            answer={currentQuestion.answer}
+            questionNumber={sessionProgress?.total - sessionProgress?.remaining + 1 || 1}
+            totalQuestions={activeSession?.totalQuestions || sessionProgress?.total || 0}
+            onAnswer={submitAnswer}
+            isCode={currentQuestion.isCode}
+            CodeBlock={CodeBlock}
+            disabled={loading}
+            showHint={true}
+            compact={false}
+          />
+        ) : (
+          <QuestionCard
+            key={`${currentQuestion._id}-${questionKey}`}
+            currentQuestion={currentQuestion}
+            showAnswer={showAnswer}
+            setShowAnswer={setShowAnswer}
+            submitAnswer={submitAnswer}
+            loading={loading}
+          />
+        )}
       </div>
 
       {/* Session Info */}

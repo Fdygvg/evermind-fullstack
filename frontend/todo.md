@@ -4,8 +4,8 @@
 <!-- - **Make the two buttons in the dashboard functional** – Connect existing routes   -->
 <!-- - **Change the font** – Global CSS change   -->
 <!-- - **Check all routes** – Basic testing   --> logged in users should be able to go home 
-- **Fix all CSS imperfections** – Polish existing code  
-- **Prism Js Design** – Add Prism Js anywhere Answer Displays   
+<!-- - **Fix all CSS imperfections** – Polish existing code   -->
+<!-- - **Prism Js Design** – Add Prism Js anywhere Answer Displays    -->
 - **Hide/Reveal Answers|| Tap to reveal** – Button To Drop all Answers / Click to reveal answer
 - **Easy Navigation** – Make it easy to go home/navigate
 - **Add Shuffle Option To session/review**
@@ -28,6 +28,43 @@
 - ***Apart from export with html. Figure out a way for people  to share sections**
 - ***Create a profile page||Copy quizlet**
 - ***Add preset sections based on user selection during registration**
+- ***Like TikTok gifts.  For streak s , certain levels,  questions answered,  different types , fit for all occasions**
+- **Ai optimized prompt copy 
+
+Convert this text into Evermind flashcards.
+
+Format:
+[
+  {
+    "question": "...",
+    "answer": "...",
+    "tags": []
+  }
+]
+
+Rules:
+- Keep questions short and clear.
+- Only include facts, concepts, or code explanations.
+- If the text contains code, wrap it in `language blocks.
+- Never invent information.
+- Keep answers concise.
+- Output ONLY valid JSON array.
+]
+
+Paste the text here:***
+- ***Look for somewhere to out a did you know
+Then connect to an api**
+- ***Add that trivia mode api in a mode somewhere, maybe as a game**
+- ***Hot Keys Section stuff , make it cool , addd a key board mode or something**
+- ***add archive mode for both section and questuon , restoring question revies it back to its section**
+- ***add tools section (Sugges a better name) , add things like shuffle question , .....**
+- ***Add Suggestion Box**
+- ***Create a place to share decks , update a deck you shared  , add notes , people can like and comment , top sharer and all of that**
+- *****
+- *****
+- *****
+- *****
+- *****
 
 # 🔥 Significant Features (1-2 days)
 - **Work on your homepage** – Full landing page (you started this!)  
