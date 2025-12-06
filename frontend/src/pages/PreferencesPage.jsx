@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSave, FaArrowRight, FaChevronLeft } from 'react-icons/fa';
 import { userService } from '../services/user';
+import { presetService } from '../services/preset';
 
 const PreferencesPage = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const PreferencesPage = () => {
     skillLevel: '',
     studyTime: ''
   });
+  const [isCreatingSections, setIsCreatingSections] = useState(false);
 
   // Step 1: Referral Source
   const referralSources = [
@@ -138,16 +140,33 @@ const PreferencesPage = () => {
     setLoading(true);
     setError('');
     try {
+      // Save preferences
       const response = await userService.updatePreferences(preferences);
       
       if (response.data.success) {
         console.log('Preferences saved successfully');
+        
+        // Auto-import presets based on selections
+        setIsCreatingSections(true);
+        try {
+          const presetResponse = await presetService.autoImportPresets({
+            techStack: preferences.techStack,
+            learningCategory: preferences.learningCategory
+          });
+          console.log('Preset sections created:', presetResponse.data.data.count);
+        } catch (presetError) {
+          console.error('Error creating preset sections:', presetError);
+          // Don't block navigation if preset import fails
+        }
+        
+        setIsCreatingSections(false);
         navigate('/dashboard');
       }
     } catch (error) {
       console.error('Error saving preferences:', error);
       setError('Failed to save preferences. Please try again.');
       setLoading(false);
+      setIsCreatingSections(false);
     }
   };
 
@@ -329,8 +348,22 @@ const PreferencesPage = () => {
           >
             {currentStep === 5 ? (
               <>
-                {loading ? 'Saving...' : 'Complete Setup'}
-                <FaSave size={18} />
+                {isCreatingSections ? (
+                  <>
+                    Setting up your workspace...
+                    <FaSave size={18} />
+                  </>
+                ) : loading ? (
+                  <>
+                    Saving...
+                    <FaSave size={18} />
+                  </>
+                ) : (
+                  <>
+                    Complete Setup
+                    <FaSave size={18} />
+                  </>
+                )}
               </>
             ) : (
               <>

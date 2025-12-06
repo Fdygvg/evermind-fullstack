@@ -33,6 +33,7 @@ import ExportPage from "./pages/ExportPage";
 import ProtectedRoute from "./components/Common/ProtectedRoute";
 import MainLayout from "./components/Layout/MainLayout";
 import HomePage from "./pages/HomePage";
+import EliminationModePage from "./pages/EliminationModePage";
 import PreferencesPage from "./pages/PreferencesPage";
 
 function App() {
@@ -75,6 +76,10 @@ function App() {
                     <Route
                       path="/session/results"
                       element={<SessionResultsPage />}
+                    />
+                    <Route
+                      path="/elimination"
+                      element={<EliminationModePage />}
                     />
                     <Route path="/settings" element={<SettingsPage />} />
                   </Route>

@@ -11,14 +11,9 @@ const reviewSessionSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Section'
   }],
-  mode: {
-    type: String,
-    enum: ['buffer', 'random'],
-    default: 'buffer'
-  },
   cardMode: {
     type: String,
-    enum: ['normal', 'flashcard'],
+    enum: ['normal', 'flashcard', 'elimination'],
     default: 'normal'
   },
 
@@ -38,11 +33,19 @@ const reviewSessionSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Question'
   }],
+  mediumQuestions: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Question'
+  }],
   correctCount: {
     type: Number,
     default: 0
   },
   wrongCount: {
+    type: Number,
+    default: 0
+  },
+  mediumCount: {
     type: Number,
     default: 0
   },

@@ -1,0 +1,60 @@
+{
+  "id": "react_basics",
+  "name": "React Basics",
+  "description": "Core React concepts and modern hooks",
+  "category": "programming",
+  "tags": ["react", "basics", "frontend"],
+  "color": "#61DAFB",
+  "emoji": "⚛️",
+  "questions": [
+    {
+      "question": "What is React?",
+      "answer": "A JavaScript library for building user interfaces using components",
+      "tags": ["basics", "intro"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is JSX?",
+      "answer": "JavaScript XML - syntax extension that allows writing HTML-like code in JavaScript",
+      "tags": ["jsx", "syntax"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the difference between state and props?",
+      "answer": "State is mutable data managed within a component, props are immutable data passed from parent to child",
+      "tags": ["state", "props", "comparison"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the useState hook?",
+      "answer": "A hook that lets you add state to functional components: const [state, setState] = useState(initialValue)",
+      "tags": ["hooks", "state"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the useEffect hook used for?",
+      "answer": "Performs side effects in functional components (data fetching, subscriptions, DOM manipulation)",
+      "tags": ["hooks", "side-effects"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is the virtual DOM?",
+      "answer": "A lightweight copy of the actual DOM that React uses to efficiently update only changed elements",
+      "tags": ["virtual-dom", "performance"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is prop drilling?",
+      "answer": "Passing props through multiple component levels to reach deeply nested components",
+      "tags": ["props", "patterns"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is the useContext hook?",
+      "answer": "Hook to access context values without prop drilling, used for global state management",
+      "tags": ["hooks", "context"],
+      "difficulty": "medium"
+    }
+  ]
+}
+

@@ -1,0 +1,60 @@
+{
+  "id": "sql_basics",
+  "name": "SQL Essentials",
+  "description": "Core SQL queries and database concepts",
+  "category": "programming",
+  "tags": ["sql", "database", "queries"],
+  "color": "#4479A1",
+  "emoji": "🗄️",
+  "questions": [
+    {
+      "question": "What is SQL?",
+      "answer": "Structured Query Language - a language for managing and querying relational databases",
+      "tags": ["basics", "intro"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the difference between WHERE and HAVING?",
+      "answer": "WHERE filters rows before grouping, HAVING filters groups after aggregation",
+      "tags": ["clauses", "filtering"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is a PRIMARY KEY?",
+      "answer": "A column or set of columns that uniquely identifies each row in a table",
+      "tags": ["keys", "constraints"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is a FOREIGN KEY?",
+      "answer": "A column that references the primary key of another table, establishing relationships between tables",
+      "tags": ["keys", "relationships"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the difference between INNER JOIN and LEFT JOIN?",
+      "answer": "INNER JOIN returns matching rows from both tables, LEFT JOIN returns all rows from left table and matches from right",
+      "tags": ["joins", "comparison"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What are aggregate functions in SQL?",
+      "answer": "Functions that perform calculations on multiple rows: COUNT, SUM, AVG, MIN, MAX",
+      "tags": ["functions", "aggregation"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is normalization?",
+      "answer": "Process of organizing data to reduce redundancy and improve data integrity",
+      "tags": ["design", "normalization"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is an index in SQL?",
+      "answer": "A database structure that improves speed of data retrieval operations on a table",
+      "tags": ["performance", "indexing"],
+      "difficulty": "medium"
+    }
+  ]
+}
+

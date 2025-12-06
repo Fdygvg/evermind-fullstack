@@ -9,6 +9,7 @@ import sectionRoutes from "./routes/sectionRoutes.js";
 import questionRoutes from "./routes/questionRoutes.js";
 import sessionRoutes from "./routes/sessionRoutes.js";
 import statsRoutes from "./routes/statsRoutes.js";
+import presetRoutes from "./routes/presetRoutes.js";
 
 dotenv.config();
 // app config
@@ -30,6 +31,7 @@ app.use("/api/sections", sectionRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/presets", presetRoutes);
 
 // Test route
 app.get("/", (req, res) => {

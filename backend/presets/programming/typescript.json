@@ -1,0 +1,60 @@
+{
+  "id": "typescript_basics",
+  "name": "TypeScript Basics",
+  "description": "Core TypeScript concepts and type system fundamentals",
+  "category": "programming",
+  "tags": ["typescript", "basics", "types"],
+  "color": "#3178C6",
+  "emoji": "📘",
+  "questions": [
+    {
+      "question": "What is TypeScript?",
+      "answer": "A statically typed superset of JavaScript that compiles to plain JavaScript",
+      "tags": ["basics", "intro"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What are the primitive types in TypeScript?",
+      "answer": "string, number, boolean, null, undefined, symbol, bigint, any, unknown, never, void",
+      "tags": ["types", "primitives"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the difference between 'any' and 'unknown' types?",
+      "answer": "'any' disables type checking entirely, while 'unknown' requires type checking before use. Unknown is safer.",
+      "tags": ["types", "safety"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is an interface in TypeScript?",
+      "answer": "A way to define the structure of an object, specifying property names and types",
+      "tags": ["interface", "types"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the difference between interface and type?",
+      "answer": "Interfaces can be extended and merged, types can use unions/intersections. Both define object shapes.",
+      "tags": ["interface", "type", "comparison"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What are generics in TypeScript?",
+      "answer": "A way to create reusable components that work with multiple types while maintaining type safety",
+      "tags": ["generics", "advanced"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is a tuple in TypeScript?",
+      "answer": "An array with fixed length and specific types for each position",
+      "tags": ["types", "arrays"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What does the 'readonly' modifier do?",
+      "answer": "Makes properties or array elements immutable, preventing modification after initialization",
+      "tags": ["modifiers", "immutability"],
+      "difficulty": "easy"
+    }
+  ]
+}
+

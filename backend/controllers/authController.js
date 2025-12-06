@@ -20,13 +20,14 @@ export const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
-    req.headers['x-real-ip']?.trim() ||
-    req.connection?.remoteAddress || 
-    req.socket?.remoteAddress ||
-    req.connection?.socket?.remoteAddress ||
-    'unknown';
-  console.log("User IP:", ip);
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      req.headers["x-real-ip"]?.trim() ||
+      req.connection?.remoteAddress ||
+      req.socket?.remoteAddress ||
+      req.connection?.socket?.remoteAddress ||
+      "unknown";
+    console.log("User IP:", ip);
 
     const existingUser = await User.findOne({
       $or: [{ email }, { username }],
@@ -70,6 +71,22 @@ export const register = async (req, res) => {
         isVerified: false,
       },
     });
+    if (
+      userPreferences.learningCategory ||
+      userPreferences.techStack?.length > 0
+    ) {
+      // Get recommended presets
+      const recommendedPresets = PresetService.getUserPresets(userPreferences);
+
+      // Create first preset automatically
+      if (recommendedPresets.length > 0) {
+        await PresetService.createPresetForUser(
+          user._id,
+          recommendedPresets[0].id,
+          recommendedPresets[0].category
+        );
+      }
+    }
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({
@@ -203,6 +220,11 @@ export const getProfile = async (req, res) => {
     });
   }
 };
+
+
+
+
+
 //Logout
 export const logout = async (req, res) => {
   try {
@@ -228,24 +250,23 @@ export const logout = async (req, res) => {
   }
 };
 
-
 // Forgot Password - Send reset email
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
-    
+
     // Don't reveal if email exists or not (security)
     if (!user) {
       return res.json({
         success: true,
-        message: 'If that email exists, a password reset link has been sent'
+        message: "If that email exists, a password reset link has been sent",
       });
     }
 
     // Generate reset token (expires in 1 hour)
-    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetToken = crypto.randomBytes(32).toString("hex");
     const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     user.passwordResetToken = resetToken;
@@ -257,14 +278,13 @@ export const forgotPassword = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'If that email exists, a password reset link has been sent'
+      message: "If that email exists, a password reset link has been sent",
     });
-
   } catch (error) {
-    console.error('Forgot password error:', error);
+    console.error("Forgot password error:", error);
     res.status(500).json({
       success: false,
-      message: 'Error processing password reset request'
+      message: "Error processing password reset request",
     });
   }
 };
@@ -276,13 +296,13 @@ export const resetPassword = async (req, res) => {
 
     const user = await User.findOne({
       passwordResetToken: token,
-      passwordResetExpires: { $gt: new Date() }
+      passwordResetExpires: { $gt: new Date() },
     });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired reset token'
+        message: "Invalid or expired reset token",
       });
     }
 
@@ -294,14 +314,14 @@ export const resetPassword = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Password reset successfully! You can now login with your new password'
+      message:
+        "Password reset successfully! You can now login with your new password",
     });
-
   } catch (error) {
-    console.error('Reset password error:', error);
+    console.error("Reset password error:", error);
     res.status(500).json({
       success: false,
-      message: 'Error resetting password'
+      message: "Error resetting password",
     });
   }
 };

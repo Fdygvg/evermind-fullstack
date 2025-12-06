@@ -1,0 +1,60 @@
+{
+  "id": "python_basics",
+  "name": "Python Basics",
+  "description": "Essential Python programming concepts and syntax",
+  "category": "programming",
+  "tags": ["python", "basics", "programming"],
+  "color": "#3776AB",
+  "emoji": "🐍",
+  "questions": [
+    {
+      "question": "What are the main data types in Python?",
+      "answer": "int, float, str, bool, list, tuple, dict, set, NoneType",
+      "tags": ["types", "basics"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the difference between a list and a tuple?",
+      "answer": "Lists are mutable (can be modified), tuples are immutable (cannot be changed after creation)",
+      "tags": ["data structures", "comparison"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is list comprehension in Python?",
+      "answer": "A concise way to create lists: [expression for item in iterable if condition]",
+      "tags": ["lists", "syntax"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is the difference between '==' and 'is' in Python?",
+      "answer": "'==' compares values, 'is' compares object identity (memory location)",
+      "tags": ["operators", "comparison"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What are *args and **kwargs?",
+      "answer": "*args allows variable number of positional arguments, **kwargs allows variable number of keyword arguments",
+      "tags": ["functions", "parameters"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is a lambda function?",
+      "answer": "An anonymous function defined with lambda keyword: lambda x: x + 1",
+      "tags": ["functions", "syntax"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the purpose of __init__ method?",
+      "answer": "Constructor method called when creating a new instance of a class to initialize object attributes",
+      "tags": ["classes", "oop"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What are Python decorators?",
+      "answer": "Functions that modify the behavior of other functions or methods without changing their code",
+      "tags": ["decorators", "advanced"],
+      "difficulty": "hard"
+    }
+  ]
+}
+

@@ -5,7 +5,7 @@ import UserStats from '../models/UserStats.js';
 
 export const startSession = async (req, res) => {
   try {
-    const { sectionIds, mode = 'buffer', cardMode = 'normal' } = req.body;
+    const { sectionIds, cardMode = 'normal' } = req.body;
     
     // End any existing active session
     await ReviewSession.findOneAndUpdate(
@@ -13,11 +13,16 @@ export const startSession = async (req, res) => {
       { isActive: false, endTime: new Date() }
     );
 
-    // Get questions from selected sections
+    // Get questions from selected sections that are due for review
+    const now = new Date();
     const questions = await Question.find({
       userId: req.userId,
       sectionId: { $in: sectionIds },
-      isActive: true
+      isActive: true,
+      $or: [
+        { nextReviewDate: null },
+        { nextReviewDate: { $lte: now } }
+      ]
     });
 
     if (questions.length === 0) {
@@ -31,18 +36,19 @@ export const startSession = async (req, res) => {
     const shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
     const questionIds = shuffledQuestions.map(q => q._id);
 
-    // Create new session
+
     const session = new ReviewSession({
       userId: req.userId,
       sectionIds,
-      mode,
       cardMode,
       allQuestions: questionIds,
       remainingQuestions: questionIds,
       correctQuestions: [],
       wrongQuestions: [],
+      mediumQuestions: [],
       correctCount: 0,
       wrongCount: 0,
+      mediumCount: 0,
       isActive: true
     });
 
@@ -55,7 +61,6 @@ export const startSession = async (req, res) => {
         session: {
           _id: session._id,
           id: session._id,
-          mode: session.mode,
           cardMode: session.cardMode,
           totalQuestions: session.allQuestions.length,
           allQuestions: session.allQuestions,
@@ -125,7 +130,8 @@ export const getNextQuestion = async (req, res) => {
 
 export const submitAnswer = async (req, res) => {
   try {
-    const { questionId, isCorrect } = req.body;
+    const { questionId, responseType } = req.body;
+    // responseType: 'easy' | 'medium' | 'hard'
     
     const session = await ReviewSession.findOne({
       userId: req.userId,
@@ -146,54 +152,67 @@ export const submitAnswer = async (req, res) => {
 
     // Update question stats
     const question = await Question.findById(questionId);
-    if (question) {
-      if (isCorrect) {
-        question.totalCorrect += 1;
-        session.correctCount += 1;
-        session.correctQuestions.push(questionId);
-      } else {
-        question.totalWrong += 1;
-        session.wrongCount += 1;
-        session.wrongQuestions.push(questionId);
-      }
-      question.lastReviewed = new Date();
-      await question.save();
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: 'Question not found'
+      });
     }
 
-    // Remove from remaining questions (whether correct or wrong)
+    // Remove from remaining questions first
     session.remainingQuestions = session.remainingQuestions.filter(
       id => id.toString() !== questionId
     );
 
-    // RANDOM MODE: Add wrong questions back to random position immediately
-    if (session.mode === 'random' && !isCorrect) {
-      const randomPosition = Math.floor(Math.random() * (session.remainingQuestions.length + 1));
-      session.remainingQuestions.splice(randomPosition, 0, questionId);
-    }
+    // Handle based on response type
+    if (responseType === 'easy') {
+      // Green button: Schedule for 3 days later, remove from session
+      question.nextReviewDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+      question.reviewDifficulty = 'easy';
+      question.lastDifficultyRating = new Date();
+      question.totalCorrect += 1;
+      session.correctCount += 1;
+      session.correctQuestions.push(questionId);
+    } else if (responseType === 'medium') {
+      // Yellow button: Schedule for tomorrow, remove from session
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0); // Start of tomorrow
+      question.nextReviewDate = tomorrow;
+      question.reviewDifficulty = 'medium';
+      question.lastDifficultyRating = new Date();
+      session.mediumCount += 1;
+      session.mediumQuestions.push(questionId);
+    } else if (responseType === 'hard') {
+      // Red button: Keep in session, reinsert after 5-7 cards (spaced repetition)
+      question.reviewDifficulty = 'hard';
+      question.lastDifficultyRating = new Date();
+      question.totalWrong += 1;
+      session.wrongCount += 1;
+      session.wrongQuestions.push(questionId);
 
-    // BUFFER MODE: Reinsert wrong question after 5 questions (at position currentIndex + 1 + 5)
-    if (session.mode === 'buffer' && !isCorrect) {
-      const reintDelay = 5; // Questions to wait before reappearing
-      // Calculate insert position: current position + 1 + delay
-      // But don't go beyond the end of the array
+      // Reinsert after 5-7 cards
+      const reintDelay = Math.floor(Math.random() * 3) + 5; // 5-7
       const insertAt = Math.min(
-        currentQuestionIndex + 1 + reintDelay,
+        currentQuestionIndex + reintDelay,
         session.remainingQuestions.length
       );
-      // Insert the question back at the calculated position
       session.remainingQuestions.splice(insertAt, 0, questionId);
     }
 
+    question.lastReviewed = new Date();
+    await question.save();
     await session.save();
 
     res.json({
       success: true,
-      message: `Answer submitted: ${isCorrect ? 'Correct' : 'Wrong'}`,
+      message: `Answer submitted: ${responseType}`,
       data: {
         progress: {
           total: session.allQuestions.length,
           remaining: session.remainingQuestions.length,
           correct: session.correctCount,
+          medium: session.mediumCount,
           wrong: session.wrongCount
         }
       }
@@ -306,7 +325,6 @@ export const getCurrentSession = async (req, res) => {
       data: {
         session: {
           id: session._id,
-          mode: session.mode,
           cardMode: session.cardMode,
           totalQuestions: session.allQuestions.length,
           sections: session.sectionIds,
@@ -362,7 +380,6 @@ export const getLastSessionResults = async (req, res) => {
         total: totalQuestions,
         accuracy,
         duration,
-        mode: lastSession.mode,
         sections: lastSession.sectionIds,
         date: lastSession.endTime
       }

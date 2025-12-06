@@ -9,6 +9,7 @@
   border: 2px solid var(--border-color);
   box-shadow: var(--shadow-md);
   gap: 1.5rem;
+
 }
 
 .session-stats-bar.compact {

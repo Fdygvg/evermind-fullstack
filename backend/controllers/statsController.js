@@ -67,7 +67,7 @@ export const getSessionHistory = async (req, res) => {
     .skip(skip)
     .limit(parseInt(limit))
     .populate('sectionIds', 'name color')
-    .select('mode correctCount wrongCount startTime endTime sectionIds');
+    .select('cardMode correctCount wrongCount startTime endTime sectionIds');
 
     const sessionHistory = sessions.map(session => {
       // Handle cases where startTime or endTime might be missing
@@ -76,7 +76,7 @@ export const getSessionHistory = async (req, res) => {
       
       return {
         id: session._id,
-        mode: session.mode,
+        cardMode: session.cardMode,
         sections: session.sectionIds || [],
         correct: session.correctCount || 0,
         wrong: session.wrongCount || 0,

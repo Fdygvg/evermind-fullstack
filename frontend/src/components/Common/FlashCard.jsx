@@ -1,6 +1,6 @@
 // components/Common/FlashCard.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { FaSync, FaQuestionCircle, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaSync, FaQuestionCircle, FaCheck, FaTimes, FaMinus } from 'react-icons/fa';
 import './css/flashCard.css';
 
 const Flashcard = ({
@@ -81,11 +81,15 @@ const Flashcard = ({
           break;
         case 'ArrowLeft':
         case '1':
-          if (showAnswerButtons) handleAnswer(false);
+          if (showAnswerButtons) handleAnswer('hard');
+          break;
+        case 'ArrowDown':
+        case '2':
+          if (showAnswerButtons) handleAnswer('medium');
           break;
         case 'ArrowRight':
-        case '2':
-          if (showAnswerButtons) handleAnswer(true);
+        case '3':
+          if (showAnswerButtons) handleAnswer('easy');
           break;
         case 'Escape':
           setIsFlipped(false);
@@ -155,8 +159,9 @@ const Flashcard = ({
               
               {showAnswerButtons && (
                 <div className="answer-instructions">
-                  <span>Press ← or 1 for Wrong</span>
-                  <span>Press → or 2 for Correct</span>
+                  <span>Press 1 or ← for Don't Know</span>
+                  <span>Press 2 or ↓ for Kinda</span>
+                  <span>Press 3 or → for I Know It</span>
                 </div>
               )}
             </div>
@@ -166,37 +171,38 @@ const Flashcard = ({
 
       {/* Action Buttons (only show when answer is revealed) */}
       {showAnswerButtons && (
-        <div className="answer-actions">
+        <div className="answer-actions-3">
           <button
-            className="action-btn wrong-btn"
-            onClick={() => handleAnswer(false)}
+            className="action-btn red-btn"
+            onClick={() => handleAnswer('hard')}
             disabled={disabled}
-            aria-label="Mark as wrong"
+            aria-label="Don't know"
           >
             <FaTimes size={20} />
-            <span>Wrong</span>
+            <span>Don't Know</span>
             <kbd>1</kbd>
           </button>
           
           <button
-            className="action-btn flip-btn"
-            onClick={handleFlip}
+            className="action-btn yellow-btn"
+            onClick={() => handleAnswer('medium')}
             disabled={disabled}
-            aria-label="Flip card back"
+            aria-label="Kinda know"
           >
-            <FaSync size={20} />
-            <span>Flip Back</span>
+            <FaMinus size={20} />
+            <span>Kinda</span>
+            <kbd>2</kbd>
           </button>
           
           <button
-            className="action-btn correct-btn"
-            onClick={() => handleAnswer(true)}
+            className="action-btn green-btn"
+            onClick={() => handleAnswer('easy')}
             disabled={disabled}
-            aria-label="Mark as correct"
+            aria-label="I know it"
           >
             <FaCheck size={20} />
-            <span>Correct</span>
-            <kbd>2</kbd>
+            <span>I Know It</span>
+            <kbd>3</kbd>
           </button>
         </div>
       )}

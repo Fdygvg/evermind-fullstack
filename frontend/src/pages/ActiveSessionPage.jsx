@@ -6,6 +6,7 @@ import ProgressBar from "../components/Common/ProgressBar";
 import QuestionCard from "../components/Common/QuestionCard";
 import FlashCard from "../components/Common/FlashCard";
 import CodeBlock from "../components/Common/CodeBlock";
+import CommandCenter from "../components/CommandCenter/CommandCenter";
 
 const ActiveSession = () => {
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -27,6 +28,9 @@ const ActiveSession = () => {
     console.log("[SESSION] Active session cardMode:", activeSession?.cardMode);
   }, [activeSession?.cardMode]);
 
+  
+
+  
   const loadNextQuestion = useCallback(async () => {
     // Prevent multiple simultaneous loads
     if (isLoadingQuestionRef.current) {
@@ -110,8 +114,8 @@ const ActiveSession = () => {
     }
   }, [currentQuestion?._id]);
 
-  const submitAnswer = useCallback(async (isCorrect) => {
-    console.log("[SUBMIT] submitAnswer called with:", isCorrect);
+  const submitAnswer = useCallback(async (responseType) => {
+    console.log("[SUBMIT] submitAnswer called with:", responseType);
     
     if (!currentQuestion?._id || loading) {
       console.log("[SUBMIT] ERROR: No current question or already loading, cannot submit");
@@ -140,16 +144,16 @@ const ActiveSession = () => {
     try {
       console.log("[SUBMIT] Submitting answer to backend first...");
       await sessionService.submitAnswer({
-        questionId,
-        isCorrect,
+      questionId,
+      responseType,
       });
       console.log("[SUBMIT] Answer submitted successfully");
       
-      // Update streak based on answer
-      if (isCorrect) {
+  
+      if (responseType === 'easy') {
         setCurrentStreak(prev => prev + 1);
       } else {
-        setCurrentStreak(0); // Reset streak on wrong answer
+        setCurrentStreak(0); 
       }
       
       // NOW load the next question (backend knows we answered)
@@ -163,10 +167,10 @@ const ActiveSession = () => {
         status: error.response?.status
       });
       // Reset ref on error so user can retry
-      submittingQuestionIdRef.current = null;
+        submittingQuestionIdRef.current = null;
       setLoading(false);
-      console.log("[SUBMIT] Reset submission flag after error");
-    }
+        console.log("[SUBMIT] Reset submission flag after error");
+      }
   }, [currentQuestion, loadNextQuestion, loading]);
 
   const endSession = async () => {
@@ -224,26 +228,29 @@ const ActiveSession = () => {
             compact={false}
           />
         ) : (
-          <QuestionCard
+        <QuestionCard
             key={`${currentQuestion._id}-${questionKey}`}
-            currentQuestion={currentQuestion}
-            showAnswer={showAnswer}
-            setShowAnswer={setShowAnswer}
-            submitAnswer={submitAnswer}
+          currentQuestion={currentQuestion}
+          showAnswer={showAnswer}
+          setShowAnswer={setShowAnswer}
+          submitAnswer={submitAnswer}
             loading={loading}
-          />
+        />
         )}
       </div>
 
       {/* Session Info */}
       <div className="session-info">
         <div className="mode-badge">
-          Mode: {activeSession?.mode === "buffer" ? "Buffer" : "Random"}
+          Card Style: {activeSession?.cardMode === "flashcard" ? "Flashcard" : "Normal"}
         </div>
         <div className="progress-numbers">
           Correct: {sessionProgress?.correct} | Wrong: {sessionProgress?.wrong}
         </div>
       </div>
+
+      {/* Command Center - Multi-purpose tool palette */}
+      <CommandCenter />
     </div>
   );
 };

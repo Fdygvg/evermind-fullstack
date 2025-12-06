@@ -1,0 +1,60 @@
+{
+  "id": "cybersecurity_basics",
+  "name": "Cybersecurity Fundamentals",
+  "description": "Essential security concepts and best practices",
+  "category": "programming",
+  "tags": ["security", "cybersecurity", "basics"],
+  "color": "#FF6B6B",
+  "emoji": "🔐",
+  "questions": [
+    {
+      "question": "What is encryption?",
+      "answer": "The process of converting data into a coded format to prevent unauthorized access",
+      "tags": ["encryption", "basics"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the difference between symmetric and asymmetric encryption?",
+      "answer": "Symmetric uses same key for encryption/decryption, asymmetric uses public/private key pairs",
+      "tags": ["encryption", "comparison"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is SQL injection?",
+      "answer": "A code injection attack that exploits vulnerabilities in database queries to execute malicious SQL",
+      "tags": ["attacks", "sql"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is XSS (Cross-Site Scripting)?",
+      "answer": "Attack where malicious scripts are injected into trusted websites to execute in users' browsers",
+      "tags": ["attacks", "web"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is a firewall?",
+      "answer": "A network security system that monitors and controls incoming/outgoing traffic based on security rules",
+      "tags": ["network", "defense"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is two-factor authentication (2FA)?",
+      "answer": "Security method requiring two different forms of identification to verify user identity",
+      "tags": ["authentication", "security"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is a DDoS attack?",
+      "answer": "Distributed Denial of Service - overwhelming a system with traffic from multiple sources to make it unavailable",
+      "tags": ["attacks", "network"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the principle of least privilege?",
+      "answer": "Users and programs should only have the minimum access rights necessary to perform their functions",
+      "tags": ["principles", "access-control"],
+      "difficulty": "medium"
+    }
+  ]
+}
+

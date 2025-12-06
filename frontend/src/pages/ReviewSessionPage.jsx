@@ -9,10 +9,10 @@ import { FaQuestionCircle } from "react-icons/fa";
 const ReviewSessionPage = () => {
   const [sections, setSections] = useState([]);
   const [selectedSections, setSelectedSections] = useState([]);
-  const [mode, setMode] = useState("buffer");
+  const [sessionType, setSessionType] = useState("review"); // "review" or "elimination"
   const [cardMode, setCardMode] = useState("normal"); // "normal" or "flashcard"
   const [loading, setLoading] = useState(false);
-  const [flipped, setFlipped] = useState(null); // tracks which card is flipped
+  const [flipped, setFlipped] = useState(null); // tracks which card is flipped 
 
   
   const { setActiveSession } = useSession()
@@ -70,11 +70,20 @@ const ReviewSessionPage = () => {
 
     setLoading(true);
     try {
+      // If elimination mode, navigate directly to elimination page
+      if (sessionType === "elimination") {
+        navigate("/elimination", {
+          state: { sectionIds: selectedSections }
+        });
+        setLoading(false);
+        return;
+      }
+
+
       console.log("[REVIEW] Starting session with cardMode:", cardMode);
       const response = await sessionService.startSession({
         sectionIds: selectedSections,
-        mode,
-        cardMode, // Pass card mode to session
+        cardMode,
       });
 
       console.log("[REVIEW] Session created, response:", response.data.data.session);
@@ -99,38 +108,37 @@ const ReviewSessionPage = () => {
       <h1>Start Revision Session</h1>
 
       <div className="mode-selection">
-        <h2>Select Review Mode</h2>
+        <h2>Select Session Type</h2>
         <div className="mode-options">
-          {["buffer", "random"].map((modeName) => (
+          {[
+            { value: "review", label: "Review Session", description: "Smart spaced repetition review with confidence-based scheduling" },
+            { value: "elimination", label: "Elimination Mode", description: "Eliminate questions you know well to focus on what needs practice" }
+          ].map((type) => (
             <div
-              key={modeName}
-              className={`mode-card ${flipped === modeName ? "flipped" : ""}`}
+              key={type.value}
+              className={`mode-card ${flipped === type.value ? "flipped" : ""}`}
             >
               <div className="mode-card-front">
                 <label className="mode-option">
                   <input
                     type="radio"
-                    value={modeName}
-                    checked={mode === modeName}
-                    onChange={(e) => setMode(e.target.value)}
+                    value={type.value}
+                    checked={sessionType === type.value}
+                    onChange={(e) => setSessionType(e.target.value)}
                   />
-                  <span>{modeName === "buffer" ? "Buffer Mode" : "Random Mode"}</span>
+                  <span>{type.label}</span>
                  
                   <FaQuestionCircle
                     className="question-icon"
-                    onClick={() => setFlipped(flipped === modeName ? null : modeName)}
+                    onClick={() => setFlipped(flipped === type.value ? null : type.value)}
                   />
                 </label>
               </div>
 
               <div className="mode-card-back">
                 <div className="mode-description">
-                  <h3>{modeName === "buffer" ? "Buffer Mode" : "Random Mode"}</h3>
-                  <p>
-                    {modeName === "buffer"
-                      ? "Wrong answers reappear after 5 other questions."
-                      : "Questions are displayed randomly."}
-                  </p>
+                  <h3>{type.label}</h3>
+                  <p>{type.description}</p>
                   <button onClick={() => setFlipped(null)}>Close</button>
                 </div>
               </div>
@@ -139,8 +147,9 @@ const ReviewSessionPage = () => {
         </div>
       </div>
 
-      <div className="mode-selection">
-        <h2>Select Card Style</h2>
+      {sessionType === "review" && (
+        <div className="mode-selection">
+          <h2>Select Card Style</h2>
         <div className="mode-options">
           {["normal", "flashcard"].map((cardModeName) => (
             <div
@@ -179,6 +188,7 @@ const ReviewSessionPage = () => {
           ))}
         </div>
       </div>
+      )}
 
       <div className="section-selection">
         <h2>Select Sections</h2>

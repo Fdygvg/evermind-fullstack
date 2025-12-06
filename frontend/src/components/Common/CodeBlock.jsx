@@ -14,8 +14,14 @@ const CodeBlock = ({ text, language = 'javascript', forceCode = false }) => {
   const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
   const inlineCodeRegex = /`([^`]+)`/g;
   
+  // Reset regex before use (they have global flag which maintains state)
+  codeBlockRegex.lastIndex = 0;
+  inlineCodeRegex.lastIndex = 0;
+  
   // If forceCode is true and no code blocks, treat entire text as code
   if (forceCode && !codeBlockRegex.test(text)) {
+    // Reset regex after use to prevent state pollution
+    codeBlockRegex.lastIndex = 0;
     return (
       <div className="code-block-container">
         <SyntaxHighlighter
@@ -35,7 +41,7 @@ const CodeBlock = ({ text, language = 'javascript', forceCode = false }) => {
     );
   }
   
-  // Reset regex (they have global flag)
+  // Reset regex again (in case we didn't take the early return)
   codeBlockRegex.lastIndex = 0;
   
   // Split text into parts (code and non-code)
@@ -61,6 +67,9 @@ const CodeBlock = ({ text, language = 'javascript', forceCode = false }) => {
     const inlineParts = [];
     let inlineLastIndex = 0;
     let inlineMatch;
+    
+    // Reset inline code regex before use
+    inlineCodeRegex.lastIndex = 0;
 
     while ((inlineMatch = inlineCodeRegex.exec(text)) !== null) {
       // Add text before inline code
@@ -102,7 +111,7 @@ const CodeBlock = ({ text, language = 'javascript', forceCode = false }) => {
   }
 
   // Process code blocks
-  codeBlocks.forEach((block, idx) => {
+  codeBlocks.forEach((block) => {
     // Add text before code block
     if (block.start > lastIndex) {
       parts.push({

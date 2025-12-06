@@ -81,7 +81,7 @@ const SessionResultsPage = () => {
             </div>
 
             <div className="session-info">
-              <p><strong>Mode:</strong> {results.mode === 'buffer' ? 'Buffer' : 'Random'}</p>
+              <p><strong>Card Style:</strong> {results.cardMode === 'flashcard' ? 'Flashcard' : 'Normal'}</p>
               {results.date && (
                 <p><strong>Completed:</strong> {new Date(results.date).toLocaleString()}</p>
               )}

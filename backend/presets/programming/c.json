@@ -1,0 +1,60 @@
+{
+  "id": "c_basics",
+  "name": "C Programming Basics",
+  "description": "Fundamental C programming concepts and syntax",
+  "category": "programming",
+  "tags": ["c", "basics", "programming"],
+  "color": "#A8B9CC",
+  "emoji": "🔤",
+  "questions": [
+    {
+      "question": "What is a pointer in C?",
+      "answer": "A variable that stores the memory address of another variable",
+      "tags": ["pointers", "memory"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is the difference between malloc() and calloc()?",
+      "answer": "malloc() allocates uninitialized memory, calloc() allocates and initializes memory to zero",
+      "tags": ["memory", "allocation"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is a struct in C?",
+      "answer": "A user-defined data type that groups related variables of different types under one name",
+      "tags": ["structures", "data-types"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the difference between '++i' and 'i++'?",
+      "answer": "++i increments before use (prefix), i++ increments after use (postfix)",
+      "tags": ["operators", "increment"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the purpose of the 'static' keyword?",
+      "answer": "Preserves variable value between function calls, or limits variable/function scope to current file",
+      "tags": ["keywords", "scope"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is the difference between pass by value and pass by reference?",
+      "answer": "Pass by value copies the value, pass by reference passes the memory address (using pointers in C)",
+      "tags": ["functions", "parameters"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is a segmentation fault?",
+      "answer": "Error when program tries to access memory it doesn't have permission to access",
+      "tags": ["errors", "memory"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the purpose of header files (.h)?",
+      "answer": "Contain function declarations and macro definitions to be shared across multiple source files",
+      "tags": ["files", "organization"],
+      "difficulty": "easy"
+    }
+  ]
+}
+

@@ -26,5 +26,6 @@ import "./css/analyticsPage.css";
 import "./css/sessionHistory.css";
 import "./css/sessionResults.css";
 import "./css/preferencesPage.css";
+import "./css/eliminationPage.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);

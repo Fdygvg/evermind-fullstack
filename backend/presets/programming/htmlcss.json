@@ -1,0 +1,60 @@
+{
+  "id": "htmlcss_basics",
+  "name": "HTML/CSS Fundamentals",
+  "description": "Essential HTML structure and CSS styling concepts",
+  "category": "programming",
+  "tags": ["html", "css", "web", "frontend"],
+  "color": "#E34F26",
+  "emoji": "🎨",
+  "questions": [
+    {
+      "question": "What is semantic HTML?",
+      "answer": "Using HTML elements that clearly describe their meaning (header, nav, article, section, footer)",
+      "tags": ["html", "semantics"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the CSS box model?",
+      "answer": "Content, padding, border, and margin layers that make up the total size of an element",
+      "tags": ["css", "layout"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is the difference between inline and block elements?",
+      "answer": "Block elements take full width and start on new line, inline elements only take needed width",
+      "tags": ["html", "display"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is Flexbox?",
+      "answer": "A CSS layout model for creating flexible, responsive layouts in one dimension (row or column)",
+      "tags": ["css", "flexbox", "layout"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is CSS Grid?",
+      "answer": "A two-dimensional CSS layout system for creating complex responsive layouts with rows and columns",
+      "tags": ["css", "grid", "layout"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What is the difference between padding and margin?",
+      "answer": "Padding is space inside the element (between content and border), margin is space outside (around border)",
+      "tags": ["css", "spacing"],
+      "difficulty": "easy"
+    },
+    {
+      "question": "What is CSS specificity?",
+      "answer": "Determines which CSS rule applies when multiple rules target the same element (inline > ID > class > tag)",
+      "tags": ["css", "specificity"],
+      "difficulty": "medium"
+    },
+    {
+      "question": "What are CSS media queries?",
+      "answer": "CSS rules that apply only when certain conditions are met (screen size, orientation, etc.) for responsive design",
+      "tags": ["css", "responsive"],
+      "difficulty": "easy"
+    }
+  ]
+}
+

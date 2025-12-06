@@ -34,6 +34,18 @@ const questionSchema = new mongoose.Schema({
   lastReviewed: {
     type: Date
   },
+  nextReviewDate: {
+    type: Date,
+    default: null  // null means available for review now
+  },
+  reviewDifficulty: {
+    type: String,
+    enum: ['easy', 'medium', 'hard'],
+    default: null
+  },
+  lastDifficultyRating: {
+    type: Date
+  },
   isActive: {
     type: Boolean,
     default: true

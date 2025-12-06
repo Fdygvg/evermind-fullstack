@@ -25,7 +25,7 @@
 - **Fix verification/token issues** – Bug fixing  
 - ***Add  CAPTCHA**
 - ***Add flash card mode**
-- ***Apart from export with html. Figure out a way for people  to share sections**
+- ***Apart from export with html. Figure out a way for people  to share sections, like a link , to share section or sections and clicking on that link,  will give you access to a free , try it out for like the first 5 questions then after that prompt,  sign up to continue, then when user signup he can continue**
 - ***Create a profile page||Copy quizlet**
 - ***Add preset sections based on user selection during registration**
 - ***Like TikTok gifts.  For streak s , certain levels,  questions answered,  different types , fit for all occasions**
@@ -57,9 +57,16 @@ Then connect to an api**
 - ***Add that trivia mode api in a mode somewhere, maybe as a game**
 - ***Hot Keys Section stuff , make it cool , addd a key board mode or something**
 - ***add archive mode for both section and questuon , restoring question revies it back to its section**
-- ***add tools section (Sugges a better name) , add things like shuffle question , .....**
+- ***add tools section (Sugges a better name) , add things like shuffle question , switch mode from flashcards to the other one and from buffer to random, move buttons from side to ot from top to bottom, even add the timer here , and also ai, u can also remove and add stuff Make it a circle that brings more circle**
 - ***Add Suggestion Box**
 - ***Create a place to share decks , update a deck you shared  , add notes , people can like and comment , top sharer and all of that**
+- **Code for premium or freetriap***
+- ***Work on only section page and question page apart from delete and edit btn add copy btn , make it selectable**
+- ***New mode , list mode , all questions display with correct button or maybe add swipe**
+- ***Add animation when you delete shii**
+- ***Work on a smart , tracker , the good bad, easy, hard, also add go back incase user clikc wrong thing**
+- *****
+- *****
 - *****
 - *****
 - *****
@@ -84,6 +91,7 @@ Then connect to an api**
 - **Add tutorial** – Interactive walkthrough  
 - **Figure out images/flags** – Media upload system  
 - **Add Secret Affirmation** – Easter egg feature  
+- **Research shows you need 5...6 days of spaced retention to actually retention** – Easter egg feature  
 
 # 🤖 Advanced (Week+)
 - **Make AI send GIFs** – Complex AI + media integration
@@ -174,27 +182,8 @@ ___
  </div>
 
 
-mini laygorunf css
+Clean Up User Schema 
+mini playground css
 
 
 
-
-
-can you explain this code to me like ima  fucking idiot , #include <stdio.h>
-
-union U {
-    int i;
-    float f;
-    char c[4];
-};
-
-int main() {
-    union U u;
-    u.i = 0x41424344;    // set raw bytes (hex)
-    printf("as int: %d\n", u.i);
-    printf("as chars: %c%c%c%c\n", u.c[0], u.c[1], u.c[2], u.c[3]);
-    u.f = 3.14f;         // now f is the active member
-    printf("as float: %f\n", u.f);
-    // reading other member than last-written is allowed but may be implementation-defined for some types
-    return 0;
-}

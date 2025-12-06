@@ -161,7 +161,7 @@ const AnalyticsPage = () => {
                   {new Date(session.date).toLocaleDateString()}
                 </div>
                 <div className="timeline-content">
-                  <div className="session-mode">{session.mode === 'buffer' ? 'Buffer' : 'Random'} Mode</div>
+                  <div className="session-mode">{session.cardMode === 'flashcard' ? 'Flashcard' : 'Normal'} Style</div>
                   <div className="session-stats">
                     <span className="correct">✅ {session.correct}</span>
                     <span className="wrong">❌ {session.wrong}</span>

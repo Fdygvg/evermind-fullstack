@@ -104,6 +104,7 @@ const Dashboard = () => {
           >
             Manage sections
           </button>
+
         </div>
       </section>
 
@@ -181,7 +182,7 @@ const Dashboard = () => {
           {activeSession ? (
             <>
               <div className="session-meta">
-                <span>Mode: {activeSession.mode}</span>
+                <span>Style: {activeSession.cardMode === 'flashcard' ? 'Flashcard' : 'Normal'}</span>
                 <span>
                   Questions: {completedQuestions}/{activeSession.progress.total}
                 </span>

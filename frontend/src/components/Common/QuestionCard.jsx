@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { FaCheck, FaMinus, FaTimes } from 'react-icons/fa';
 import CodeBlock from "./CodeBlock";
 import { useSound } from "../../hooks/useSound";
 import "./css/questionCard.css";
@@ -26,7 +27,8 @@ const QuestionCard = ({
     console.log("[CARD] Current question:", {
       id: currentQuestion?._id,
       question: currentQuestion?.question?.substring(0, 50) + "...",
-      hasAnswer: !!currentQuestion?.answer
+      hasAnswer: !!currentQuestion?.answer,
+      answerLength: currentQuestion?.answer?.length
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestion?._id]);
@@ -139,6 +141,10 @@ const QuestionCard = ({
   // Touch events
   const handleTouchStart = useCallback(
     (e) => {
+      // Ignore touches on buttons and other interactive elements
+      if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+        return;
+      }
       const touch = e.touches[0];
       const inZone = isInSwipeZone(touch.clientX, touch.clientY);
       if (inZone) {
@@ -172,6 +178,10 @@ const QuestionCard = ({
   // Mouse events
   const handleMouseDown = useCallback(
     (e) => {
+      // Ignore clicks on buttons and other interactive elements
+      if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+        return;
+      }
       const inZone = isInSwipeZone(e.clientX, e.clientY);
       if (inZone) {
         e.preventDefault();
@@ -248,7 +258,7 @@ const QuestionCard = ({
         )}
       </div>
 
-      {showAnswer ? (
+      {showAnswer && currentQuestion?.answer ? (
         <div className="answer-section">
           <h2>Answer</h2>
           {currentQuestion.isCode ? (
@@ -256,41 +266,57 @@ const QuestionCard = ({
           ) : (
             <p>{currentQuestion.answer}</p>
           )}
-          <div className="answer-buttons">
+          <div className="answer-buttons-3">
             <button
-              className="correct-btn"
+              className="response-btn green-btn"
               onClick={() => {
-                console.log("[BUTTON] Correct button clicked");
+                console.log("[BUTTON] Easy (Green) button clicked");
                 console.log("[BUTTON] Current question ID:", currentQuestion?._id);
                 console.log("[BUTTON] Loading state:", loading);
                 playSound("correct");
-                submitAnswer(true);
+                submitAnswer('easy');
               }}
               disabled={loading}
             >
-              ✓ Correct
+              <FaCheck /> I Know It
             </button>
             <button
-              className="wrong-btn"
+              className="response-btn yellow-btn"
               onClick={() => {
-                console.log("[BUTTON] Wrong button clicked");
+                console.log("[BUTTON] Medium (Yellow) button clicked");
+                console.log("[BUTTON] Current question ID:", currentQuestion?._id);
+                console.log("[BUTTON] Loading state:", loading);
+                submitAnswer('medium');
+              }}
+              disabled={loading}
+            >
+              <FaMinus /> Kinda
+            </button>
+            <button
+              className="response-btn red-btn"
+              onClick={() => {
+                console.log("[BUTTON] Hard (Red) button clicked");
                 console.log("[BUTTON] Current question ID:", currentQuestion?._id);
                 console.log("[BUTTON] Loading state:", loading);
                 playSound("wrong");
-                submitAnswer(false);
+                submitAnswer('hard');
               }}
               disabled={loading}
             >
-              ✗ Wrong
+              <FaTimes /> Don't Know
             </button>
           </div>
         </div>
       ) : (
         <button
           className="show-answer-btn"
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent event from bubbling to card handlers
             setShowAnswer(true);
             playSound("flip");
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation(); // Prevent mouseDown from triggering card swipe handlers
           }}
         >
           Show Answer

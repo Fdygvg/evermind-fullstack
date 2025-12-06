@@ -123,7 +123,7 @@ const SessionHistoryPage = () => {
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Mode</th>
+                  <th>Card Style</th>
                   <th>Correct</th>
                   <th>Wrong</th>
                   <th>Accuracy</th>
@@ -140,8 +140,8 @@ const SessionHistoryPage = () => {
                       <small>{new Date(session.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
                     </td>
                     <td>
-                      <span className={`mode-badge ${session.mode}`}>
-                        {session.mode === 'buffer' ? 'Buffer' : 'Random'}
+                      <span className={`mode-badge ${session.cardMode}`}>
+                        {session.cardMode === 'flashcard' ? 'Flashcard' : 'Normal'}
                       </span>
                     </td>
                     <td className="correct-cell">
@@ -207,10 +207,10 @@ const SessionHistoryPage = () => {
                 onClick={() => {
                   // Implement CSV export
                   const csvContent = [
-                    ['Date', 'Mode', 'Correct', 'Wrong', 'Accuracy', 'Duration', 'Sections'],
+                    ['Date', 'Card Style', 'Correct', 'Wrong', 'Accuracy', 'Duration', 'Sections'],
                     ...sessions.map(s => [
                       new Date(s.date).toISOString(),
-                      s.mode,
+                      s.cardMode === 'flashcard' ? 'Flashcard' : 'Normal',
                       s.correct,
                       s.wrong,
                       `${s.accuracy}%`,
