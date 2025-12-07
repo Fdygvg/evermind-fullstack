@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import CodeBlock from "./CodeBlock";
-import "./css/QuestionList.css";
+import "./css/questionList.css";
 import { getRandomFlipEffect } from "../../utils/flipStyles";
 
 const QuestionList = ({ 
