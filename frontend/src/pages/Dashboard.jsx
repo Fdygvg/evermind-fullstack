@@ -100,7 +100,7 @@ const Dashboard = () => {
           <button
             type="button"
             className="dashboard-button secondary"
-            onClick={() => navigate("/sections")}
+            onClick={() => navigate("/sectionlist")}
           >
             Manage sections
           </button>

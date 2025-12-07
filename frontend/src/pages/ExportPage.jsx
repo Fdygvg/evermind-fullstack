@@ -111,6 +111,7 @@ const ExportPage = () => {
         // Try export endpoint first
         response = await questionService.exportQuestions(params);
       } catch (err) {
+        console.error(err)
         // Fallback to regular getQuestions if export endpoint doesn't exist
         response = await questionService.getQuestions(params);
       }

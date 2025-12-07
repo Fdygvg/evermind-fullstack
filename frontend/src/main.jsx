@@ -14,7 +14,7 @@ import "./css/layout.css";
 import "./css/reviewSession.css";
 import "./css/activeSession.css";
 import "./css/addQuestion.css";
-import "./css/section.css";
+import "./css/sectionListPage.css";
 import "./css/editQuestion.css";
 import "./css/SettingsPage.css";
 import "./css/searchPage.css";
@@ -27,5 +27,6 @@ import "./css/sessionHistory.css";
 import "./css/sessionResults.css";
 import "./css/preferencesPage.css";
 import "./css/eliminationPage.css";
+import "./css/questionListPage.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);

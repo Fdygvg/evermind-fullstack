@@ -56,9 +56,7 @@ const EliminationQuestionCard = ({
         <button
           className="action-btn reveal-btn"
           onClick={() => {
-            {
-              onToggleAnswer;
-            }
+            onToggleAnswer();
             playSound("bubble");
           }}
           title={isRevealed ? "Hide Answer" : "Reveal Answer"}

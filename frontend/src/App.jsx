@@ -21,7 +21,7 @@ import ActiveSessionPage from "./pages/ActiveSessionPage";
 import SessionResultsPage from "./pages/SessionResultsPage";
 import AddQuestion from "./pages/AddQuestionPage";
 import BulkImportPage from "./pages/BulkImportPage";
-import Sections from "./pages/SectionPage";
+import SectionListPage from "./pages/SectionListPage";
 import NotFound from "./pages/NotFound";
 import SearchPage from "./pages/SearchPage";
 import EditQuestionPage from "./pages/EditQuestionPage";
@@ -35,6 +35,7 @@ import MainLayout from "./components/Layout/MainLayout";
 import HomePage from "./pages/HomePage";
 import EliminationModePage from "./pages/EliminationModePage";
 import PreferencesPage from "./pages/PreferencesPage";
+import QuestionListPage from "./pages/QuestionListPage";
 
 function App() {
   return (
@@ -74,6 +75,18 @@ function App() {
                       element={<AddEditSectionPage />}
                     />
                     <Route
+                      path="/sections"
+                      element={<SectionListPage />}
+                    />
+                    <Route
+                      path="/sections/:sectionId/questions"
+                      element={<QuestionListPage />}
+                    />
+                    <Route
+                      path="/sections/:sectionId/stats"
+                      element={<AnalyticsPage />}
+                    />
+                    <Route
                       path="/session/results"
                       element={<SessionResultsPage />}
                     />
@@ -83,7 +96,9 @@ function App() {
                     />
                     <Route path="/settings" element={<SettingsPage />} />
                   </Route>
-                  <Route path="/sections" element={<Sections />} />
+                
+                  <Route path="/sectionlist" element={<SectionListPage />} />
+                  <Route path="/questionlist" element={<QuestionListPage />} />
                   <Route path="/questions/add" element={<AddQuestion />} />
                   <Route
                     path="/questions/bulk-import"

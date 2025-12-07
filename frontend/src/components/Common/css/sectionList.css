@@ -1,0 +1,264 @@
+.sections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.section-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-left: 4px solid;
+  position: relative;
+  padding: 1.5rem;
+}
+
+.section-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+.section-card-header {
+  margin-bottom: 1rem;
+}
+
+.section-title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  color: var(--text-inverse);
+  margin: 0;
+  flex: 1;
+  font-weight: 600;
+}
+
+.section-info-btn {
+  background: none;
+  border: none;
+  color: color-mix(in srgb, var(--text-inverse) 80%, transparent);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-info-btn:hover {
+  background: color-mix(in srgb, var(--text-inverse) 10%, transparent);
+  color: var(--text-inverse);
+}
+
+.section-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.section-tag {
+  background: color-mix(in srgb, var(--text-inverse) 15%, transparent);
+  color: var(--text-inverse);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.section-tag-more {
+  background: color-mix(in srgb, var(--text-inverse) 25%, transparent);
+  color: var(--text-inverse);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.section-description {
+  color: color-mix(in srgb, var(--text-inverse) 80%, transparent);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  min-height: 3.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Progress Bar */
+.progress-container {
+  margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+  height: 8px;
+  background: color-mix(in srgb, var(--text-inverse) 15%, transparent);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--text-inverse) 80%, transparent);
+  display: block;
+  text-align: right;
+}
+
+/* Section Stats */
+.section-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--text-inverse) 10%, transparent);
+  border-radius: 8px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-icon {
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: var(--text-inverse);
+  font-size: 0.875rem;
+}
+
+.stat-label {
+  color: color-mix(in srgb, var(--text-inverse) 80%, transparent);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+/* Section Actions */
+.section-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.btn {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.btn-edit {
+  background: var(--color-primary);
+  color: var(--text-inverse);
+}
+
+.btn-edit:hover {
+  background: color-mix(in srgb, var(--color-primary) 80%, transparent);
+}
+
+.btn-delete {
+  background: var(--color-error);
+  color: var(--text-inverse);
+}
+
+.btn-delete:hover {
+  background: color-mix(in srgb, var(--color-error) 80%, transparent);
+}
+
+.btn-view {
+  background: color-mix(in srgb, var(--color-primary) 70%, #10B981);
+  color: var(--text-inverse);
+}
+
+.btn-view:hover {
+  background: color-mix(in srgb, var(--color-primary) 60%, #10B981);
+}
+
+/* Section Footer */
+.section-footer {
+  border-top: 1px solid color-mix(in srgb, var(--text-inverse) 10%, transparent);
+  padding-top: 0.75rem;
+  text-align: center;
+}
+
+.updated-text {
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--text-inverse) 60%, transparent);
+}
+
+/* Empty State */
+.empty-sections {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: var(--bg-card);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+  color: var(--text-secondary);
+}
+
+.empty-sections h3 {
+  font-size: 1.5rem;
+  color: var(--text-inverse);
+  margin-bottom: 0.5rem;
+}
+
+.empty-sections p {
+  color: color-mix(in srgb, var(--text-inverse) 80%, transparent);
+  margin-bottom: 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sections-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-card {
+    padding: 1rem;
+  }
+  
+  .section-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
