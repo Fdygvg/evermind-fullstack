@@ -91,7 +91,7 @@ const userSchema = new mongoose.Schema(
 // OOP Method: Hash password before saving
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
-  this.password = await bcrypt.hash(this.password, 8);
+  this.password = await bcrypt.hash(this.password, 6);
 });
 
 // OOP Method: Compare password for login
