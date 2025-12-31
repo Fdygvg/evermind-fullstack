@@ -1,19 +1,25 @@
-import React, { useState, useEffect } from "react";
+// Enhanced EliminationModePage with Smart Review Integration
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Filter, Home, Flame } from "lucide-react";
+import { Filter, Home } from "lucide-react";
 import { useSession } from "../hooks/useSession";
 import { questionService } from "../services/question";
+import { sectionService } from "../services/sections";
 import EliminationQuestionCard from "../components/Elimination/EliminationQuestionCard";
 import EliminatedList from "../components/Elimination/EliminatedList";
+import SmartReviewWrapper from "../components/SmartReview/SmartReviewWrapper";
+import RatingButtons from "../components/SmartReview/RatingButtons";
+import SectionProgressDisplay from "../components/SmartReview/SectionProgressDisplay";
 
 const EliminationModePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  useSession(); // Initialize session context
+  useSession();
+
   const [questions, setQuestions] = useState([]);
   const [filteredQuestions, setFilteredQuestions] = useState([]);
   const [eliminatedQuestions, setEliminatedQuestions] = useState([]);
-  const [partialQuestions, setPartialQuestions] = useState([]); // Questions marked as "Kinda"
+  const [partialQuestions, setPartialQuestions] = useState([]);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
@@ -21,19 +27,46 @@ const EliminationModePage = () => {
   const [hideEliminated, setHideEliminated] = useState(true);
   const [loading, setLoading] = useState(true);
   const [sessionTime, setSessionTime] = useState(0);
+  const [currentQuestionForRating, setCurrentQuestionForRating] = useState(null);
+
+  // Check if using Smart Review mode
+  const isSmartReviewMode = location.state?.useSmartReview !== false; // Default to true
+  const [sectionIds, setSectionIds] = useState(location.state?.sectionIds || []);
+
+  // Load sections if none provided (for Smart Review mode)
+  useEffect(() => {
+    const loadSections = async () => {
+      if (sectionIds.length === 0 && isSmartReviewMode) {
+        try {
+          const response = await sectionService.getSections();
+          const sections = response.data?.data || response.data || [];
+          const ids = sections.map(s => s._id);
+          console.log('[Elimination] Loaded sections for Smart Review:', ids);
+          setSectionIds(ids);
+        } catch (error) {
+          console.error('[Elimination] Error loading sections:', error);
+        }
+      }
+    };
+    loadSections();
+  }, [isSmartReviewMode]);
 
   // Get questions from route state or fetch
   useEffect(() => {
     const loadQuestions = async () => {
+      // If Smart Review mode, questions will be loaded by SmartReviewWrapper
+      if (isSmartReviewMode) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
 
       try {
-        // Option 1: Questions passed via navigation state
         if (location.state?.questions) {
           setQuestions(location.state.questions);
           setFilteredQuestions(location.state.questions);
         }
-        // Option 2: Fetch from selected sections
         else if (location.state?.sectionIds && location.state.sectionIds.length > 0) {
           const response = await questionService.getQuestions({
             sectionId: location.state.sectionIds.join(',')
@@ -42,7 +75,6 @@ const EliminationModePage = () => {
           setQuestions(questions);
           setFilteredQuestions(questions);
         }
-        // Option 3: Get all user questions
         else {
           const response = await questionService.getQuestions();
           const questions = response.data.data?.questions || response.data.data || [];
@@ -51,7 +83,6 @@ const EliminationModePage = () => {
         }
       } catch (error) {
         console.error('Error loading questions:', error);
-        // Handle error - could show error message to user
         setQuestions([]);
         setFilteredQuestions([]);
       } finally {
@@ -60,7 +91,7 @@ const EliminationModePage = () => {
     };
 
     loadQuestions();
-  }, [location]);
+  }, [location, isSmartReviewMode]);
 
   // Session timer
   useEffect(() => {
@@ -72,7 +103,7 @@ const EliminationModePage = () => {
   }, []);
 
   // Handle question elimination with different levels
-  const handleQuestionAction = (questionId, action) => {
+  const handleQuestionAction = useCallback((questionId, action) => {
     const question = filteredQuestions.find((q) => q._id === questionId);
     if (!question) return;
 
@@ -87,18 +118,28 @@ const EliminationModePage = () => {
       setFilteredQuestions((prev) => prev.filter((q) => q._id !== questionId));
       setCorrectCount((prev) => prev + 1);
       setCurrentStreak((prev) => prev + 1);
+
+      // If Smart Review, show rating buttons
+      if (isSmartReviewMode) {
+        setCurrentQuestionForRating(question);
+      }
     } else if (action === "kinda") {
       // Partial elimination - Kinda know it
       setPartialQuestions((prev) => [...prev, question]);
       setFilteredQuestions((prev) => prev.filter((q) => q._id !== questionId));
       setCorrectCount((prev) => prev + 1);
       setCurrentStreak((prev) => prev + 1);
+
+      // If Smart Review, show rating buttons
+      if (isSmartReviewMode) {
+        setCurrentQuestionForRating(question);
+      }
     } else if (action === "dont-know") {
       // Don't know - keep reviewing, but mark as wrong
       setWrongCount((prev) => prev + 1);
-      setCurrentStreak(0); // Break streak
+      setCurrentStreak(0);
     }
-  };
+  }, [filteredQuestions, revealedAnswers, isSmartReviewMode]);
 
   // Toggle answer visibility
   const toggleAnswer = (questionId) => {
@@ -110,7 +151,6 @@ const EliminationModePage = () => {
 
   // Reset a question (bring back)
   const resetQuestion = (questionId) => {
-    // Check if in eliminated list
     const eliminatedQuestion = eliminatedQuestions.find(
       (q) => q._id === questionId
     );
@@ -120,17 +160,16 @@ const EliminationModePage = () => {
       );
       setFilteredQuestions((prev) => [...prev, eliminatedQuestion]);
       setCorrectCount((prev) => Math.max(0, prev - 1));
-      setCurrentStreak(0); // Break streak on reset
+      setCurrentStreak(0);
       return;
     }
 
-    // Check if in partial list
     const partialQuestion = partialQuestions.find((q) => q._id === questionId);
     if (partialQuestion) {
       setPartialQuestions((prev) => prev.filter((q) => q._id !== questionId));
       setFilteredQuestions((prev) => [...prev, partialQuestion]);
       setCorrectCount((prev) => Math.max(0, prev - 1));
-      setCurrentStreak(0); // Break streak on reset
+      setCurrentStreak(0);
     }
   };
 
@@ -147,13 +186,6 @@ const EliminationModePage = () => {
       timeSpent: sessionTime,
       endedAt: new Date(),
     };
-
-    // Save session results
-    await fetch("/api/sessions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(sessionData),
-    });
 
     navigate("/dashboard", {
       state: {
@@ -172,9 +204,100 @@ const EliminationModePage = () => {
     );
   }
 
+  // Smart Review Mode Rendering
+  if (isSmartReviewMode) {
+    return (
+      <SmartReviewWrapper
+        sectionIds={sectionIds}
+        enableSmartReview={true}
+        showDailyCounter={true}
+        showAddMore={true}
+      >
+        {({ currentQuestion, rateQuestion, isLoading, isSessionComplete, canUndo, undoLastRating, reviewedToday, dailyLimit, sectionProgress }) => {
+          if (isSessionComplete) {
+            return (
+              <div className="session-complete">
+                <h2>🎉 Smart Review Complete!</h2>
+                <p>Great job completing today's elimination review!</p>
+                <button onClick={endSession}>End Session</button>
+              </div>
+            );
+          }
+
+          if (!currentQuestion) {
+            return <div className="loading">Loading Smart Review questions...</div>;
+          }
+
+          return (
+            <div className="elimination-page smart-review-mode">
+              <header className="page-header">
+                <div className="header-left">
+                  <button
+                    className="nav-btn"
+                    onClick={() => navigate("/dashboard")}
+                    title="Back to Dashboard"
+                  >
+                    <Home size={20} />
+                  </button>
+                  <h1>🧠 Smart Review • Elimination Mode</h1>
+                </div>
+
+                <div className="header-right">
+                  {canUndo && (
+                    <button className="undo-btn" onClick={undoLastRating}>
+                      ↶ Undo
+                    </button>
+                  )}
+                </div>
+              </header>
+
+              {/* Section Progress Display */}
+              <SectionProgressDisplay sectionProgress={sectionProgress} />
+
+              <div className="questions-container">
+                <EliminationQuestionCard
+                  question={currentQuestion}
+                  index={0}
+                  isRevealed={revealedAnswers[currentQuestion._id] || false}
+                  onToggleAnswer={() => toggleAnswer(currentQuestion._id)}
+                  rateQuestion={rateQuestion}
+                  isLoading={isLoading}
+                  disabled={isLoading}
+                />
+                {/* Show rating buttons after elimination action */}
+                {currentQuestionForRating && currentQuestionForRating._id === currentQuestion._id && (
+                  <div className="elimination-rating-section">
+                    <h3>How well do you know this?</h3>
+                    <RatingButtons
+                      onRate={async (rating) => {
+                        await rateQuestion(rating);
+                        setCurrentQuestionForRating(null);
+                      }}
+                      disabled={isLoading}
+                      compact={false}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="session-controls">
+                <button
+                  className="control-btn end-session-btn"
+                  onClick={endSession}
+                >
+                  End Session
+                </button>
+              </div>
+            </div>
+          );
+        }}
+      </SmartReviewWrapper>
+    );
+  }
+
+  // Legacy Elimination Mode (no Smart Review)
   return (
     <div className="elimination-page">
-      {/* Header */}
       <header className="page-header">
         <div className="header-left">
           <button
@@ -203,10 +326,9 @@ const EliminationModePage = () => {
         </div>
       </header>
 
-      {/* Questions List */}
       <div className="questions-container">
         {(filteredQuestions?.length ?? 0) === 0 &&
-        (questions?.length ?? 0) > 0 ? (
+          (questions?.length ?? 0) > 0 ? (
           <div className="session-complete">
             <div className="celebration">
               <h2>🎉 ELIMINATION COMPLETE!</h2>
@@ -247,7 +369,6 @@ const EliminationModePage = () => {
         )}
       </div>
 
-      {/* Eliminated Questions (if not hidden) */}
       {!hideEliminated && (
         <EliminatedList
           eliminatedQuestions={eliminatedQuestions}
@@ -256,7 +377,6 @@ const EliminationModePage = () => {
         />
       )}
 
-      {/* Session Controls */}
       <div className="session-controls">
         <button
           className="control-btn end-session-btn"

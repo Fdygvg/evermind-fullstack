@@ -1,7 +1,7 @@
 // src/App.jsx
 import React from "react";
 import {
-  HashRouter as Router,
+  BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
@@ -10,6 +10,8 @@ import { AuthProvider } from "./context/AuthContext";
 import { SessionProvider } from "./context/SessionContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { SoundProvider } from "./context/SoundContext";
+import { SmartReviewProvider } from './context/SmartReviewContext';
+
 import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
 import ForgotPassword from "./components/Auth/ForgotPassword";
@@ -36,6 +38,7 @@ import HomePage from "./pages/HomePage";
 import EliminationModePage from "./pages/EliminationModePage";
 import PreferencesPage from "./pages/PreferencesPage";
 import QuestionListPage from "./pages/QuestionListPage";
+// import TikTokReviewPage from "./pages/TiktokReviewPage";
 
 function App() {
   return (
@@ -43,6 +46,7 @@ function App() {
       <AuthProvider>
         <SessionProvider>
           <SoundProvider>
+            <SmartReviewProvider>
             <Router>
               <div className="App">
                 <Routes>
@@ -94,6 +98,10 @@ function App() {
                       path="/elimination"
                       element={<EliminationModePage />}
                     />
+                    {/* <Route
+                      path="/tiktok-review"
+                      element={<TikTokReviewPage />}
+                    /> */}
                     <Route path="/settings" element={<SettingsPage />} />
                   </Route>
                 
@@ -121,6 +129,7 @@ function App() {
                 </Routes>
               </div>
             </Router>
+            </SmartReviewProvider>
           </SoundProvider>
         </SessionProvider>
       </AuthProvider>

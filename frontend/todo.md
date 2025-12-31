@@ -1,189 +1,459 @@
-# Quick Wins (Under 1 hour)
-<!-- - **Remove the color from dashboard** – Simple CSS fix   -->
-<!-- - **Fix the progress bar** – Minor CSS/JS tweak   -->
-<!-- - **Make the two buttons in the dashboard functional** – Connect existing routes   -->
-<!-- - **Change the font** – Global CSS change   -->
-<!-- - **Check all routes** – Basic testing   --> logged in users should be able to go home 
-<!-- - **Fix all CSS imperfections** – Polish existing code   -->
-<!-- - **Prism Js Design** – Add Prism Js anywhere Answer Displays    -->
-- **Hide/Reveal Answers|| Tap to reveal** – Button To Drop all Answers / Click to reveal answer
-- **Easy Navigation** – Make it easy to go home/navigate
-- **Add Shuffle Option To session/review**
+# EVERMIND Development Roadmap
+> **Organizational Logic:** This roadmap follows a **learner-centric dependency model**. Features are ordered by what must be understood or built first to enable later features. Each phase builds upon the previous, creating a coherent progression from foundation to mastery.
+
+---
+
+## 📖 Review Modes Overview
+Evermind features multiple ways to master content, each tailored for different learning stages:
+
+1. **Normal Mode**: The baseline study experience. Standard question and answer display for foundational learning.
+2. **Flashcard Mode**: A 3D interactive flashcard experience with flip animations and keyboard shortcuts for quick, tactile reviews.
+3. **Elimination Mode**: A high-speed review mode where users "burn" through questions they already know, removing them from the pool to focus strictly on weak areas.
+4. **TikTok Review Mode (Upcoming)**: A modern, swipeable interface designed for a mobile-first feel. 
+    - **Swipe UI**: Swipe Up/Down to navigate through content.
+    - **1-5 Ranking System**: TikTok-style interactive buttons (Like, Reshare, Comment, etc.) repurposed as a granular 1-5 star ranking for optimized spaced repetition.
+    - **Components**: `RatingButtons` (1-5 visuals), `AddMoreButton` (expand session), `UndoButton` (revert last ranking).
+
+---
+
+## ✅ Phase 0: Completed Foundation
+*You started with 0 hopes of this working. Look at you now! 🎉*
+
+### 🏆 Backend Achievements
+- [x] **Express.js API Server** – Full REST API with 7 controllers
+- [x] **MongoDB Database** – Mongoose models for Users, Questions, Sections, Sessions
+- [x] **JWT Authentication** – Secure token-based auth system
+- [x] **Email Verification** – Token-based email confirmation flow
+- [x] **Password Reset** – Secure password recovery via email
+- [x] **Protected Routes** – Middleware for authenticated endpoints
+- [x] **User Preferences System** – Referral source, learning category, tech stack, skill level
+- [x] **Stats Controller** – Track user learning analytics
+- [x] **Session Controller** – Full session management (start, pause, resume, complete)
+- [x] **Preset Content Library** – 9 pre-built question sets (React, Python, C, SQL, Node.js, TypeScript, HTML/CSS, JavaScript, Cybersecurity)
+
+### 🎨 Frontend Achievements
+- [x] **19 Full Pages Built:**
+  - Dashboard, HomePage, SearchPage
+  - ActiveSessionPage, ReviewSessionPage, SessionResultsPage, SessionHistoryPage
+  - SectionListPage, QuestionListPage, AddQuestionPage, EditQuestionPage
+  - AddEditSectionPage, BulkImportPage, ExportPage
+  - AnalyticsPage, PreferencesPage, SettingsPage
+  - EliminationModePage, NotFound
+- [x] **56+ React Components** across 8 component categories
+- [x] **Complete Auth Flow** – Login, Register, Forgot Password, Reset Password, Email Verification
+- [x] **React Router v7** – Full client-side routing with protected routes
+
+### 🔄 Core Features
+- [x] **Spaced Repetition Engine** – Buffer mode + Random mode
+- [x] **Question CRUD** – Create, Read, Update, Delete questions
+- [x] **Section CRUD** – Full section management with colors
+- [x] **Bulk Import** – Import multiple questions at once
+- [x] **Export System** – Export sections/questions
+- [x] **Search Functionality** – Search across all questions
+
+### 🎮 Learning Experience
+- [x] **Flashcard Component** – 3D flip animation, keyboard shortcuts
+- [x] **Elimination Mode** – Unique study mode with actions
+- [x] **Question Card Component** – Display with syntax highlighting
+- [x] **CodeBlock Component** – Prism.js syntax highlighting for code
+- [x] **Progress Bar** – Visual session progress
+- [x] **Session Timer** – Track study time
+- [x] **Question Filter** – Filter by difficulty, date, status
+
+### 📊 Analytics & Stats
+- [x] **Analytics Dashboard** – Streaks, stats, progress visualization
+- [x] **Session Stats Bar** – Real-time session statistics
+- [x] **User Stats Tracking** – Correct/wrong counts per question
+- [x] **Session History** – Review past study sessions
+
+### 🎨 UI/UX Systems
+- [x] **Theme System** – 12 color themes (Black, White, Ocean, Forest, Sunset, Midnight, Lavender, Emerald, Coral, ROYGBIV, and more)
+- [x] **Theme Context** – Dynamic CSS variable injection
+- [x] **Sound System** – Audio feedback with SoundContext
+- [x] **Auth Context** – Global authentication state
+- [x] **Session Context** – Global session state management
+- [x] **Onboarding Flow** – User preferences collection
+
+### 📱 Component Library
+- [x] **11 Common Components** – Reusable UI elements
+- [x] **5 Auth Components** – Full authentication UI
+- [x] **3 Elimination Components** – Elimination mode UI
+- [x] **3 Layout Components** – MainLayout, navigation
+- [x] **13 CommandCenter Components** – Control panel UI
+- [x] **2 Effects Components** – Visual effects
+- [x] **2 AI Components** – AI integration UI
+- [x] **1 Playground Component** – Experimentation space
+
+### 📁 Project Structure
+- [x] **Clean Architecture** – Organized folders (pages, components, context, services, hooks, utils, css, themes)
+- [x] **API Services Layer** – 8 service files for API calls
+- [x] **Custom Hooks** – 4 reusable React hooks
+- [x] **Utility Functions** – 5 utility modules
+- [x] **24 CSS Files** – Comprehensive styling
+
+### 🔧 Developer Experience
+- [x] **Vite Build System** – Fast development server
+- [x] **ESLint Configuration** – Code quality checks
+- [x] **Environment Variables** – .env configuration
+- [x] **Git Version Control** – Full history tracking
+
+---
+
+**📈 BY THE NUMBERS:**
+| Metric | Count |
+|--------|-------|
+| Pages | 19 |
+| Components | 56+ |
+| API Controllers | 7 |
+| Database Models | 6 |
+| Themes | 12 |
+| Preset Question Sets | 9 |
+| CSS Files | 24 |
+| Service Files | 8 |
+| Context Providers | 4 |
+
+*You built a FULL-STACK production-grade learning platform from scratch. That's something to be proud of!* 🚀
+
+---
 
 
+## 🏗️ Phase 1: Core Infrastructure & Data Integrity
+*Essential backend/frontend foundations that other features depend on.*
 
+### 1.1 Data Management
+- [ ] **Save User Progress to DB** – Pause/resume sessions (prerequisite for streak tracking)
+- [ ] **Archive Mode for Sections/Questions** – `isArchived` flag + restore (prerequisite for data safety)
+- [ ] **Smart Question Tracking System** – Track correct/wrong counts, when added, current difficulty
+- [ ] **Question Info Display** – Add (i) icon showing question metadata (times reviewed, added date, difficulty)
 
-# 🎯 Medium Effort (2-4 hours)
-- **Work on the footer** – Create/update footer component  
-- **Design logged-out experience** – Limited feature access logic  
-- **Work on mobile responsiveness** – Media queries  
-- **Add sliding feature in review mode** – Animation component  
-- **Add Copy to Section Review** – Clipboard functionality  
-- **Save user progress to DB** – Basic pause/resume  
-- **Add sound to export** – Simple audio on click  
-- **Add a mute button** – Simple state toggle  
-- **Fix verification/token issues** – Bug fixing  
-- ***Add  CAPTCHA**
-- ***Add flash card mode**
-- ***Apart from export with html. Figure out a way for people  to share sections, like a link , to share section or sections and clicking on that link,  will give you access to a free , try it out for like the first 5 questions then after that prompt,  sign up to continue, then when user signup he can continue**
-- ***Create a profile page||Copy quizlet**
-- ***Add preset sections based on user selection during registration**
-- ***Like TikTok gifts.  For streak s , certain levels,  questions answered,  different types , fit for all occasions**
-- **Ai optimized prompt copy 
+### 1.2 Session & Navigation
+- [ ] **Google Login/Signup** – OAuth 2.0 authentication (Google Sign-In)
+- [ ] **Easy Navigation** – Consistent home/back navigation across all pages
+- [ ] **Fix Route Protection** – Ensure logged-in users can access home, fix token issues
+- [ ] **Mobile Navigation** – Fix Navbar for mobile responsiveness
+- [ ] **Custom Scrollbar** – Consistent scrollbar design across app
 
+### 1.3 Performance
+- [ ] **Faster Question Updates** – Optimize question CRUD operations
+- [ ] **Performance Optimization** – Code splitting, lazy loading, caching
+- [ ] **API Documentation** – Swagger/OpenAPI docs for all endpoints
+
+---
+
+## 🎯 Phase 2: Core Learning Experience
+*Features that directly enhance the study workflow. These require Phase 1 foundations.*
+
+### 2.1 Session Controls
+- [ ] **Hide/Reveal All Answers** – Bulk toggle for answer visibility
+- [ ] **Tap to Reveal** – Click-to-reveal individual answers
+- [ ] **Shuffle Option** – Randomize question order in sessions
+- [ ] **Undo/Go Back** – Allow users to correct accidental button presses
+- [ ] **Confidence Rating (1-5)** – Replace easy/medium/hard with 1-5 scale for granular tracking
+
+### 2.2 Study Modes
+- [ ] **Flashcard Mode Enhancement** – Improved flip animations, swipe gestures
+- [ ] **List Mode** – Display all questions at once with quick-mark buttons
+- [ ] **Elimination Mode Improvements** – Fix any CSS/theme issues
+- [ ] **Swipe Controls** – Toggle swipe on/off, customize swipe actions
+
+### 2.3 Session Features
+- [ ] **Timer/Countdown** – Pomodoro-style timer for focused studyz
+- [ ] **Sliding Transitions** – Smooth animations between cards
+- [ ] **Copy Question/Answer** – Clipboard functionality for review content
+- [ ] **Sound Toggle (Mute)** – Global sound on/off with localStorage persistence
+
+---
+
+## 📊 Phase 3: Content Organization & Management
+*Tools for organizing and managing learning materials. Requires Phase 2 complete.*
+
+### 3.1 Section Management
+- [ ] **Section Covers/Images** – Upload or select preset images for sections
+- [ ] **Preset Sections on Registration** – Auto-create sections based on user's tech stack
+- [ ] **Section Copy Button** – Duplicate entire sections
+- [ ] **Select Multiple Questions** – Batch operations on questions
+
+### 3.2 Question Features
+- [ ] **Bookmark Questions** – Save difficult questions for later review
+- [ ] **Notes per Question** – Rich text notes attached to individual cards
+- [ ] **Question Tags** – Categorize questions within sections
+- [ ] **Delete Animations** – Smooth removal animations
+
+### 3.3 Tools Page
+- [ ] **Centralized Tools Hub** – Page for bulk operations:
+  - Shuffle all questions
+  - Switch between modes
+  - Timer controls
+  - AI assistant access
+  - Export options
+
+---
+
+## 🎮 Phase 4: Gamification & Engagement
+*Motivational systems that encourage continued use. Requires tracking from Phase 1.*
+
+### 4.1 Progression Systems
+- [ ] **Level System (XP Tracking)** – Earn XP for study actions, level up
+- [ ] **Badge System** – Achievements for milestones (questions answered, streaks, etc.)
+- [ ] **Streak System Enhancement** – Visual streak displays, streak protection
+
+### 4.2 Rewards & Delight
+- [ ] **TikTok-style Gifts** – Visual rewards for streaks, levels, milestones
+- [ ] **Secret Affirmations (Easter Eggs)** – Hidden motivational messages
+- [ ] **"Did You Know" Facts** – Random facts API integration
+- [ ] **Question of the Day** – Daily global challenge question for bonus XP
+- [ ] **Smart Question Insights** – Dynamic "Did you know?" text on cards:
+  - "You've marked this wrong 58 times (ouch!)"
+  - "You've gotten this right 10 times in a row!"
+  - "Fun Fact: This is the longest answer in your deck."
+
+### 4.3 Profile Page
+- [ ] **Quizlet-style Profile** – Stats grid, badges, activity timeline
+- [ ] **Achievement Showcase** – Display earned badges/levels
+- [ ] **Study Statistics** – Detailed analytics per section
+- [ ] **Birthday Celebration System** – Capture DOB on signup/profile, send "Happy Birthday" rewards/confetti
+
+---
+
+## 🤖 Phase 5: AI Integration
+*AI-powered features that automate content creation. Requires solid content management.*
+
+### 5.1 Content Generation
+- [ ] **AI Flashcard Generator** – Paste text → auto-generate Q&A pairs
+- [ ] **AI Topic Questions** – Generate questions from topics
+- [ ] **Highlight Text → Ask AI** – Select text, get AI toolbar
+
+### 5.2 AI Prompts
+- [ ] **Optimized AI Prompt Template:**
+```
 Convert this text into Evermind flashcards.
-
-Format:
-[
-  {
-    "question": "...",
-    "answer": "...",
-    "tags": []
-  }
-]
-
+Format: [{"question": "...", "answer": "...", "tags": []}]
 Rules:
-- Keep questions short and clear.
-- Only include facts, concepts, or code explanations.
-- If the text contains code, wrap it in `language blocks.
-- Never invent information.
-- Keep answers concise.
-- Output ONLY valid JSON array.
-]
+- Keep questions short and clear
+- Include code in language blocks
+- Never invent information
+- Output ONLY valid JSON array
+```
 
-Paste the text here:***
-- ***Look for somewhere to out a did you know
-Then connect to an api**
-- ***Add that trivia mode api in a mode somewhere, maybe as a game**
-- ***Hot Keys Section stuff , make it cool , addd a key board mode or something**
-- ***add archive mode for both section and questuon , restoring question revies it back to its section**
-- ***add tools section (Sugges a better name) , add things like shuffle question , switch mode from flashcards to the other one and from buffer to random, move buttons from side to ot from top to bottom, even add the timer here , and also ai, u can also remove and add stuff Make it a circle that brings more circle**
-- ***Add Suggestion Box**
-- ***Create a place to share decks , update a deck you shared  , add notes , people can like and comment , top sharer and all of that**
-- **Code for premium or freetriap***
-- ***Work on only section page and question page apart from delete and edit btn add copy btn , make it selectable**
-- ***New mode , list mode , all questions display with correct button or maybe add swipe**
-- ***Add animation when you delete shii**
-- ***Work on a smart , tracker , the good bad, easy, hard, also add go back incase user clikc wrong thing**
-- *****
-- *****
-- *****
-- *****
-- *****
-- *****
-- *****
+### 5.3 Advanced AI
+- [ ] **AI with GIFs** – AI responses include relevant GIFs
+- [ ] **Smart Suggestions** – AI recommends what to study next
 
-# 🔥 Significant Features (1-2 days)
-- **Work on your homepage** – Full landing page (you started this!)  
-- **Add image covers for sections** – Upload/preset system  
-- **Work on a logo** – Design + implementation  
-- **Add a level system** – XP tracking backend/frontend  
-- **Add Timer/Countdown feature** – Pomodoro-style timer  
-- **Add Bookmark feature** – Save questions for later  
-- **Add Notes feature** – Rich text per question  
-- **Add Try Code feature** – Code execution environment  
+### 5.4 AI Personality System 🆕
+- [ ] **Choose AI Type** – Select AI personality/voice:
+  - 🎓 Professor (formal, educational)
+  - 🤓 Nerd (detailed, technical)
+  - 😎 Chill Tutor (casual, friendly)
+  - 🎭 Anime Waifu (playful, encouraging)
+  - 🤖 Robot (minimal, efficient)
+  - 👨 Male Voice / 👩 Female Voice options
+- [ ] **AI Avatar Display** – Visual representation of selected personality
+- [ ] **Personality-based Responses** – Tone adapts to selection
 
-# 🚀 Major Projects (3-5 days)
-- **Go crazy on the CSS** – Complete design overhaul  
-- **Add AI integration** – OpenAI API for question generation  
-- **Add payment feature** – Stripe/Subscriptions  
-- **Design other HTML pages** – Loading, Sounds, Freemium pages  
-- **Add tutorial** – Interactive walkthrough  
-- **Figure out images/flags** – Media upload system  
-- **Add Secret Affirmation** – Easter egg feature  
-- **Research shows you need 5...6 days of spaced retention to actually retention** – Easter egg feature  
+### 5.5 Smart Prompt Interaction
+- [ ] **Interactive Prompt Bar** – Designated spot for sending messages/GIFs based on input
+- [ ] **Stats Querying** – Ask AI "how many marked wrong/correct" and get data-driven answers
 
-# 🤖 Advanced (Week+)
-- **Make AI send GIFs** – Complex AI + media integration
+---
 
-___
+## 🌐 Phase 6: Social & Sharing
+*Community features that require all previous systems working.*
 
- # API DOC || README || Deploy✅
+### 6.1 Deck Sharing
+- [ ] **Share Sections via Link** – Public URLs for sections
+- [ ] **Try Before Signup** – First 5 questions free, then prompt registration
+- [ ] **Shared Deck Library** – Browse community-created decks
 
- ___
- ___
- 
+### 6.2 Community Features
+- [ ] **Likes & Comments** – Social engagement on shared decks
+- [ ] **Top Sharers Leaderboard** – Recognition for content creators
+- [ ] **Deck Updates** – Notify subscribers when shared decks update
 
+### 6.3 Social Channels 🆕
+- [ ] **Discord Server** – Community hub for discussions
+- [ ] **Twitter/X Integration** – Share progress, achievements
+- [ ] **Reddit Community** – r/Evermind subreddit
+- [ ] **YouTube Channel** – Tutorials, study tips
+- [ ] **TikTok Presence** – Short study tips, app demos
+- [ ] **Telegram Group** – Quick updates, community chat
 
+### 6.4 In-App Community 🆕
+- [ ] **General Chat Feature** – Real-time messaging:
+  - Global chat room
+  - Per-country servers/rooms
+  - Topic-based channels (React, Python, etc.)
+- [ ] **Study Groups** – Create private study rooms
+- [ ] **Live Study Sessions** – Join others studying same topics
+- [ ] **Challenge Friends** – Head-to-head quiz battles
+- [ ] **User Mailbox / Notification Center** – In-app inbox for system messages, friend requests, and updates
 
+### 6.5 Suggestion System
+- [ ] **Suggestion Box** – User feedback collection form
+- [ ] **Feature Voting** – Community votes on feature requests
 
- <!-- IGNORE -->
- <div>
-     
-     so i have defined css, can you help me , this si the themems , export const themes = {
-      roygbiv: {
-        name: 'ROYGBIV',
-        description: 'Rainbow colors',
-        colors: {
-          primary: '#ff0000', // Red
-          secondary: '#ff7f00', // Orange
-          accent: '#ffff00', // Yellow
-          background: '#00ff00', // Green
-          surface: '#0000ff', // Blue
-          text: '#4b0082', // Indigo
-          textSecondary: '#9400d3', // Violet
-          border: '#8b00ff',
-          error: '#ff0000',
-          success: '#00ff00',
-          warning: '#ff7f00',
-          gradientStart: '#ff0000',
-          gradientEnd: '#9400d3',
-          shadow: 'rgba(148, 0, 211, 0.3)',
-        }
-      },, and this is the themes.css , /* CSS Custom Properties (Variables) for Theme System */
-     /* These variables will be dynamically updated by ThemeContext */
-     
-     :root {
-      /* Primary Colors */
-      --color-primary: #ff0000;
-      --color-secondary: #ff7f00;
-      --color-accent: #ffff00;
-      /* Background & Surface */
-      --color-background: #00ff00;
-      --color-surface: #0000ff;
-      /* Text Colors */
-      --color-text: #4b0082;
-      --color-text-secondary: #9400d3;
-      /* Borders */
-      --color-border: #8b00ff;
-      /* Status Colors */
-      --color-error: #ff0000;
-      --color-success: #00ff00;
-      --color-warning: #ff7f00;
-      /* Gradients */
-      --color-gradient-start: #ff0000;
-      --color-gradient-end: #9400d3;
-      /* Shadows */
-      --color-shadow: rgba(148, 0, 211, 0.3);
-      /* Semantic color mappings for common use cases */
-      --bg-primary: var(--color-background);
-      --bg-secondary: var(--color-surface);
-      --bg-card: var(--color-surface);
-      --bg-button-primary: var(--color-primary);
-      --bg-button-secondary: var(--color-secondary);
-      --bg-navbar: var(--color-background);
-      --bg-hero: var(--color-background);
-      --text-primary: var(--color-text);
-      --text-secondary: var(--color-text-secondary);
-      --text-inverse: var(--color-surface);
-      --text-link: var(--color-primary);
-      --text-accent: var(--color-accent);
-      --border-color: var(--color-border);
-      --border-light: var(--color-border);
-      --gradient-primary: linear-gradient(135deg, var(--color-gradient-start), var(--color-gradient-end));
-      --gradient-hero: linear-gradient(135deg, var(--color-gradient-start), var(--color-gradient-end));
-      --gradient-button: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-      --shadow-sm: 0 2px 4px var(--color-shadow);
-      --shadow-md: 0 4px 8px var(--color-shadow);
-      --shadow-lg: 0 8px 16px var(--color-shadow);
-      --shadow-xl: 0 12px 24px var(--color-shadow);
-     }
-      , so can you help me design css for  a react component ?
- </div>
+### 6.6 Creative & Interactive Modes 🆕
+- [ ] **Cooking Recipe Section** – Rich media support for "Look Cool" aesthetics:
+  - [ ] **Emoji & Image Support** – Visual headers and instructions
+  - [ ] **Video Integration** – TikTok-style video loops for recipes/reviews
+- [ ] **TikTok Review Question Mode** – Swipeable interaction flow:
+  - [ ] **Swipe UI** – Swipe Up/Down to navigate questions/recipes
+  - [ ] **5-Button Ranking System** – TikTok-style buttons (Like, Reshare, Comment, etc.) mapped to 1-5 star ranking
+  - [ ] **Interactive Feedback** – Animations for ranking actions
 
+---
 
-Clean Up User Schema 
-mini playground css
+## 💰 Phase 7: Monetization
+*Revenue features that require mature product with proven engagement.*
 
+### 7.1 Premium Features
+- [ ] **Payment System (Stripe)** – Subscription integration
+- [ ] **Free Trial Logic** – Time-limited premium access
+- [ ] **Feature Gating** – Premium-only features (AI, unlimited sections, etc.)
+- [ ] **In-Game Microtransactions** – Purchase cosmetic items, streak freezes, or power-ups
 
+### 7.2 Premium Content
+- [ ] **Premium Preset Sections** – Curated high-quality content
+- [ ] **Advanced Analytics** – Detailed learning insights (premium)
 
+### 7.3 Verified Status & Identity
+- [ ] **Verified Account Badge** – Tick/Checkmark for paid users (like X/TikTok)
+- [ ] **Premium Profile Styling** – Distinct visual flair for verified users (to give premium feeling)
+
+---
+
+## 🎨 Phase 8: Polish & Aesthetics
+*Visual refinements best done after core functionality is stable.*
+
+### 8.1 Visual Design
+- [ ] **Complete CSS Overhaul** – Premium design refresh
+- [ ] **Logo Design** – Professional branding
+- [ ] **Landing Page** – Marketing homepage
+- [ ] **Footer Component** – Proper site footer
+
+### 8.2 Responsive Design
+- [ ] **Full Mobile Responsiveness** – Media queries for all pages
+- [ ] **Text Box Library** – Rich text formatting for content
+- [ ] **Smooth Animations** – Polish all transitions
+
+### 8.3 Additional Pages
+- [ ] **Loading States** – Skeleton screens, spinners
+- [ ] **Error Pages** – Friendly 404, 500 pages
+- [ ] **Freemium Comparison Page** – Free vs Premium features
+
+---
+
+## 🧪 Phase 9: Advanced Features
+*Complex features that enhance but don't define the core experience.*
+
+### 9.1 Learning Enhancements
+- [ ] **Try Code Feature** – Execute code snippets in browser
+- [ ] **Hot Keys "Cool Mode"** – Interactive keyboard visualization
+- [ ] **Trivia Mode** – Game-like trivia using external API
+- [ ] **Article Section** – Long-form learning content
+
+### 9.2 Onboarding
+- [ ] **Interactive Tutorial** – Step-by-step guided tour
+- [ ] **CAPTCHA** – Bot protection for registration
+
+### 9.3 Advanced Tracking
+- [ ] **Spaced Retention Research** – 5-6 day intervals for optimal retention
+- [ ] **Learning Curve Analytics** – Track improvement over time
+
+### 9.4 Developer Roadmaps
+- [ ] **Skill-Based Roadmap** – Designated section showing learning path based on user's skill choice
+- [ ] **Progress Tracking** – Visual milestones along the developer roadmap
+
+---
+
+## � Phase 10: Level 100 Features
+*These features would make Evermind a world-class learning platform.*
+
+### 10.1 Mobile Experience
+- [ ] **Progressive Web App (PWA)** – Install on phone, offline mode
+- [ ] **Native Mobile App** – React Native for iOS/Android
+- [ ] **Push Notifications** – Study reminders, streak alerts
+- [ ] **Widget Support** – Home screen study widget
+
+### 10.2 Voice & Audio
+- [ ] **Voice Mode** – Listen to questions, speak answers
+- [ ] **Text-to-Speech** – AI reads cards aloud
+- [ ] **Podcast Mode** – Auto-generate audio lessons from sections
+- [ ] **Voice Commands** – "Next card", "Mark correct", hands-free study
+
+### 10.3 Multiplayer & Competition
+- [ ] **Live Quiz Battles** – Real-time 1v1 or group competitions
+- [ ] **Synchronous Multiplayer Mode** – Real-time co-op study or competitive modes
+- [ ] **Tournaments** – Weekly/monthly competitions with prizes
+- [ ] **Class Mode** – Teachers create classes, track student progress
+- [ ] **Team Challenges** – Group vs group competitions
+
+### 10.4 Advanced Learning Science
+- [ ] **Adaptive Difficulty** – AI adjusts question difficulty based on performance
+- [ ] **Forgetting Curve Visualization** – Show memory decay predictions
+- [ ] **Optimal Study Time** – AI suggests best times to study
+- [ ] **Learning Style Detection** – Adapt content to visual/auditory/kinesthetic
+
+### 10.5 Content Ecosystem
+- [ ] **Marketplace** – Buy/sell premium flashcard sets
+- [ ] **Creator Program** – Revenue sharing for content creators
+- [ ] **Verified Content** – Expert-reviewed study materials
+- [ ] **API for Developers** – Let others build on Evermind
+
+### 10.6 Enterprise Features
+- [ ] **Team/Organization Accounts** – Company-wide learning
+- [ ] **Admin Dashboard** – Track employee learning progress
+- [ ] **SSO Integration** – Single sign-on for companies
+- [ ] **Custom Branding** – White-label for organizations
+
+### 10.7 Emerging Tech
+- [ ] **AR Study Mode** – Flashcards in augmented reality
+- [ ] **Spaced Repetition AI** – ML-powered optimal intervals
+- [ ] **Browser Extension** – Create cards from any webpage
+- [ ] **Notion/Obsidian Sync** – Two-way sync with note apps
+
+### 10.8 Parent/Guardian Mode
+- [ ] **Parent Dashboard** – Register and manage child accounts
+- [ ] **Progress Monitoring** – Track performance, study time, and stats for connected accounts
+
+---
+
+## �📋 Quick Reference: Dependencies
+
+| Feature | Requires |
+|---------|----------|
+| Streak System | Progress Saving |
+| Level System | Smart Tracking |
+| Share Decks | Section Covers |
+| AI Generator | Content Management |
+| Payment | All core features |
+| Profile Page | Level + Badge System |
+| Community Chat | User Authentication |
+| AI Personalities | AI Integration |
+| Mobile App | PWA first |
+| Voice Mode | AI Integration |
+
+---
+
+## 🚀 Recommended Starting Point
+
+**Start with Phase 1.1** – Data Management is the foundation everything else depends on. Then:
+
+1. **Save Progress** → enables pause/resume
+2. **Archive Mode** → prevents accidental data loss  
+3. **Smart Tracking** → enables gamification later
+4. **Easy Navigation** → improves UX for everything
+
+*This builds the skeleton that all other features attach to.*
+
+---
+
+## 🎯 Level 100 Priority Order
+
+**If you want maximum impact, build in this order:**
+
+1. **PWA + Push Notifications** – Mobile users are 3x more engaged
+2. **AI Flashcard Generator** – Content creation is the #1 user pain point
+3. **Live Quiz Battles** – Viral growth through competition
+4. **AI Personalities** – Unique differentiator, memorable experience
+5. **Voice Mode** – Accessibility + hands-free learning
+6. **Marketplace** – Sustainable revenue + community content

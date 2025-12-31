@@ -1,97 +1,193 @@
-// components/AI/Explanation/AIExplainButton.jsx
-import React, { useState } from 'react';
-import { Sparkles, Loader2 } from 'lucide-react';
-import AIQuestionModal from './AIQuestionModal';
-import '../Common/css/AIExplainButton.css';
+// components/AI/Explanation/AIQuestionModal.jsx
+import React, { useState, useEffect } from 'react';
+import { X, Copy, RefreshCw, Brain, ExternalLink } from 'lucide-react';
+import { aiExplanationService } from '../../../services/aiExplanationService';
+import './AIQuestionModal.css';
 
 /**
- * Button that attaches to question (i) icon to get AI explanation
- * Usage: <AIExplainButton question={question} answer={answer} />
+ * Modal that shows detailed AI explanation for a question
  */
-const AIExplainButton = ({ 
+const AIQuestionModal = ({ 
   question, 
   answer, 
   section,
-  size = 'sm',
-  variant = 'icon',
-  className = ''
+  isOpen, 
+  onClose 
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, _setIsLoading] = useState(false);
+  const [explanation, setExplanation] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [explanationType, setExplanationType] = useState('detailed'); // 'simple', 'detailed', 'analogy'
 
-  const handleClick = (e) => {
-    e.stopPropagation(); // Prevent parent clicks
-    setIsModalOpen(true);
+  useEffect(() => {
+    if (isOpen && !explanation) {
+      generateExplanation('detailed');
+    }
+  }, [isOpen]);
+
+  const generateExplanation = async (type = 'detailed') => {
+    setIsLoading(true);
+    setError('');
+    setExplanationType(type);
+
+    try {
+      const result = await aiExplanationService.explainQuestion(
+        question, 
+        answer, 
+        section,
+        type
+      );
+      setExplanation(result);
+    } catch (err) {
+      setError('Failed to generate explanation. Please try again.');
+      console.error('AI explanation error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  if (variant === 'icon') {
-    return (
-      <>
-        <button
-          className={`ai-explain-btn ai-explain-icon ${size} ${className}`}
-          onClick={handleClick}
-          disabled={isLoading}
-          aria-label="Explain with AI"
-          title="Get AI explanation"
-        >
-          {isLoading ? (
-            <Loader2 className="ai-explain-spin" size={size === 'lg' ? 20 : 16} />
-          ) : (
-            <Sparkles size={size === 'lg' ? 20 : 16} />
-          )}
-        </button>
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(explanation);
+  };
 
-        {isModalOpen && (
-          <AIQuestionModal
-            question={question}
-            answer={answer}
-            section={section}
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-          />
-        )}
-      </>
-    );
-  }
+  const regenerateExplanation = () => {
+    generateExplanation(explanationType);
+  };
 
-  // Text button variant
+  if (!isOpen) return null;
+
   return (
-    <>
-      <button
-        className={`ai-explain-btn ai-explain-text ${size} ${className}`}
-        onClick={handleClick}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="ai-explain-spin" size={16} />
-            <span>Generating...</span>
-          </>
-        ) : (
-          <>
-            <Sparkles size={16} />
-            <span>Explain with AI</span>
-          </>
-        )}
-      </button>
+    <div className="ai-modal-overlay" onClick={onClose}>
+      <div className="ai-modal-content" onClick={(e) => e.stopPropagation()}>
+        
+        {/* Modal Header */}
+        <div className="ai-modal-header">
+          <div className="ai-modal-title">
+            <Brain size={24} />
+            <div>
+              <h3>AI Explanation</h3>
+              {section && (
+                <span className="ai-modal-subtitle">
+                  Section: {section.name}
+                </span>
+              )}
+            </div>
+          </div>
+          <button className="ai-modal-close" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </div>
 
-      {isModalOpen && (
-        <AIQuestionModal
-          question={question}
-          answer={answer}
-          section={section}
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-        />
-      )}
-    </>
+        {/* Original Question Display */}
+        <div className="ai-original-question">
+          <div className="ai-question-block">
+            <span className="ai-label">Question:</span>
+            <p className="ai-question-text">{question}</p>
+          </div>
+          <div className="ai-answer-block">
+            <span className="ai-label">Answer:</span>
+            <p className="ai-answer-text">{answer}</p>
+          </div>
+        </div>
+
+        {/* Explanation Type Selector */}
+        <div className="ai-explanation-types">
+          <button
+            className={`ai-type-btn ${explanationType === 'simple' ? 'active' : ''}`}
+            onClick={() => generateExplanation('simple')}
+            disabled={isLoading}
+          >
+            Simple
+          </button>
+          <button
+            className={`ai-type-btn ${explanationType === 'detailed' ? 'active' : ''}`}
+            onClick={() => generateExplanation('detailed')}
+            disabled={isLoading}
+          >
+            Detailed
+          </button>
+          <button
+            className={`ai-type-btn ${explanationType === 'analogy' ? 'active' : ''}`}
+            onClick={() => generateExplanation('analogy')}
+            disabled={isLoading}
+          >
+            Analogy
+          </button>
+        </div>
+
+        {/* Explanation Content */}
+        <div className="ai-explanation-container">
+          {isLoading ? (
+            <div className="ai-loading">
+              <div className="ai-loading-spinner"></div>
+              <p>AI is analyzing and generating explanation...</p>
+            </div>
+          ) : error ? (
+            <div className="ai-error">
+              <p>{error}</p>
+              <button 
+                className="ai-retry-btn"
+                onClick={regenerateExplanation}
+              >
+                <RefreshCw size={16} />
+                Try Again
+              </button>
+            </div>
+          ) : explanation ? (
+            <div className="ai-explanation-result">
+              <div className="ai-explanation-text">
+                {explanation}
+              </div>
+              
+              <div className="ai-explanation-actions">
+                <button 
+                  className="ai-action-btn"
+                  onClick={copyToClipboard}
+                  title="Copy to clipboard"
+                >
+                  <Copy size={16} />
+                  Copy
+                </button>
+                <button 
+                  className="ai-action-btn"
+                  onClick={regenerateExplanation}
+                  disabled={isLoading}
+                  title="Generate new explanation"
+                >
+                  <RefreshCw size={16} />
+                  Regenerate
+                </button>
+                <a 
+                  className="ai-action-btn"
+                  href={`https://www.google.com/search?q=${encodeURIComponent(question)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Search related information"
+                >
+                  <ExternalLink size={16} />
+                  Search More
+                </a>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Tips Section */}
+        <div className="ai-modal-tips">
+          <p className="ai-tips-title">
+            <Brain size={16} />
+            AI Learning Tips
+          </p>
+          <ul className="ai-tips-list">
+            <li>Try different explanation types for varied understanding</li>
+            <li>Copy explanations to your notes for review</li>
+            <li>Use analogies to connect with existing knowledge</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
   );
 };
 
-// Default props
-AIExplainButton.defaultProps = {
-  size: 'sm',
-  variant: 'icon'
-};
-
-export default AIExplainButton;
+export default AIQuestionModal;

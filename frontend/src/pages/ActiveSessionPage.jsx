@@ -1,3 +1,4 @@
+// Enhanced ActiveSessionPage with Smart Review Integration
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "../hooks/useSession";
@@ -7,39 +8,44 @@ import QuestionCard from "../components/Common/QuestionCard";
 import FlashCard from "../components/Common/FlashCard";
 import CodeBlock from "../components/Common/CodeBlock";
 import CommandCenter from "../components/CommandCenter/CommandCenter";
+import SmartReviewWrapper from "../components/SmartReview/SmartReviewWrapper";
+import RatingButtons from "../components/SmartReview/RatingButtons";
 
 const ActiveSession = () => {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [sessionProgress, setSessionProgress] = useState(null);
-  const [loading, setLoading] = useState(false); // Track loading state for UI
-  const [questionKey, setQuestionKey] = useState(0); // Force remount when question changes
-  const [sessionTime, setSessionTime] = useState(0); // Track session time in seconds
-  const [currentStreak, setCurrentStreak] = useState(0); // Track consecutive correct answers
-  const submittingQuestionIdRef = useRef(null); // Track which question is being submitted
-  const isLoadingQuestionRef = useRef(false); // Prevent multiple simultaneous loads
-  const sessionStartTimeRef = useRef(null); // Track when session started
+  const [loading, setLoading] = useState(false);
+  const [questionKey, setQuestionKey] = useState(0);
+  const [sessionTime, setSessionTime] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const submittingQuestionIdRef = useRef(null);
+  const isLoadingQuestionRef = useRef(false);
+  const sessionStartTimeRef = useRef(null);
 
   const { activeSession } = useSession();
   const navigate = useNavigate();
 
-  // Debug: Log cardMode
+  // Check if Smart Review mode is enabled
+  const isSmartReviewMode = activeSession?.useSmartReview || false;
+  const sectionIds = activeSession?.sectionIds || [];
+
   useEffect(() => {
-    console.log("[SESSION] Active session cardMode:", activeSession?.cardMode);
-  }, [activeSession?.cardMode]);
+    console.log("[SESSION] Active session:", {
+      cardMode: activeSession?.cardMode,
+      useSmartReview: activeSession?.useSmartReview,
+      sectionIds: activeSession?.sectionIds
+    });
+  }, [activeSession]);
 
-  
-
-  
   const loadNextQuestion = useCallback(async () => {
-    // Prevent multiple simultaneous loads
     if (isLoadingQuestionRef.current) {
       console.log("[LOAD] Already loading question, skipping...");
       return;
     }
 
     isLoadingQuestionRef.current = true;
-    setLoading(true); // Set loading state for UI
+    setLoading(true);
     console.log("[LOAD] Starting to load next question...");
 
     try {
@@ -63,12 +69,11 @@ const ActiveSession = () => {
       });
       console.log("[LOAD] Progress:", progress);
 
-      // Update question immediately - clear loading first, then update question
-      setLoading(false); // Clear loading state first for immediate UI update
+      setLoading(false);
       setCurrentQuestion(question);
       setSessionProgress(progress);
       setShowAnswer(false);
-      setQuestionKey(prev => prev + 1); // Force remount by changing key
+      setQuestionKey(prev => prev + 1);
       
       console.log("[LOAD] Question state updated successfully");
     } catch (error) {
@@ -78,20 +83,22 @@ const ActiveSession = () => {
         response: error.response?.data,
         status: error.response?.status
       });
-      setLoading(false); // Clear loading on error too
+      setLoading(false);
     } finally {
       isLoadingQuestionRef.current = false;
       console.log("[LOAD] Load operation completed");
     }
   }, [navigate]);
 
-  // Load initial question on mount only
+  // Load initial question on mount (only for non-Smart Review sessions)
   useEffect(() => {
-    console.log("[INIT] Component mounted, loading initial question");
-    sessionStartTimeRef.current = Date.now();
-    loadNextQuestion();
+    if (!isSmartReviewMode) {
+      console.log("[INIT] Component mounted, loading initial question");
+      sessionStartTimeRef.current = Date.now();
+      loadNextQuestion();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run on mount
+  }, []);
 
   // Timer: Update session time every second
   useEffect(() => {
@@ -105,7 +112,7 @@ const ActiveSession = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Reset submission flag when question changes (allows immediate interaction with new question)
+  // Reset submission flag when question changes
   useEffect(() => {
     if (currentQuestion?._id) {
       console.log("[STATE] Question changed to:", currentQuestion._id);
@@ -125,38 +132,32 @@ const ActiveSession = () => {
     const questionId = currentQuestion._id;
     console.log("[SUBMIT] Current question ID:", questionId);
     
-    // Prevent rapid duplicate submissions for the same question
     if (submittingQuestionIdRef.current === questionId) {
       console.log("[SUBMIT] BLOCKED: Already submitting for this question:", questionId);
       return;
     }
     
-    // Mark this question as being submitted
     submittingQuestionIdRef.current = questionId;
     console.log("[SUBMIT] Marked question as submitting:", questionId);
 
-    // Reset answer visibility immediately for instant feedback
     console.log("[SUBMIT] Hiding answer section");
     setShowAnswer(false);
-    setLoading(true); // Show loading state immediately
+    setLoading(true);
 
-    // Submit answer FIRST, then load next question
     try {
       console.log("[SUBMIT] Submitting answer to backend first...");
       await sessionService.submitAnswer({
-      questionId,
-      responseType,
+        questionId,
+        responseType,
       });
       console.log("[SUBMIT] Answer submitted successfully");
       
-  
       if (responseType === 'easy') {
         setCurrentStreak(prev => prev + 1);
       } else {
-        setCurrentStreak(0); 
+        setCurrentStreak(0);
       }
       
-      // NOW load the next question (backend knows we answered)
       console.log("[SUBMIT] Loading next question...");
       await loadNextQuestion();
     } catch (error) {
@@ -166,11 +167,10 @@ const ActiveSession = () => {
         response: error.response?.data,
         status: error.response?.status
       });
-      // Reset ref on error so user can retry
-        submittingQuestionIdRef.current = null;
+      submittingQuestionIdRef.current = null;
       setLoading(false);
-        console.log("[SUBMIT] Reset submission flag after error");
-      }
+      console.log("[SUBMIT] Reset submission flag after error");
+    }
   }, [currentQuestion, loadNextQuestion, loading]);
 
   const endSession = async () => {
@@ -184,6 +184,115 @@ const ActiveSession = () => {
     }
   };
 
+  // Smart Review Mode: Render with SmartReviewWrapper
+  if (isSmartReviewMode) {
+    return (
+      <SmartReviewWrapper 
+        sectionIds={sectionIds}
+        enableSmartReview={true}
+        showDailyCounter={true}
+        showAddMore={true}
+      >
+        {({ currentQuestion: smartQuestion, rateQuestion, isLoading, isSessionComplete, canUndo, undoLastRating }) => {
+          if (isSessionComplete) {
+            return (
+              <div className="session-complete">
+                <h2>🎉 Session Complete!</h2>
+                <p>Great job! You've completed today's review.</p>
+                <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+              </div>
+            );
+          }
+
+          if (!smartQuestion) {
+            return <div className="loading">Loading Smart Review questions...</div>;
+          }
+
+          return (
+            <div className="active-session smart-review-mode">
+              {/* Progress Bar */}
+              <div className="session-header">
+                <ProgressBar
+                  currentStreak={currentStreak}
+                  sessionTime={sessionTime}
+                  currentCount={sessionProgress?.total - sessionProgress?.remaining || 0}
+                  totalCount={activeSession?.totalQuestions || sessionProgress?.total || 0}
+                  correctCount={sessionProgress?.correct || 0}
+                  wrongCount={sessionProgress?.wrong || 0}
+                  showAccuracy={true}
+                  showTimer={true}
+                  compact={false}
+                />
+                <div className="session-controls-header">
+                  {canUndo && (
+                    <button className="undo-btn" onClick={undoLastRating}>
+                      ↶ Undo Last Rating
+                    </button>
+                  )}
+                  <button className="end-session-btn" onClick={endSession}>
+                    End Session
+                  </button>
+                </div>
+              </div>
+
+              {/* Question Display */}
+              <div className="question-card-wrapper">
+                {activeSession?.cardMode === "flashcard" ? (
+                  <FlashCard
+                    key={`${smartQuestion._id}-${questionKey}`}
+                    question={smartQuestion.question}
+                    answer={smartQuestion.answer}
+                    questionNumber={1}
+                    totalQuestions={100}
+                    onAnswer={submitAnswer}
+                    isCode={smartQuestion.isCode}
+                    CodeBlock={CodeBlock}
+                    disabled={isLoading}
+                    showHint={true}
+                    compact={false}
+                    useSmartReview={true}
+                    onRate={rateQuestion}
+                  />
+                ) : (
+                  <>
+                    <QuestionCard
+                      key={`${smartQuestion._id}-${questionKey}`}
+                      currentQuestion={smartQuestion}
+                      showAnswer={showAnswer}
+                      setShowAnswer={setShowAnswer}
+                      submitAnswer={submitAnswer}
+                      loading={isLoading}
+                    />
+                    
+                    {/* Smart Review Rating Buttons */}
+                    {showAnswer && (
+                      <RatingButtons 
+                        onRate={rateQuestion}
+                        disabled={isLoading}
+                        compact={false}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Session Info */}
+              <div className="session-info">
+                <div className="mode-badge smart-review-badge">
+                  🧠 Smart Review Mode
+                  {activeSession?.cardMode === "flashcard" && " • Flashcard"}
+                </div>
+              </div>
+
+              <CommandCenter />
+            </div>
+          );
+        }}
+      </SmartReviewWrapper>
+    );
+  }
+
+  // Legacy Mode: Original session behavior
   if (!currentQuestion) {
     return <div className="loading">Loading question...</div>;
   }
@@ -226,16 +335,17 @@ const ActiveSession = () => {
             disabled={loading}
             showHint={true}
             compact={false}
+            useSmartReview={false}
           />
         ) : (
-        <QuestionCard
+          <QuestionCard
             key={`${currentQuestion._id}-${questionKey}`}
-          currentQuestion={currentQuestion}
-          showAnswer={showAnswer}
-          setShowAnswer={setShowAnswer}
-          submitAnswer={submitAnswer}
+            currentQuestion={currentQuestion}
+            showAnswer={showAnswer}
+            setShowAnswer={setShowAnswer}
+            submitAnswer={submitAnswer}
             loading={loading}
-        />
+          />
         )}
       </div>
 
@@ -249,7 +359,7 @@ const ActiveSession = () => {
         </div>
       </div>
 
-      {/* Command Center - Multi-purpose tool palette */}
+      {/* Command Center */}
       <CommandCenter />
     </div>
   );

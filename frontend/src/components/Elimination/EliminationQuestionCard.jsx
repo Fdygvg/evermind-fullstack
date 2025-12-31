@@ -1,7 +1,7 @@
 import React from "react";
 import { Eye } from "lucide-react";
-import EliminationActions from "./EliminationActions";
 import CodeBlock from "../Common/CodeBlock";
+import RatingButtons from "../SmartReview/RatingButtons";
 import "../Common/css/eliminationQuestionCard.css";
 import { useSound } from "../../hooks/useSound";
 
@@ -10,9 +10,40 @@ const EliminationQuestionCard = ({
   index,
   isRevealed,
   onToggleAnswer,
-  onAction,
+  rateQuestion,
+  isLoading,
+  disabled = false
 }) => {
   const { playSound } = useSound();
+
+  const handleRate = async (rating) => {
+    console.log("[ELIMINATION] Rating button clicked:", rating);
+    console.log("[ELIMINATION] Question ID:", question._id);
+
+    if (!rateQuestion) {
+      console.error("[ELIMINATION] rateQuestion function not provided!");
+      return;
+    }
+
+    try {
+      // Play sound based on rating
+      if (rating >= 4) {
+        playSound("correct");
+      } else if (rating === 3) {
+        playSound("ding");
+      } else {
+        playSound("wrong");
+      }
+
+      // Submit the rating
+      await rateQuestion(rating);
+      console.log("[ELIMINATION] Rating submitted successfully");
+
+    } catch (error) {
+      console.error("[ELIMINATION] Error submitting rating:", error);
+      playSound("error");
+    }
+  };
 
   return (
     <div className="question-card">
@@ -60,13 +91,21 @@ const EliminationQuestionCard = ({
             playSound("bubble");
           }}
           title={isRevealed ? "Hide Answer" : "Reveal Answer"}
+          disabled={disabled}
         >
           <Eye size={18} />
           <span>{isRevealed ? "Hide Answer" : "Reveal Answer"}</span>
         </button>
       </div>
 
-      <EliminationActions onAction={onAction} />
+      {/* Smart Review Rating Buttons */}
+      <div className="smart-review-rating-section">
+        <RatingButtons
+          onRate={handleRate}
+          disabled={isLoading || disabled}
+          compact={false}
+        />
+      </div>
     </div>
   );
 };

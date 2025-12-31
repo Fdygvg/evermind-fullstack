@@ -1,0 +1,56 @@
+.section-progress-display {
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--color-border);
+}
+
+.section-progress-display h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.progress-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.section-progress-item {
+  background: var(--color-background-light);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-light);
+}
+
+.section-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+}
+
+.session-day {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.day-label {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.day-number {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+.session-count {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}

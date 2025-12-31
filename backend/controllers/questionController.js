@@ -26,7 +26,6 @@ export const getQuestions = async (req, res) => {
     });
   }
 };
-
 export const createQuestion = async (req, res) => {
   try {
     const { sectionId, question, answer } = req.body;
@@ -43,15 +42,20 @@ export const createQuestion = async (req, res) => {
       });
     }
 
-    const newQuestion = new Question({
+    // USE Question.create() instead of new Question()
+    const newQuestion = await Question.create({
       userId: req.userId,
       sectionId,
       question,
       answer,
       isCode: req.body.isCode || false,
+      // Schema defaults will automatically apply:
+      // priority: 0
+      // dueDate: Date.now()
+      // lastRating: null
+      // etc.
     });
 
-    await newQuestion.save();
     await newQuestion.populate("sectionId");
 
     res.status(201).json({
@@ -67,7 +71,6 @@ export const createQuestion = async (req, res) => {
     });
   }
 };
-
 export const bulkImportQuestions = async (req, res) => {
   try {
     const questions = req.body; // now body is an array
@@ -234,7 +237,7 @@ export const exportQuestions = async (req, res) => {
 
     res.json({
       success: true,
-      data: { 
+      data: {
         questions: exportData,
         exportDate: new Date().toISOString(),
         totalQuestions: questions.length,

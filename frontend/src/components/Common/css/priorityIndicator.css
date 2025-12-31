@@ -1,0 +1,123 @@
+/* Priority Indicator Styles */
+.priority-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.priority-color {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.priority-emoji {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.priority-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.priority-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.priority-description {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+/* Size Variants */
+.priority-small .priority-color {
+  width: 24px;
+  height: 24px;
+}
+
+.priority-small .priority-emoji {
+  font-size: 0.9rem;
+}
+
+.priority-small .priority-label {
+  font-size: 0.85rem;
+}
+
+.priority-small .priority-description {
+  font-size: 0.75rem;
+}
+
+.priority-large {
+  padding: 1rem;
+}
+
+.priority-large .priority-color {
+  width: 48px;
+  height: 48px;
+}
+
+.priority-large .priority-emoji {
+  font-size: 1.5rem;
+}
+
+.priority-large .priority-label {
+  font-size: 1.1rem;
+}
+
+.priority-large .priority-description {
+  font-size: 0.9rem;
+}
+
+/* Priority-specific colors (optional, for additional styling) */
+.priority-0 {
+  border-left: 4px solid #8b5cf6;
+}
+
+.priority-1 {
+  border-left: 4px solid #ef4444;
+}
+
+.priority-2 {
+  border-left: 4px solid #f97316;
+}
+
+.priority-3 {
+  border-left: 4px solid #eab308;
+}
+
+.priority-4 {
+  border-left: 4px solid #22c55e;
+}
+
+.priority-5 {
+  border-left: 4px solid #3b82f6;
+}
+
+/* Compact version (icon only) */
+.priority-indicator.compact {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.priority-indicator.compact .priority-color {
+  width: 28px;
+  height: 28px;
+}
+
+.priority-indicator.compact .priority-emoji {
+  font-size: 1rem;
+}

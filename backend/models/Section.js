@@ -1,4 +1,3 @@
-// models/Section.js
 import mongoose from "mongoose";
 const colors = [
   "#3B82F6", // blue

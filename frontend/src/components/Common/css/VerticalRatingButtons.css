@@ -1,0 +1,54 @@
+.vertical-rating-buttons {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 100;
+}
+
+.rating-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.rating-icon:not(:disabled):hover {
+  border-color: var(--btn-color);
+  transform: scale(1.1);
+}
+
+.rating-icon.selected {
+  background: var(--btn-color);
+  color: white;
+  border-color: var(--btn-color);
+}
+
+.rating-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.label {
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--btn-color);
+  white-space: nowrap;
+}

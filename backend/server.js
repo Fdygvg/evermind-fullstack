@@ -10,6 +10,7 @@ import questionRoutes from "./routes/questionRoutes.js";
 import sessionRoutes from "./routes/sessionRoutes.js";
 import statsRoutes from "./routes/statsRoutes.js";
 import presetRoutes from "./routes/presetRoutes.js";
+import smartReviewRoutes from './routes/smartReviewRoutes.js';
 
 dotenv.config();
 // app config
@@ -32,6 +33,7 @@ app.use("/api/questions", questionRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/presets", presetRoutes);
+app.use('/api/smart-review', smartReviewRoutes);
 
 // Test route
 app.get("/", (req, res) => {

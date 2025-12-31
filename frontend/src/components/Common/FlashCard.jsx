@@ -1,6 +1,7 @@
-// components/Common/FlashCard.jsx
+// Enhanced FlashCard with Smart Review Rating Buttons
 import React, { useState, useRef, useEffect } from 'react';
-import { FaSync, FaQuestionCircle, FaCheck, FaTimes, FaMinus } from 'react-icons/fa';
+import { FaSync, FaQuestionCircle } from 'react-icons/fa';
+import RatingButtons from '../SmartReview/RatingButtons';
 import './css/flashCard.css';
 
 const Flashcard = ({
@@ -10,11 +11,15 @@ const Flashcard = ({
   totalQuestions,
   onAnswer,
   isCode = false,
-  CodeBlock, // Optional: if you want to render code
+  CodeBlock,
   disabled = false,
-  autoFlipDelay = null, // Optional: auto-flip after X ms
+  autoFlipDelay = null,
   showHint = true,
-  compact = false
+  compact = false,
+  // Smart Review props
+  useSmartReview = false,
+  onRate,
+  smartReviewMode = false
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -52,6 +57,13 @@ const Flashcard = ({
     onAnswer(isCorrect);
   };
 
+  const handleSmartReviewRating = async (rating) => {
+    if (disabled) return;
+    if (onRate) {
+      await onRate(rating);
+    }
+  };
+
   // Auto-flip feature (optional)
   useEffect(() => {
     if (autoFlipDelay && !isFlipped) {
@@ -73,23 +85,20 @@ const Flashcard = ({
     const handleKeyDown = (e) => {
       if (disabled) return;
       
+      // Smart Review mode uses different keyboard shortcuts (1-5 for ratings)
+      if (useSmartReview && showAnswerButtons) {
+        if (e.key >= '1' && e.key <= '5') {
+          e.preventDefault();
+          handleSmartReviewRating(parseInt(e.key));
+          return;
+        }
+      }
+      
       switch(e.key) {
         case ' ':
         case 'Spacebar':
           e.preventDefault();
           handleFlip();
-          break;
-        case 'ArrowLeft':
-        case '1':
-          if (showAnswerButtons) handleAnswer('hard');
-          break;
-        case 'ArrowDown':
-        case '2':
-          if (showAnswerButtons) handleAnswer('medium');
-          break;
-        case 'ArrowRight':
-        case '3':
-          if (showAnswerButtons) handleAnswer('easy');
           break;
         case 'Escape':
           setIsFlipped(false);
@@ -103,7 +112,7 @@ const Flashcard = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [disabled, showAnswerButtons, isFlipped]);
+  }, [disabled, showAnswerButtons, isFlipped, useSmartReview]);
 
   return (
     <div className={`flashcard-container ${compact ? 'compact' : ''}`}>
@@ -137,7 +146,7 @@ const Flashcard = ({
               )}
               
               {showHint && !isFlipped && (
-                <div className="flip-hint">
+               <div className="flip-hint">
                   <FaQuestionCircle size={20} />
                   <span>Click or press SPACE to reveal answer</span>
                 </div>
@@ -156,58 +165,23 @@ const Flashcard = ({
                   <div className="answer-text">{answer}</div>
                 </>
               )}
-              
-              {showAnswerButtons && (
-                <div className="answer-instructions">
-                  <span>Press 1 or ← for Don't Know</span>
-                  <span>Press 2 or ↓ for Kinda</span>
-                  <span>Press 3 or → for I Know It</span>
-                </div>
-              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Action Buttons (only show when answer is revealed) */}
-      {showAnswerButtons && (
-        <div className="answer-actions-3">
-          <button
-            className="action-btn red-btn"
-            onClick={() => handleAnswer('hard')}
+      {/* Smart Review Rating Buttons (only show when flipped) */}
+      {useSmartReview && showAnswerButtons && (
+        <div className="flashcard-smart-review">
+          <RatingButtons 
+            onRate={handleSmartReviewRating}
             disabled={disabled}
-            aria-label="Don't know"
-          >
-            <FaTimes size={20} />
-            <span>Don't Know</span>
-            <kbd>1</kbd>
-          </button>
-          
-          <button
-            className="action-btn yellow-btn"
-            onClick={() => handleAnswer('medium')}
-            disabled={disabled}
-            aria-label="Kinda know"
-          >
-            <FaMinus size={20} />
-            <span>Kinda</span>
-            <kbd>2</kbd>
-          </button>
-          
-          <button
-            className="action-btn green-btn"
-            onClick={() => handleAnswer('easy')}
-            disabled={disabled}
-            aria-label="I know it"
-          >
-            <FaCheck size={20} />
-            <span>I Know It</span>
-            <kbd>3</kbd>
-          </button>
+            compact={true}
+          />
         </div>
       )}
 
-      {/* Flip button (always visible) */}
+      {/* Flip button (show when not flipped or in non-smart-review mode) */}
       {!showAnswerButtons && (
         <button
           className="flip-only-btn"
@@ -225,17 +199,11 @@ const Flashcard = ({
           <kbd>SPACE</kbd>
           <span>Flip card</span>
         </div>
-        {isFlipped && (
-          <>
-            <div className="shortcut">
-              <kbd>1</kbd> or <kbd>←</kbd>
-              <span>Wrong</span>
-            </div>
-            <div className="shortcut">
-              <kbd>2</kbd> or <kbd>→</kbd>
-              <span>Correct</span>
-            </div>
-          </>
+        {isFlipped && useSmartReview && (
+          <div className="shortcut">
+            <kbd>1-5</kbd>
+            <span>Rate (1=Hard, 5=Perfect)</span>
+          </div>
         )}
         <div className="shortcut">
           <kbd>ESC</kbd>

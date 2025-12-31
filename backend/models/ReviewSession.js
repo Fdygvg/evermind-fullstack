@@ -1,4 +1,3 @@
-// models/ReviewSession.js
 import mongoose from 'mongoose';
 
 const reviewSessionSchema = new mongoose.Schema({

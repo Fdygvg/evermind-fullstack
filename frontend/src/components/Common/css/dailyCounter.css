@@ -1,0 +1,369 @@
+/* Daily Counter Styles */
+.daily-counter {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+}
+
+.counter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-light);
+}
+
+.counter-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.counter-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-weight: 700;
+}
+
+.counter-stats .current {
+  font-size: 2.2rem;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.counter-stats .separator {
+  font-size: 1.8rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  margin: 0 0.25rem;
+}
+
+.counter-stats .total {
+  font-size: 1.8rem;
+  color: var(--text-primary);
+}
+
+.counter-stats .questions-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-left: 0.5rem;
+}
+
+/* Three-Track Breakdown */
+.track-breakdown {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.track-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-light);
+  transition: all 0.3s ease;
+}
+
+.track-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.track-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  color: white;
+}
+
+.track-count {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.track-new .track-badge {
+  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+}
+
+.track-pending .track-badge {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+}
+
+.track-review .track-badge {
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+}
+
+.track-new {
+  border-color: #8b5cf6;
+}
+
+.track-pending {
+  border-color: #f97316;
+}
+
+.track-review {
+  border-color: #3b82f6;
+}
+
+/* Progress Bar */
+.progress-container {
+  margin: 1.5rem 0;
+}
+
+.progress-bar {
+  height: 32px;
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  border: 2px solid var(--border-light);
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 14px;
+  position: relative;
+  transition: width 0.5s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 1rem;
+  min-width: 40px; /* Ensures text is visible even at low percentages */
+}
+
+/* Progress Colors */
+.progress-very-low { background: linear-gradient(90deg, #ef4444, #f97316); }
+.progress-low { background: linear-gradient(90deg, #f97316, #eab308); }
+.progress-medium { background: linear-gradient(90deg, #eab308, #22c55e); }
+.progress-high { background: linear-gradient(90deg, #22c55e, #3b82f6); }
+.progress-complete { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+
+.progress-text {
+  color: var(--color-surface);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+/* Progress Labels */
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.progress-label {
+  font-weight: 500;
+}
+
+.progress-label.start {
+  text-align: left;
+}
+
+.progress-label.middle {
+  text-align: center;
+  flex: 1;
+}
+
+.progress-label.end {
+  text-align: right;
+}
+
+/* Counter Footer */
+.counter-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.remaining-info {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.remaining-count {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.remaining-text {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Status Indicator */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-very-low { background-color: #ef4444; }
+.status-low { background-color: #f97316; }
+.status-medium { background-color: #eab308; }
+.status-high { background-color: #22c55e; }
+.status-complete { background-color: #3b82f6; }
+
+.status-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Completion Message */
+.completion-message {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--gradient-primary);
+  color: var(--color-surface);
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  animation: fadeIn 0.5s ease;
+}
+
+/* Animations */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Compact Version */
+.daily-counter.compact {
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.daily-counter.compact .counter-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+}
+
+.daily-counter.compact .counter-title {
+  font-size: 1.1rem;
+}
+
+.daily-counter.compact .counter-stats .current {
+  font-size: 1.8rem;
+}
+
+.daily-counter.compact .counter-stats .total {
+  font-size: 1.4rem;
+}
+
+.daily-counter.compact .progress-bar {
+  height: 24px;
+}
+
+.daily-counter.compact .progress-fill {
+  padding-right: 0.75rem;
+}
+
+.daily-counter.compact .progress-text {
+  font-size: 0.8rem;
+}
+
+.daily-counter.compact .counter-footer {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+}
+
+.daily-counter.compact .remaining-count {
+  font-size: 1.4rem;
+}
+
+.daily-counter.compact .remaining-text {
+  font-size: 0.85rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .daily-counter {
+    padding: 1.25rem;
+    margin: 1rem 0;
+  }
+
+  .counter-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .counter-title {
+    font-size: 1.2rem;
+  }
+
+  .track-breakdown {
+    gap: 0.75rem;
+  }
+
+  .track-item {
+    flex: 1 1 auto;
+    min-width: calc(50% - 0.375rem);
+  }
+
+  .track-badge {
+    font-size: 0.65rem;
+  }
+
+  .track-count {
+    font-size: 1rem;
+  }
+
+  .counter-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .remaining-info {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .status-indicator {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* Dark Mode Support handled via variables */
