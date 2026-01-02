@@ -6,9 +6,7 @@ import { useSession } from "../hooks/useSession";
 import { questionService } from "../services/question";
 import { sectionService } from "../services/sections";
 import EliminationQuestionCard from "../components/Elimination/EliminationQuestionCard";
-import EliminatedList from "../components/Elimination/EliminatedList";
 import SmartReviewWrapper from "../components/SmartReview/SmartReviewWrapper";
-import RatingButtons from "../components/SmartReview/RatingButtons";
 import SectionProgressDisplay from "../components/SmartReview/SectionProgressDisplay";
 
 const EliminationModePage = () => {
@@ -27,7 +25,6 @@ const EliminationModePage = () => {
   const [hideEliminated, setHideEliminated] = useState(true);
   const [loading, setLoading] = useState(true);
   const [sessionTime, setSessionTime] = useState(0);
-  const [currentQuestionForRating, setCurrentQuestionForRating] = useState(null);
 
   // Check if using Smart Review mode
   const isSmartReviewMode = location.state?.useSmartReview !== false; // Default to true
@@ -49,7 +46,7 @@ const EliminationModePage = () => {
       }
     };
     loadSections();
-  }, [isSmartReviewMode]);
+  }, [isSmartReviewMode, sectionIds.length]);
 
   // Get questions from route state or fetch
   useEffect(() => {
@@ -118,28 +115,18 @@ const EliminationModePage = () => {
       setFilteredQuestions((prev) => prev.filter((q) => q._id !== questionId));
       setCorrectCount((prev) => prev + 1);
       setCurrentStreak((prev) => prev + 1);
-
-      // If Smart Review, show rating buttons
-      if (isSmartReviewMode) {
-        setCurrentQuestionForRating(question);
-      }
     } else if (action === "kinda") {
       // Partial elimination - Kinda know it
       setPartialQuestions((prev) => [...prev, question]);
       setFilteredQuestions((prev) => prev.filter((q) => q._id !== questionId));
       setCorrectCount((prev) => prev + 1);
       setCurrentStreak((prev) => prev + 1);
-
-      // If Smart Review, show rating buttons
-      if (isSmartReviewMode) {
-        setCurrentQuestionForRating(question);
-      }
     } else if (action === "dont-know") {
       // Don't know - keep reviewing, but mark as wrong
       setWrongCount((prev) => prev + 1);
       setCurrentStreak(0);
     }
-  }, [filteredQuestions, revealedAnswers, isSmartReviewMode]);
+  }, [filteredQuestions, revealedAnswers]);
 
   // Toggle answer visibility
   const toggleAnswer = (questionId) => {
@@ -213,7 +200,7 @@ const EliminationModePage = () => {
         showDailyCounter={true}
         showAddMore={true}
       >
-        {({ currentQuestion, rateQuestion, isLoading, isSessionComplete, canUndo, undoLastRating, reviewedToday, dailyLimit, sectionProgress }) => {
+        {({ todaysQuestions, rateQuestion, isLoading, isSessionComplete, canUndo, undoLastRating, sectionProgress }) => {
           if (isSessionComplete) {
             return (
               <div className="session-complete">
@@ -224,7 +211,7 @@ const EliminationModePage = () => {
             );
           }
 
-          if (!currentQuestion) {
+          if (!todaysQuestions || todaysQuestions.length === 0) {
             return <div className="loading">Loading Smart Review questions...</div>;
           }
 
@@ -255,29 +242,20 @@ const EliminationModePage = () => {
               <SectionProgressDisplay sectionProgress={sectionProgress} />
 
               <div className="questions-container">
-                <EliminationQuestionCard
-                  question={currentQuestion}
-                  index={0}
-                  isRevealed={revealedAnswers[currentQuestion._id] || false}
-                  onToggleAnswer={() => toggleAnswer(currentQuestion._id)}
-                  rateQuestion={rateQuestion}
-                  isLoading={isLoading}
-                  disabled={isLoading}
-                />
-                {/* Show rating buttons after elimination action */}
-                {currentQuestionForRating && currentQuestionForRating._id === currentQuestion._id && (
-                  <div className="elimination-rating-section">
-                    <h3>How well do you know this?</h3>
-                    <RatingButtons
-                      onRate={async (rating) => {
-                        await rateQuestion(rating);
-                        setCurrentQuestionForRating(null);
-                      }}
+                <div className="questions-list">
+                  {todaysQuestions.map((question, index) => (
+                    <EliminationQuestionCard
+                      key={question._id}
+                      question={question}
+                      index={index}
+                      isRevealed={revealedAnswers[question._id] || false}
+                      onToggleAnswer={() => toggleAnswer(question._id)}
+                      rateQuestion={(rating) => rateQuestion(rating, question._id)}
+                      isLoading={isLoading}
                       disabled={isLoading}
-                      compact={false}
                     />
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
 
               <div className="session-controls">

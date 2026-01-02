@@ -5,14 +5,14 @@ import { Settings } from 'lucide-react';
 import ToolPalette from './ToolPalette';
 import DraggableTool from './DraggableTool';
 import tools from './tools';
-import '../Common/css/commandCenter.css';
+import '../css/commandCenter.css';
 
 
 
 const CommandCenter = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [minimizedTools, setMinimizedTools] = useState({});
-  
+
   // Initialize directly from localStorage
   const [activeTools, setActiveTools] = useState(() => {
     try {
@@ -22,7 +22,7 @@ const CommandCenter = () => {
       return ['timer'];
     }
   });
-  
+
   const [toolPositions, setToolPositions] = useState(() => {
     try {
       const saved = localStorage.getItem('evermind_tool_positions');
@@ -31,20 +31,20 @@ const CommandCenter = () => {
       return {};
     }
   });
-  
+
 
   // Save to localStorage when tools change
   useEffect(() => {
     localStorage.setItem('evermind_active_tools', JSON.stringify(activeTools));
   }, [activeTools]);
-  
+
   // Save to localStorage when positions change
   useEffect(() => {
     localStorage.setItem('evermind_tool_positions', JSON.stringify(toolPositions));
   }, [toolPositions]);
-  
 
-  
+
+
   const toggleTool = (toolId) => {
     if (activeTools.includes(toolId)) {
       setActiveTools(prev => prev.filter(id => id !== toolId));
@@ -52,18 +52,18 @@ const CommandCenter = () => {
       setActiveTools(prev => [...prev, toolId]);
     }
   };
-  
+
   const updateToolPosition = (toolId, position) => {
     setToolPositions(prev => ({
       ...prev,
       [toolId]: position
     }));
   };
-  
+
   const resetPositions = () => {
     setToolPositions({});
   };
-  
+
   return (
     <>
       {/* Floating Trigger Button */}
@@ -73,11 +73,11 @@ const CommandCenter = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         drag
-        dragConstraints={{ 
-          left: 0, 
+        dragConstraints={{
+          left: 0,
           right: window.innerWidth - 60,
-          top: 0, 
-          bottom: window.innerHeight - 60 
+          top: 0,
+          bottom: window.innerHeight - 60
         }}
         dragElastic={0.1}
         initial={{ opacity: 0, scale: 0 }}
@@ -86,7 +86,7 @@ const CommandCenter = () => {
       >
         <Settings size={24} />
       </Motion.button>
-      
+
       {/* Tool Palette Modal */}
       <AnimatePresence>
         {isOpen && (
@@ -99,12 +99,12 @@ const CommandCenter = () => {
           />
         )}
       </AnimatePresence>
-      
+
       {/* Active Draggable Tools */}
       {activeTools.map(toolId => {
         const ToolComponent = tools[toolId];
         if (!ToolComponent) return null;
-        
+
         return (
           <DraggableTool
             key={toolId}

@@ -1,5 +1,5 @@
 import React from 'react';
-import '../Common/css/SectionProgressDisplay.css';
+import '../css/SectionProgressDisplay.css';
 
 const SectionProgressDisplay = ({ sectionProgress, sections = [] }) => {
     if (!sectionProgress || Object.keys(sectionProgress).length === 0) {

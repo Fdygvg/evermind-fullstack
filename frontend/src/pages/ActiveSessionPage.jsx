@@ -1,6 +1,6 @@
-// Enhanced ActiveSessionPage with Smart Review Integration
+// Enhanced ActiveSessionPage with Smart Review Integration and Session Resumption
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useSession } from "../hooks/useSession";
 import { sessionService } from "../services/sessions";
 import ProgressBar from "../components/Common/ProgressBar";
@@ -19,12 +19,16 @@ const ActiveSession = () => {
   const [questionKey, setQuestionKey] = useState(0);
   const [sessionTime, setSessionTime] = useState(0);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [answeredQuestionIds, setAnsweredQuestionIds] = useState([]);
+  const [isResuming, setIsResuming] = useState(false);
   const submittingQuestionIdRef = useRef(null);
   const isLoadingQuestionRef = useRef(false);
   const sessionStartTimeRef = useRef(null);
+  const autoSaveIntervalRef = useRef(null);
 
   const { activeSession } = useSession();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Check if Smart Review mode is enabled
   const isSmartReviewMode = activeSession?.useSmartReview || false;
@@ -90,15 +94,43 @@ const ActiveSession = () => {
     }
   }, [navigate]);
 
+  // Check for session resumption
+  useEffect(() => {
+    const checkResume = () => {
+      if (location.state?.resumeSession && location.state?.sessionData) {
+        console.log('[RESUME] Resuming session from saved state');
+        setIsResuming(true);
+        const sessionData = location.state.sessionData;
+        
+        // Restore answered question IDs
+        if (sessionData.progress?.answeredQuestionIds) {
+          setAnsweredQuestionIds(sessionData.progress.answeredQuestionIds);
+        }
+        
+        // Set session progress
+        if (sessionData.progress) {
+          setSessionProgress(sessionData.progress);
+        }
+      }
+    };
+    
+    checkResume();
+  }, [location.state]);
+
   // Load initial question on mount (only for non-Smart Review sessions)
   useEffect(() => {
-    if (!isSmartReviewMode) {
+    if (!isSmartReviewMode && !isResuming) {
       console.log("[INIT] Component mounted, loading initial question");
       sessionStartTimeRef.current = Date.now();
       loadNextQuestion();
+    } else if (!isSmartReviewMode && isResuming) {
+      console.log("[INIT] Resuming session, loading next question");
+      sessionStartTimeRef.current = Date.now();
+      loadNextQuestion();
+      setIsResuming(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isResuming]);
 
   // Timer: Update session time every second
   useEffect(() => {
@@ -111,6 +143,42 @@ const ActiveSession = () => {
 
     return () => clearInterval(timer);
   }, []);
+
+  // Auto-save progress every 30 seconds and on unmount
+  useEffect(() => {
+    const saveProgress = async () => {
+      if (!isSmartReviewMode && sessionProgress && activeSession) {
+        try {
+          console.log('[AUTO-SAVE] Saving progress...');
+          await sessionService.updateProgress({
+            currentIndex: sessionProgress.currentQuestionIndex || 0,
+            answeredQuestionIds: answeredQuestionIds,
+            status: 'active'
+          });
+          console.log('[AUTO-SAVE] Progress saved successfully');
+        } catch (error) {
+          console.error('[AUTO-SAVE] Failed to save progress:', error);
+        }
+      }
+    };
+
+    // Set up auto-save interval (every 30 seconds)
+    autoSaveIntervalRef.current = setInterval(saveProgress, 30000);
+
+    // Save on unmount (auto-pause)
+    return () => {
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
+      }
+      
+      // Auto-pause on unmount
+      if (!isSmartReviewMode && sessionProgress && activeSession) {
+        sessionService.pauseSession().catch(err => {
+          console.error('[AUTO-PAUSE] Failed to pause session:', err);
+        });
+      }
+    };
+  }, [isSmartReviewMode, sessionProgress, answeredQuestionIds, activeSession]);
 
   // Reset submission flag when question changes
   useEffect(() => {
@@ -152,6 +220,9 @@ const ActiveSession = () => {
       });
       console.log("[SUBMIT] Answer submitted successfully");
       
+      // Track answered question
+      setAnsweredQuestionIds(prev => [...prev, questionId]);
+      
       if (responseType === 'easy') {
         setCurrentStreak(prev => prev + 1);
       } else {
@@ -172,6 +243,23 @@ const ActiveSession = () => {
       console.log("[SUBMIT] Reset submission flag after error");
     }
   }, [currentQuestion, loadNextQuestion, loading]);
+
+  const pauseSession = async () => {
+    try {
+      console.log('[PAUSE] Pausing session...');
+      // Save current progress
+      await sessionService.updateProgress({
+        currentIndex: sessionProgress?.currentQuestionIndex || 0,
+        answeredQuestionIds: answeredQuestionIds,
+        status: 'paused'
+      });
+      console.log('[PAUSE] Session paused successfully');
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Failed to pause session:", error);
+      alert("Failed to pause session. Please try again.");
+    }
+  };
 
   const endSession = async () => {
     if (window.confirm("Are you sure you want to end this session?")) {
@@ -229,6 +317,9 @@ const ActiveSession = () => {
                       ↶ Undo Last Rating
                     </button>
                   )}
+                  <button className="pause-session-btn" onClick={pauseSession}>
+                    ⏸ Pause
+                  </button>
                   <button className="end-session-btn" onClick={endSession}>
                     End Session
                   </button>
@@ -315,9 +406,14 @@ const ActiveSession = () => {
         <div className="progress-stats">
           {sessionProgress?.remaining} questions remaining
         </div>
-        <button className="end-session-btn" onClick={endSession}>
-          End Session
-        </button>
+        <div className="session-controls-header">
+          <button className="pause-session-btn" onClick={pauseSession}>
+            ⏸ Pause
+          </button>
+          <button className="end-session-btn" onClick={endSession}>
+            End Session
+          </button>
+        </div>
       </div>
 
       {/* Question Card with Swipe Overlay or FlashCard */}

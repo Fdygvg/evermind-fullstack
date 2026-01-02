@@ -1,5 +1,5 @@
 import React from 'react';
-import '../../Common/css/toolTemplate.css';
+import '../../css/toolTemplate.css';
 
 const ToolTemplate = ({
   icon = '⚙️',
@@ -17,7 +17,7 @@ const ToolTemplate = ({
           {!compact && <p className="tool-desc">{description}</p>}
         </div>
       </div>
-      
+
       <div className="tool-body">
         {children}
       </div>

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { GripVertical } from 'lucide-react';
-import '../Common/css/draggable.css'
+import '../css/draggable.css'
 
 const Draggable = ({
   children,
@@ -29,17 +29,17 @@ const Draggable = ({
 
   const handleDragEnd = (event, info) => {
     setIsDragging(false);
-    
+
     const newX = currentPosition.x + info.offset.x;
     const newY = currentPosition.y + info.offset.y;
-    
+
     const newPosition = { x: newX, y: newY };
-    
+
     // Only update internal state if not controlled
     if (controlledPosition === undefined) {
       setPosition(newPosition);
     }
-    
+
     onDragEnd?.(newPosition);
   };
 
@@ -71,7 +71,7 @@ const Draggable = ({
           <GripVertical size={16} />
         </div>
       )}
-      
+
       <div className="draggable-content">
         {children}
       </div>

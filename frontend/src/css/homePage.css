@@ -53,6 +53,13 @@
   font-weight: 700;
 }
 
+
+.logo-icon-img {
+  height: 2.2rem;
+  width: auto;
+  object-fit: contain;
+}
+
 .logo-icon {
   color: var(--color-primary);
 }
@@ -494,6 +501,7 @@
   margin-bottom: 8px;
   background: linear-gradient(135deg, var(--color-gradient-start), var(--color-gradient-end));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

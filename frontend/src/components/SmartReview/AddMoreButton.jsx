@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import '../Common/css/addMoreButton.css';
+import '../css/addMoreButton.css';
 
-const AddMoreButton = ({ 
-  rolledOverCount, 
-  onAddMore, 
+const AddMoreButton = ({
+  rolledOverCount,
+  onAddMore,
   disabled = false,
-  variant = 'default' 
+  variant = 'default'
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleAddMore = async () => {
     if (disabled || isLoading || rolledOverCount === 0) return;
-    
+
     setIsLoading(true);
     try {
       await onAddMore();
@@ -68,20 +68,20 @@ const AddMoreButton = ({
         <div className="add-more-expanded">
           <div className="expanded-header">
             <h4>Add More Questions</h4>
-            <button 
+            <button
               className="close-btn"
               onClick={() => setIsExpanded(false)}
             >
               ✕
             </button>
           </div>
-          
+
           <div className="expanded-content">
             <p className="info-text">
               You have <strong>{rolledOverCount}</strong> questions that were rolled over from today's limit.
               Adding them will increase your daily review count.
             </p>
-            
+
             <div className="action-buttons">
               <button
                 className="add-confirm-btn"
@@ -97,7 +97,7 @@ const AddMoreButton = ({
                   `Add ${rolledOverCount} Questions`
                 )}
               </button>
-              
+
               <button
                 className="add-cancel-btn"
                 onClick={() => setIsExpanded(false)}
@@ -106,7 +106,7 @@ const AddMoreButton = ({
                 Cancel
               </button>
             </div>
-            
+
             <div className="warning-note">
               ⚠️ Note: These questions will be added to today's session and count toward your daily progress.
             </div>

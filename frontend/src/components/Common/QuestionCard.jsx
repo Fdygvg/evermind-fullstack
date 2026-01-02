@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { FaCheck, FaMinus, FaTimes } from 'react-icons/fa';
 import CodeBlock from "./CodeBlock";
 import { useSound } from "../../hooks/useSound";
-import "./css/questionCard.css";
+import "../css/questionCard.css";
 
 const QuestionCard = ({
   currentQuestion,

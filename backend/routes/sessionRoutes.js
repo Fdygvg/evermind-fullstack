@@ -6,7 +6,9 @@ import {
   getNextQuestion,
   submitAnswer,
   endSession,
-  getLastSessionResults
+  getLastSessionResults,
+  updateProgress,
+  pauseSession
 } from '../controllers/sessionController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -20,5 +22,7 @@ router.get('/next-question', getNextQuestion);
 router.post('/answer', submitAnswer);
 router.delete('/current', endSession);
 router.get('/last-results', getLastSessionResults);
+router.post('/update-progress', updateProgress);
+router.post('/pause', pauseSession);
 
 export default router;

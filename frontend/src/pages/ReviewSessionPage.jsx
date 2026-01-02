@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { sectionService } from "../services/sections";
 import { sessionService } from "../services/sessions";
 import { useSession } from '../hooks/useSession'
@@ -17,6 +17,7 @@ const ReviewSessionPage = () => {
   
   const { setActiveSession } = useSession()
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Helper function to convert hex color to rgba with opacity
   const hexToRgba = (hex, opacity) => {
@@ -28,7 +29,29 @@ const ReviewSessionPage = () => {
 
   useEffect(() => {
     loadSections();
-  }, []);
+    
+    // Check if resuming a session from dashboard
+    const checkResumeSession = async () => {
+      if (location.state?.resumeSession && location.state?.sessionData) {
+        const sessionData = location.state.sessionData;
+        console.log('[RESUME] Resuming session:', sessionData);
+        
+        // Set the active session in context
+        setActiveSession(sessionData);
+        
+        // Navigate directly to active session page
+        navigate('/session/start', {
+          state: {
+            resumeSession: true,
+            sessionData: sessionData
+          },
+          replace: true
+        });
+      }
+    };
+    
+    checkResumeSession();
+  }, [location.state, navigate, setActiveSession]);
 
   useEffect(() => {
   const cards = document.querySelectorAll('.section-card');

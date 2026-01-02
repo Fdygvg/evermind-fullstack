@@ -1,6 +1,7 @@
 // components/Common/SessionStatsBar.jsx
 import React, { useState, useEffect } from 'react';
 import { Flame, Timer, Target, BarChart } from 'lucide-react';
+import '../css/progressBar.css';
 
 const ProgressBar = ({
   currentStreak = 0,
@@ -36,12 +37,12 @@ const ProgressBar = ({
   };
 
   // Calculate accuracy
-  const accuracy = correctCount + wrongCount > 0 
+  const accuracy = correctCount + wrongCount > 0
     ? Math.round((correctCount / (correctCount + wrongCount)) * 100)
     : 0;
 
   // Progress percentage
-  const progress = totalCount > 0 
+  const progress = totalCount > 0
     ? Math.round((currentCount / totalCount) * 100)
     : 0;
 
@@ -78,8 +79,8 @@ const ProgressBar = ({
             <>
               <span className="stat-label">Progress</span>
               <div className="progress-bar-mini">
-                <div 
-                  className="progress-fill" 
+                <div
+                  className="progress-fill"
                   style={{ width: `${progress}%` }}
                 />
               </div>

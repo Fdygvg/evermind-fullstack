@@ -1,0 +1,379 @@
+/* Navbar Base */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1.5rem;
+  background: var(--bg-navbar);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  z-index: 1000;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Brand */
+.navbar-brand {
+  display: flex;
+  flex-direction: column;
+  font-family: 'Poppins', sans-serif;
+  flex-shrink: 0;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: -0.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.navbar-logo-icon {
+  height: 3rem;
+  width: auto;
+  object-fit: contain;
+}
+
+.navbar-logo:hover {
+  color: var(--color-accent);
+}
+
+
+
+/* Hamburger Menu */
+.navbar-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 28px;
+  height: 22px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+  position: relative;
+}
+
+.hamburger,
+.hamburger::before,
+.hamburger::after {
+  content: '';
+  display: block;
+  height: 3px;
+  width: 100%;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger::before,
+.hamburger::after {
+  position: absolute;
+  left: 0;
+}
+
+.hamburger::before {
+  top: -7px;
+}
+
+.hamburger::after {
+  top: 7px;
+}
+
+/* Hamburger animation when active */
+.navbar-toggle.active .hamburger {
+  background: transparent;
+}
+
+.navbar-toggle.active .hamburger::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+
+.navbar-toggle.active .hamburger::after {
+  top: 0;
+  transform: rotate(-45deg);
+}
+
+/* Links */
+.navbar-links {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-link {
+  text-decoration: none;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.navbar-link.active {
+  background: var(--gradient-primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+
+.navbar-link:hover {
+  background: var(--color-surface);
+  color: var(--text-accent);
+}
+
+/* User Section */
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-shrink: 0;
+}
+
+.navbar-username {
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.navbar-button {
+  padding: 0.45rem 0.8rem;
+  border: none;
+  border-radius: 20px;
+  background: var(--gradient-button);
+  color: var(--text-inverse);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.navbar-button:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+}
+
+.navbar-button.ghost {
+  background: transparent;
+  border: 1px solid var(--text-primary);
+  color: var(--text-primary);
+}
+
+.navbar-button.ghost:hover {
+  background: var(--color-surface);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.navbar-pill {
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  background: var(--color-warning);
+  color: var(--text-inverse);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.navbar-pill:hover {
+  background: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+/* Desktop Styles (default) */
+@media (min-width: 901px) {
+  .navbar {
+    flex-wrap: nowrap;
+  }
+
+  .navbar-links {
+    flex: 1;
+    justify-content: center;
+    margin: 0 2rem;
+  }
+
+  .navbar-user {
+    margin-left: auto;
+  }
+}
+
+/* Tablet Styles */
+@media (max-width: 900px) and (min-width: 601px) {
+  .navbar {
+    padding: 0.8rem 1.2rem;
+  }
+
+  .navbar-logo {
+    font-size: 1.6rem;
+  }
+
+
+
+  .navbar-toggle {
+    display: flex;
+    order: 2;
+  }
+
+  .navbar-links {
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-navbar);
+    box-shadow: var(--shadow-lg);
+    gap: 0;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0;
+    z-index: 999;
+  }
+
+  .navbar-links.active {
+    max-height: 400px;
+    padding: 1rem 0;
+  }
+
+  .navbar-link {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    width: 100%;
+    display: block;
+    text-align: left;
+  }
+
+  .navbar-link:last-child {
+    border-bottom: none;
+  }
+
+  .navbar-user {
+    order: 3;
+    gap: 0.6rem;
+  }
+
+  .navbar-username {
+    display: none;
+  }
+
+  .navbar-pill {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Mobile Styles */
+@media (max-width: 600px) {
+  .navbar {
+    padding: 0.6rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .navbar-brand {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .navbar-logo {
+    font-size: 1.4rem;
+  }
+
+
+  .navbar-toggle {
+    display: flex;
+    order: 2;
+    width: 24px;
+    height: 20px;
+  }
+
+  .navbar-links {
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-navbar);
+    box-shadow: var(--shadow-lg);
+    gap: 0;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0;
+    z-index: 999;
+  }
+
+  .navbar-links.active {
+    max-height: 500px;
+    padding: 0.5rem 0;
+  }
+
+  .navbar-link {
+    padding: 0.9rem 1.2rem;
+    border-bottom: 1px solid var(--border-color);
+    width: 100%;
+    display: block;
+    text-align: left;
+    font-size: 0.95rem;
+  }
+
+  .navbar-link:last-child {
+    border-bottom: none;
+  }
+
+  .navbar-user {
+    order: 3;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .navbar-username {
+    display: none;
+  }
+
+  .navbar-button {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.85rem;
+  }
+
+  .navbar-pill {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.45rem;
+  }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 400px) {
+  .navbar {
+    padding: 0.5rem 0.8rem;
+  }
+
+  .navbar-logo {
+    font-size: 1.2rem;
+  }
+  .navbar-user {
+    gap: 0.4rem;
+  }
+
+  .navbar-button {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}
+

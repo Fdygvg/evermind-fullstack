@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import "./css/sectionList.css";
+import "../css/sectionList.css";
 
 const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
   const navigate = useNavigate();
@@ -56,7 +56,7 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
     <div className="sections-grid">
       {sections.map((section) => {
         const progress = calculateProgress(section);
-        
+
         return (
           <div
             key={section._id}
@@ -67,7 +67,7 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
             <div className="section-card-header">
               <div className="section-title-container">
                 <h3 className="section-title">{section.name}</h3>
-                <button 
+                <button
                   className="section-info-btn"
                   onClick={(e) => handleInfoClick(section._id, e)}
                   title="Section details"
@@ -75,7 +75,7 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
                   (i)
                 </button>
               </div>
-              
+
               {section.tags && section.tags.length > 0 && (
                 <div className="section-tags">
                   {section.tags.slice(0, 2).map((tag, index) => (
@@ -99,9 +99,9 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
             {/* Progress Bar */}
             <div className="progress-container">
               <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ 
+                <div
+                  className="progress-fill"
+                  style={{
                     width: `${progress}%`,
                     backgroundColor: section.color || "#667eea"
                   }}
@@ -116,18 +116,18 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
                 <span className="stat-value">{section.questionCount || 0}</span>
                 <span className="stat-label">Questions</span>
               </div>
-              
+
               <div className="stat-item">
                 <span className="stat-icon">✅</span>
                 <span className="stat-value">{section.answeredCount || 0}</span>
                 <span className="stat-label">Answered</span>
               </div>
-              
+
               <div className="stat-item">
                 <span className="stat-icon">📅</span>
                 <span className="stat-value">
-                  {section.createdAt ? 
-                    new Date(section.createdAt).toLocaleDateString('en-US', { month: 'short' }) 
+                  {section.createdAt ?
+                    new Date(section.createdAt).toLocaleDateString('en-US', { month: 'short' })
                     : 'N/A'}
                 </span>
                 <span className="stat-label">Created</span>

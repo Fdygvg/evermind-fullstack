@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sectionService } from "../../services/sections.js";
 import { questionService } from "../../services/question";
-import "./css/searchBar.css"
+import "../css/searchBar.css"
 
 const SearchBar = ({ placeholder = "Search questions...", compact = false, onSearch }) => {
   const [query, setQuery] = useState('');
@@ -11,7 +11,7 @@ const SearchBar = ({ placeholder = "Search questions...", compact = false, onSea
   const [selectedSection, setSelectedSection] = useState('');
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  
+
   const navigate = useNavigate();
   const searchRef = useRef(null);
   const debounceTimer = useRef(null);
@@ -19,7 +19,7 @@ const SearchBar = ({ placeholder = "Search questions...", compact = false, onSea
   useEffect(() => {
     // Fetch sections for filter dropdown
     fetchSections();
-    
+
     // Close dropdown when clicking outside
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -55,7 +55,7 @@ const SearchBar = ({ placeholder = "Search questions...", compact = false, onSea
   const fetchSuggestions = async () => {
     try {
       setLoading(true);
-      
+
       const searchParams = { query: query.trim() };
       if (selectedSection) {
         searchParams.sectionId = selectedSection;
@@ -77,19 +77,19 @@ const SearchBar = ({ placeholder = "Search questions...", compact = false, onSea
       onSearch({ query, sectionId: selectedSection });
     } else {
       // Navigate to search page with filters
-      navigate('/search', { 
-        state: { 
-          query, 
-          sectionId: selectedSection 
-        } 
+      navigate('/search', {
+        state: {
+          query,
+          sectionId: selectedSection
+        }
       });
     }
     setShowDropdown(false);
   };
 
   const handleSuggestionClick = (question) => {
-    navigate(`/questions/edit/${question._id}`, { 
-      state: { question } 
+    navigate(`/questions/edit/${question._id}`, {
+      state: { question }
     });
     setShowDropdown(false);
     setQuery('');
@@ -108,7 +108,7 @@ const SearchBar = ({ placeholder = "Search questions...", compact = false, onSea
         <div className="search-input-group">
           {/* Search Icon */}
           <span className="search-icon">🔍</span>
-          
+
           {/* Main Search Input */}
           <input
             type="text"
@@ -119,18 +119,18 @@ const SearchBar = ({ placeholder = "Search questions...", compact = false, onSea
             className="search-input"
             autoComplete="off"
           />
-          
+
           {/* Clear Button */}
           {query && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="clear-btn"
               onClick={clearSearch}
             >
               ✕
             </button>
           )}
-          
+
           {/* Section Filter Dropdown */}
           <select
             value={selectedSection}
@@ -144,10 +144,10 @@ const SearchBar = ({ placeholder = "Search questions...", compact = false, onSea
               </option>
             ))}
           </select>
-          
+
           {/* Search Button */}
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="search-btn"
             disabled={!query.trim()}
           >
@@ -162,15 +162,15 @@ const SearchBar = ({ placeholder = "Search questions...", compact = false, onSea
               <span className="results-count">
                 {suggestions.length} result{suggestions.length !== 1 ? 's' : ''}
               </span>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="close-dropdown"
                 onClick={() => setShowDropdown(false)}
               >
                 ✕
               </button>
             </div>
-            
+
             <div className="suggestions-list">
               {suggestions.map(question => (
                 <div
@@ -180,7 +180,7 @@ const SearchBar = ({ placeholder = "Search questions...", compact = false, onSea
                 >
                   <div className="suggestion-content">
                     <h4 className="suggestion-question">
-                      {question.question.length > 80 
+                      {question.question.length > 80
                         ? `${question.question.substring(0, 80)}...`
                         : question.question}
                     </h4>
@@ -198,9 +198,9 @@ const SearchBar = ({ placeholder = "Search questions...", compact = false, onSea
                 </div>
               ))}
             </div>
-            
+
             <div className="suggestions-footer">
-              <button 
+              <button
                 className="view-all-btn"
                 onClick={handleSearch}
               >

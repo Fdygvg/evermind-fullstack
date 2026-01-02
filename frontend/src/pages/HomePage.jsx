@@ -1,5 +1,5 @@
+import logo from "../assets/logo.png";
 import React, { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import {
   FaCode,
@@ -130,7 +130,7 @@ function createFlashcardSystem() {
       <header className="dev-hero" ref={heroRef}>
         <nav className="dev-nav">
           <div className="dev-logo">
-            <IconFallback type="terminal" />
+            <img src={logo} alt="Evermind Logo" className="logo-icon-img" />
             <span className="logo-text">
               <span className="logo-accent">EVER</span>MIND
               <span className="dev-badge">DEV</span>
@@ -219,9 +219,8 @@ function createFlashcardSystem() {
                 {Object.keys(codeExamples).map((lang) => (
                   <button
                     key={lang}
-                    className={`editor-tab ${
-                      activeTab === lang ? "active" : ""
-                    }`}
+                    className={`editor-tab ${activeTab === lang ? "active" : ""
+                      }`}
                     onClick={() => setActiveTab(lang)}
                   >
                     {lang}.js
@@ -430,7 +429,7 @@ function createFlashcardSystem() {
       <footer className="dev-footer">
         <div className="footer-content">
           <div className="footer-logo">
-            <IconFallback type="terminal" />
+            <img src={logo} alt="Evermind Logo" className="logo-icon-img" />
             <span className="logo-text">
               <span className="logo-accent">EVER</span>MIND
               <span className="dev-tag">.DEV</span>

@@ -2,7 +2,7 @@ import React from "react";
 import { Eye } from "lucide-react";
 import CodeBlock from "../Common/CodeBlock";
 import RatingButtons from "../SmartReview/RatingButtons";
-import "../Common/css/eliminationQuestionCard.css";
+import "../css/eliminationQuestionCard.css";
 import { useSound } from "../../hooks/useSound";
 
 const EliminationQuestionCard = ({

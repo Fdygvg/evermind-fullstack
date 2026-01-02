@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../../css/DesktopTikTokCard.css';
 
 const DesktopTikTokCard = ({ question, answer, onRate }) => {
   const [isFlipped, setIsFlipped] = useState(false);

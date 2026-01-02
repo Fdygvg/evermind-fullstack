@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useSmartReview } from '../../hooks/useSmartReview';
 import DailyCounter from './DailyCounter';
 import AddMoreButton from './AddMoreButton';
-import '../Common/css/smartReviewWrapper.css';
+import '../css/smartReviewWrapper.css';
 
 const SmartReviewWrapper = ({
   children,
@@ -42,6 +42,7 @@ const SmartReviewWrapper = ({
       {children({
         // Current state
         currentQuestion: smartReview.currentQuestion,
+        todaysQuestions: smartReview.todaysQuestions, // Added for Elimination Mode
         isSessionComplete: smartReview.isSessionComplete,
         progress: smartReview.progress,
         isLoading: smartReview.isLoading,

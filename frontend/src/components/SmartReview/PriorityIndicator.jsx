@@ -1,5 +1,5 @@
 import React from 'react';
-import '../Common/css/PriorityIndicator.css';
+import '../css/priorityIndicator.css';
 import { smartReviewService } from '../../services/smartReviewService';
 
 const PriorityIndicator = ({ priority, showLabel = true, size = 'medium' }) => {

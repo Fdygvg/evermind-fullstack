@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Minus, X } from 'lucide-react';
 import Draggable from './Draggable';
-import '../Common/css/commandCenter.css';
+import '../css/commandCenter.css';
 
 const DraggableTool = ({
   toolId,
@@ -13,9 +13,9 @@ const DraggableTool = ({
   onMinimize,
   onRemove
 }) => {
-  const defaultPos = position || { 
-    x: 100 + ((toolId?.charCodeAt?.(0) || 0) % 300), 
-    y: 100 
+  const defaultPos = position || {
+    x: 100 + ((toolId?.charCodeAt?.(0) || 0) % 300),
+    y: 100
   };
   const [localMinimized, setLocalMinimized] = useState(isMinimized);
 

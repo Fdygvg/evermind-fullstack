@@ -58,10 +58,47 @@ const reviewSessionSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  
+  // Session resumption fields
+  status: {
+    type: String,
+    enum: ['active', 'paused', 'completed'],
+    default: 'active'
+  },
+  currentIndex: {
+    type: Number,
+    default: 0
+  },
+  answeredQuestionIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Question'
+  }],
+  lastUpdated: {
+    type: Date,
+    default: Date.now
+  },
+  
+  // Smart Review integration fields
+  useSmartReview: {
+    type: Boolean,
+    default: false
+  },
+  smartReviewState: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
   }
 }, {
   timestamps: true
 });
+
+// Update lastUpdated on save
+reviewSessionSchema.pre('save', function() {
+  this.lastUpdated = new Date();
+});
+
+reviewSessionSchema.index({ userId: 1, status: 1 });
+reviewSessionSchema.index({ userId: 1, isActive: 1 });
 
 const ReviewSession = mongoose.model('ReviewSession', reviewSessionSchema);
 export default ReviewSession;

@@ -12,9 +12,9 @@ frontend/src/
 frontend/src/
 ├── pages/TikTokReviewPage.jsx        # Main entry
 └── components/Common/TiktokReview/
-    ├── MobileTikTokReview.jsx        # Mobile layout
+    <!-- ├── MobileTikTokReview.jsx        # Mobile layout -->
     ├── DesktopTikTokReview.jsx       # Desktop layout
     <!-- ├── MobileTikTokCard.jsx          # Mobile card -->
     ├── DesktopTikTokCard.jsx         # Desktop card
-    ├── VerticalRatingButtons.jsx     # Shared
-    └── HeartAnimation.jsx            # Shared
+    <!-- ├── VerticalRatingButtons.jsx     # Shared -->
+    <!-- └── HeartAnimation.jsx            # Shared -->

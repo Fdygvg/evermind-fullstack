@@ -1,39 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import logo from '../../assets/logo.png';
+import '../css/navbar.css';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const navbarRef = useRef(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (navbarRef.current && !navbarRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [menuOpen]);
+
+  const handleLinkClick = () => {
+    setMenuOpen(false);
+  };
 
   return (
-    <header className="navbar">
+    <header className="navbar" ref={navbarRef}>
       <div className="navbar-brand">
         <Link to="/dashboard" className="navbar-logo">
-          EVERMIND
+          <img src={logo} alt="Evermind Logo" className="navbar-logo-icon" />
+          <span><strong>EVERMIND</strong></span>
         </Link>
-        <span className="navbar-tagline">memory, but upgraded</span>
       </div>
 
       <button
-        className="navbar-toggle"
+        className={`navbar-toggle ${menuOpen ? 'active' : ''}`}
         onClick={() => setMenuOpen(!menuOpen)}
         aria-label="Toggle navigation"
+        aria-expanded={menuOpen}
       >
         <span className="hamburger"></span>
       </button>
 
       <nav className={`navbar-links ${menuOpen ? 'active' : ''}`}>
-        <NavLink to="/dashboard" className="navbar-link">
+        <NavLink to="/dashboard" className="navbar-link" onClick={handleLinkClick}>
           Dashboard
         </NavLink>
-        <NavLink to="/session/review" className="navbar-link">
+        <NavLink to="/session/review" className="navbar-link" onClick={handleLinkClick}>
           Sessions
         </NavLink>
-        <NavLink to="/sections" className="navbar-link">
+        <NavLink to="/sections" className="navbar-link" onClick={handleLinkClick}>
           Sections
         </NavLink>
-        <NavLink to="/settings" className="navbar-link">
+        <NavLink to="/settings" className="navbar-link" onClick={handleLinkClick}>
           Settings
         </NavLink>
       </nav>

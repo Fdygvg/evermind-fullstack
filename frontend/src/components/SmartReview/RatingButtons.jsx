@@ -1,17 +1,23 @@
 // C:\Users\USER\Desktop\EVERMIND FULLSTACK\frontend\src\components\SmartReview\RatingButtons.jsx
 import React, { useState } from 'react';
-import '../Common/css/ratingButtons.css';
+import '../css/ratingButtons.css';
+import CompactRatingBar from './CompactRatingBar';
 
-const RatingButtons = ({ onRate, disabled = false, compact = false }) => {
+const RatingButtons = ({ onRate, disabled = false, compact = false, useCompactBar = true, showLabels = false }) => {
   const [selectedRating, setSelectedRating] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // Use new compact rating bar by default
+  if (useCompactBar) {
+    return <CompactRatingBar onRate={onRate} disabled={disabled} showLabels={showLabels} />;
+  }
+
   const ratings = [
-    { value: 1, label: 'Hard', emoji: '😫', color: '#ef4444', interval: 'Today' },
-    { value: 2, label: 'Medium', emoji: '😕', color: '#f97316', interval: '1 day' },
-    { value: 3, label: 'Good', emoji: '😐', color: '#eab308', interval: '3 days' },
-    { value: 4, label: 'Easy', emoji: '🙂', color: '#22c55e', interval: '7 days' },
-    { value: 5, label: 'Perfect', emoji: '😄', color: '#3b82f6', interval: '14 days' }
+    { value: 1, label: 'Hard', emoji: '😫', color: '#dc2626', interval: 'Today' },
+    { value: 2, label: 'Medium', emoji: '😕', color: '#f59e0b', interval: '1 day' },
+    { value: 3, label: 'Good', emoji: '😐', color: '#3b82f6', interval: '3 days' },
+    { value: 4, label: 'Easy', emoji: '🙂', color: '#10b981', interval: '7 days' },
+    { value: 5, label: 'Perfect', emoji: '😄', color: '#06b6d4', interval: '14 days' }
   ];
 
   const handleRatingClick = async (rating) => {
@@ -30,6 +36,7 @@ const RatingButtons = ({ onRate, disabled = false, compact = false }) => {
       }, 300);
     } catch (error) {
       // Reset on error
+      console.error('Error rating question:', error);
       setSelectedRating(null);
       setIsAnimating(false);
     }

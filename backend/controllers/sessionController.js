@@ -49,7 +49,10 @@ export const startSession = async (req, res) => {
       correctCount: 0,
       wrongCount: 0,
       mediumCount: 0,
-      isActive: true
+      isActive: true,
+      status: 'active',
+      currentIndex: 0,
+      answeredQuestionIds: []
     });
 
     await session.save();
@@ -231,7 +234,8 @@ export const endSession = async (req, res) => {
     const session = await ReviewSession.findOneAndUpdate(
       { userId: req.userId, isActive: true },
       { 
-        isActive: false, 
+        isActive: false,
+        status: 'completed',
         endTime: new Date() 
       },
       { new: true }
@@ -304,14 +308,16 @@ export const endSession = async (req, res) => {
 
 export const getCurrentSession = async (req, res) => {
   try {
+    // Find sessions with status 'active' or 'paused'
     const session = await ReviewSession.findOne({
       userId: req.userId,
-      isActive: true
+      status: { $in: ['active', 'paused'] }
     })
     .populate('sectionIds', 'name color')
     .populate('remainingQuestions')
     .populate('correctQuestions')
-    .populate('wrongQuestions');
+    .populate('wrongQuestions')
+    .sort({ lastUpdated: -1 }); // Get most recently updated
 
     if (!session) {
       return res.status(404).json({
@@ -326,15 +332,25 @@ export const getCurrentSession = async (req, res) => {
         session: {
           id: session._id,
           cardMode: session.cardMode,
+          currentMode: session.cardMode, // Alias for consistency
           totalQuestions: session.allQuestions.length,
           sections: session.sectionIds,
+          sectionIds: session.sectionIds.map(s => s._id),
+          allQuestions: session.allQuestions,
           progress: {
             total: session.allQuestions.length,
             remaining: session.remainingQuestions.length,
+            currentIndex: session.currentIndex,
             correct: session.correctCount,
-            wrong: session.wrongCount
+            wrong: session.wrongCount,
+            answeredQuestionIds: session.answeredQuestionIds
           },
-          startTime: session.startTime
+          startTime: session.startTime,
+          sessionStartTime: session.startTime, // Alias for consistency
+          status: session.status,
+          lastUpdated: session.lastUpdated,
+          useSmartReview: session.useSmartReview,
+          smartReviewState: session.smartReviewState
         }
       }
     });
@@ -389,6 +405,133 @@ export const getLastSessionResults = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching last session'
+    });
+  }
+};
+
+export const updateProgress = async (req, res) => {
+  try {
+    const { sectionIds, currentIndex, answeredQuestionIds, status, smartReviewState } = req.body;
+    
+    let session = await ReviewSession.findOne({
+      userId: req.userId,
+      status: { $in: ['active', 'paused'] }
+    });
+
+    // If no session exists but smartReviewState is provided, create one for Smart Review
+    if (!session && smartReviewState) {
+      // Extract sectionIds from smartReviewState or request body
+      const extractedSectionIds = sectionIds || smartReviewState.sectionIds || [];
+      
+      session = new ReviewSession({
+        userId: req.userId,
+        sectionIds: extractedSectionIds,
+        useSmartReview: true,
+        status: status || 'active',
+        currentIndex: currentIndex || 0,
+        answeredQuestionIds: answeredQuestionIds || [],
+        smartReviewState: smartReviewState,
+        isActive: true
+      });
+      
+      await session.save();
+      
+      return res.json({
+        success: true,
+        message: 'Smart Review session created and progress saved',
+        data: {
+          session: {
+            id: session._id,
+            currentIndex: session.currentIndex,
+            status: session.status,
+            lastUpdated: session.lastUpdated
+          }
+        }
+      });
+    }
+
+    // If still no session found, return error (for legacy mode)
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active session found'
+      });
+    }
+
+    // Update fields if provided
+    if (currentIndex !== undefined) {
+      session.currentIndex = currentIndex;
+    }
+    if (answeredQuestionIds !== undefined) {
+      session.answeredQuestionIds = answeredQuestionIds;
+    }
+    if (status !== undefined) {
+      session.status = status;
+    }
+    if (smartReviewState !== undefined) {
+      session.smartReviewState = smartReviewState;
+      // Also set useSmartReview flag if smartReviewState is provided
+      session.useSmartReview = true;
+    }
+
+    session.lastUpdated = new Date();
+    await session.save();
+
+    res.json({
+      success: true,
+      message: 'Progress updated successfully',
+      data: {
+        session: {
+          id: session._id,
+          currentIndex: session.currentIndex,
+          status: session.status,
+          lastUpdated: session.lastUpdated
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Update progress error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating progress'
+    });
+  }
+};
+
+export const pauseSession = async (req, res) => {
+  try {
+    const session = await ReviewSession.findOne({
+      userId: req.userId,
+      status: 'active'
+    });
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active session found'
+      });
+    }
+
+    session.status = 'paused';
+    session.lastUpdated = new Date();
+    await session.save();
+
+    res.json({
+      success: true,
+      message: 'Session paused successfully',
+      data: {
+        session: {
+          id: session._id,
+          status: session.status,
+          lastUpdated: session.lastUpdated
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Pause session error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error pausing session'
     });
   }
 };

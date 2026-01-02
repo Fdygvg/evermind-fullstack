@@ -1,0 +1,309 @@
+/* Compact Rating Bar - Single Line Layout */
+.compact-rating-bar-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0.75rem 0;
+}
+
+.rating-bar-instruction {
+  text-align: center;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+/* Main Rating Bar */
+.compact-rating-bar {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 1rem);
+  flex-wrap: nowrap;
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--bg-secondary, rgba(0, 0, 0, 0.03));
+  border-radius: 50px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Rating Number Buttons */
+.rating-number-btn {
+  position: relative;
+  width: clamp(2rem, 8vw, 3.5rem);
+  height: clamp(2rem, 8vw, 3.5rem);
+  min-width: 2rem;
+  min-height: 2rem;
+  border: none;
+  border-radius: 50%;
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
+              0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Individual Button Colors (fallback if style prop fails) */
+.rating-number-btn.rating-1 {
+  background-color: #dc2626;
+}
+
+.rating-number-btn.rating-2 {
+  background-color: #f59e0b;
+}
+
+.rating-number-btn.rating-3 {
+  background-color: #3b82f6;
+}
+
+.rating-number-btn.rating-4 {
+  background-color: #10b981;
+}
+
+.rating-number-btn.rating-5 {
+  background-color: #06b6d4;
+}
+
+/* Hover State */
+.rating-number-btn:hover:not(:disabled) {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25),
+              0 2px 6px rgba(0, 0, 0, 0.15),
+              0 0 0 3px rgba(255, 255, 255, 0.5);
+  z-index: 10;
+}
+
+/* Focus State (Keyboard Navigation) */
+.rating-number-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--rating-color, #3b82f6),
+              0 0 0 6px rgba(255, 255, 255, 0.8),
+              0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: scale(1.1);
+  z-index: 10;
+}
+
+/* Active/Pressed State */
+.rating-number-btn:active:not(:disabled) {
+  transform: scale(1.05);
+}
+
+/* Selected State */
+.rating-number-btn.selected {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.9),
+              0 0 0 8px var(--rating-color, #3b82f6),
+              0 6px 16px rgba(0, 0, 0, 0.3);
+  z-index: 15;
+}
+
+/* Animation State */
+.rating-number-btn.animating {
+  animation: ratingPulse 0.3s ease;
+}
+
+/* Disabled State */
+.rating-number-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Number Display */
+.rating-number {
+  display: block;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+/* Checkmark for Selected */
+.rating-checkmark {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: clamp(1rem, 3vw, 1.25rem);
+  height: clamp(1rem, 3vw, 1.25rem);
+  background: white;
+  color: var(--rating-color, #3b82f6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.6rem, 2vw, 0.75rem);
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: checkmarkPop 0.2s ease;
+  z-index: 2;
+}
+
+/* Hints Below Bar */
+.rating-bar-hints {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: clamp(0.75rem, 1.5vw, 0.9rem);
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.hint-separator {
+  opacity: 0.5;
+  margin: 0 0.25rem;
+}
+
+/* Animations */
+@keyframes ratingPulse {
+  0% { 
+    transform: scale(1); 
+  }
+  50% { 
+    transform: scale(1.3); 
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.4),
+                0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+  100% { 
+    transform: scale(1.2); 
+  }
+}
+
+@keyframes checkmarkPop {
+  0% { 
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  70% { 
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% { 
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Tablet Responsive (601px - 900px) */
+@media (max-width: 900px) and (min-width: 601px) {
+  .compact-rating-bar {
+    gap: clamp(0.4rem, 1.5vw, 0.8rem);
+    padding: 0.4rem;
+  }
+
+  .rating-number-btn {
+    width: clamp(2.25rem, 7vw, 3rem);
+    height: clamp(2.25rem, 7vw, 3rem);
+  }
+
+  .rating-bar-instruction {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* Mobile Responsive (max 600px) */
+@media (max-width: 600px) {
+  .compact-rating-bar-container {
+    padding: 0.5rem 0;
+  }
+
+  .compact-rating-bar {
+    gap: clamp(0.3rem, 1vw, 0.5rem);
+    padding: 0.35rem;
+    border-radius: 40px;
+  }
+
+  .rating-number-btn {
+    width: clamp(2rem, 10vw, 2.75rem);
+    height: clamp(2rem, 10vw, 2.75rem);
+    font-size: clamp(0.95rem, 3.5vw, 1.25rem);
+  }
+
+  .rating-bar-instruction {
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .rating-bar-hints {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .rating-checkmark {
+    width: 1rem;
+    height: 1rem;
+    font-size: 0.6rem;
+    top: -3px;
+    right: -3px;
+  }
+}
+
+/* Extra Small Mobile (max 400px) */
+@media (max-width: 400px) {
+  .compact-rating-bar {
+    gap: 0.25rem;
+    padding: 0.3rem;
+  }
+
+  .rating-number-btn {
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+    min-height: 2rem;
+    font-size: 1rem;
+  }
+
+  .rating-number-btn:hover:not(:disabled) {
+    transform: scale(1.1);
+  }
+
+  .rating-number-btn.selected {
+    transform: scale(1.15);
+  }
+
+  .rating-bar-instruction {
+    font-size: 0.9rem;
+  }
+
+  .rating-bar-hints {
+    font-size: 0.75rem;
+    gap: 0.3rem;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .rating-number-btn {
+    border: 2px solid white;
+  }
+
+  .rating-number-btn:focus-visible {
+    outline: 3px solid white;
+    outline-offset: 2px;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .rating-number-btn,
+  .rating-checkmark {
+    transition: none;
+    animation: none;
+  }
+
+  .rating-number-btn:hover:not(:disabled),
+  .rating-number-btn.selected {
+    transform: none;
+  }
+}
+

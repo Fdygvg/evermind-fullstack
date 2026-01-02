@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaSync, FaQuestionCircle } from 'react-icons/fa';
 import RatingButtons from '../SmartReview/RatingButtons';
-import './css/flashCard.css';
+import '../css/flashCard.css';
 
 const Flashcard = ({
   question,
@@ -36,10 +36,10 @@ const Flashcard = ({
 
   const handleFlip = () => {
     if (disabled || isAnimating) return;
-    
+
     setIsAnimating(true);
     setIsFlipped(prev => !prev);
-    
+
     // Show answer buttons after flip animation completes
     if (!isFlipped) {
       setTimeout(() => {
@@ -70,7 +70,7 @@ const Flashcard = ({
       flipTimeoutRef.current = setTimeout(() => {
         handleFlip();
       }, autoFlipDelay);
-      
+
       return () => {
         if (flipTimeoutRef.current) {
           clearTimeout(flipTimeoutRef.current);
@@ -84,7 +84,7 @@ const Flashcard = ({
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (disabled) return;
-      
+
       // Smart Review mode uses different keyboard shortcuts (1-5 for ratings)
       if (useSmartReview && showAnswerButtons) {
         if (e.key >= '1' && e.key <= '5') {
@@ -93,8 +93,8 @@ const Flashcard = ({
           return;
         }
       }
-      
-      switch(e.key) {
+
+      switch (e.key) {
         case ' ':
         case 'Spacebar':
           e.preventDefault();
@@ -124,7 +124,7 @@ const Flashcard = ({
       )}
 
       {/* The Card */}
-      <div 
+      <div
         ref={cardRef}
         className={`flashcard ${isFlipped ? 'flipped' : ''} ${isAnimating ? 'animating' : ''}`}
         onClick={handleFlip}
@@ -144,9 +144,9 @@ const Flashcard = ({
                   <div className="question-text">{question}</div>
                 </>
               )}
-              
+
               {showHint && !isFlipped && (
-               <div className="flip-hint">
+                <div className="flip-hint">
                   <FaQuestionCircle size={20} />
                   <span>Click or press SPACE to reveal answer</span>
                 </div>
@@ -173,7 +173,7 @@ const Flashcard = ({
       {/* Smart Review Rating Buttons (only show when flipped) */}
       {useSmartReview && showAnswerButtons && (
         <div className="flashcard-smart-review">
-          <RatingButtons 
+          <RatingButtons
             onRate={handleSmartReviewRating}
             disabled={disabled}
             compact={true}

@@ -2,17 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { X, Copy, RefreshCw, Brain, ExternalLink } from 'lucide-react';
 import { aiExplanationService } from '../../../services/aiExplanationService';
-import '../Common/css/AIQuestionModal.css';
+import '../css/AIQuestionModal.css';
 
 /**
  * Modal that shows detailed AI explanation for a question
  */
-const AIQuestionModal = ({ 
-  question, 
-  answer, 
+const AIQuestionModal = ({
+  question,
+  answer,
   section,
-  isOpen, 
-  onClose 
+  isOpen,
+  onClose
 }) => {
   const [explanation, setExplanation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -32,8 +32,8 @@ const AIQuestionModal = ({
 
     try {
       const result = await aiExplanationService.explainQuestion(
-        question, 
-        answer, 
+        question,
+        answer,
         section,
         type
       );
@@ -59,7 +59,7 @@ const AIQuestionModal = ({
   return (
     <div className="ai-modal-overlay" onClick={onClose}>
       <div className="ai-modal-content" onClick={(e) => e.stopPropagation()}>
-        
+
         {/* Modal Header */}
         <div className="ai-modal-header">
           <div className="ai-modal-title">
@@ -125,7 +125,7 @@ const AIQuestionModal = ({
           ) : error ? (
             <div className="ai-error">
               <p>{error}</p>
-              <button 
+              <button
                 className="ai-retry-btn"
                 onClick={regenerateExplanation}
               >
@@ -138,9 +138,9 @@ const AIQuestionModal = ({
               <div className="ai-explanation-text">
                 {explanation}
               </div>
-              
+
               <div className="ai-explanation-actions">
-                <button 
+                <button
                   className="ai-action-btn"
                   onClick={copyToClipboard}
                   title="Copy to clipboard"
@@ -148,7 +148,7 @@ const AIQuestionModal = ({
                   <Copy size={16} />
                   Copy
                 </button>
-                <button 
+                <button
                   className="ai-action-btn"
                   onClick={regenerateExplanation}
                   disabled={isLoading}
@@ -157,7 +157,7 @@ const AIQuestionModal = ({
                   <RefreshCw size={16} />
                   Regenerate
                 </button>
-                <a 
+                <a
                   className="ai-action-btn"
                   href={`https://www.google.com/search?q=${encodeURIComponent(question)}`}
                   target="_blank"

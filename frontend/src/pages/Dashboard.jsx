@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 import { useAuth } from "../hooks/useAuth";
 import { authService } from "../services/auth";
 import { statsService } from "../services/stats";
@@ -74,6 +75,32 @@ const Dashboard = () => {
       ? Math.round((completedQuestions / activeSession.progress.total) * 100)
       : 0;
 
+  // Helper function to capitalize mode names
+  const capitalize = (str) => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
+  // Helper function to format mode display
+  const formatMode = (mode) => {
+    const modeMap = {
+      'normal': 'Normal Mode',
+      'flashcard': 'Flashcard Mode',
+      'elimination': 'Elimination Mode'
+    };
+    return modeMap[mode] || capitalize(mode);
+  };
+
+  // Handle continue session
+  const handleContinueSession = () => {
+    navigate('/session/start', {
+      state: {
+        resumeSession: true,
+        sessionData: activeSession
+      }
+    });
+  };
+
   return (
     <div className="dashboard-page">
       {error && <div className="dashboard-error">{error}</div>}
@@ -88,24 +115,72 @@ const Dashboard = () => {
           aligned so you can retain more with less stress. Dive back into your
           session or explore a fresh focus area.
         </p>
-        <div className="dashboard-cta-group">
-          <button
-            type="button"
-            className="dashboard-button primary"
-            onClick={() => navigate("/session/review")}
-          >
-            Resume learning
-          </button>
 
-          <button
-            type="button"
-            className="dashboard-button secondary"
-            onClick={() => navigate("/sectionlist")}
-          >
-            Manage sections
-          </button>
+        {/* Resume Session Panel - Only show if active/paused session exists */}
+        {activeSession && (
+          <div className="resume-session-panel dashboard-card">
+            <div className="panel-header">
+              <h3>Resume Session</h3>
+              <span className={`status-badge status-${activeSession.status}`}>
+                {capitalize(activeSession.status)}
+              </span>
+            </div>
+            <div className="panel-content">
+              <div className="progress-info">
+                <div className="progress-text">
+                  <strong>{activeSession.progress.currentIndex + 1}</strong> / {activeSession.progress.total} questions
+                </div>
+                <div className="progress-bar-container">
+                  <div 
+                    className="progress-bar-fill" 
+                    style={{ width: `${progressPercent}%` }}
+                  ></div>
+                </div>
+              </div>
+              <div className="session-meta">
+                <div className="meta-item">
+                  <span className="meta-label">Mode:</span>
+                  <span className="meta-value">{formatMode(activeSession.currentMode)}</span>
+                </div>
+                <div className="meta-item">
+                  <span className="meta-label">Started:</span>
+                  <span className="meta-value">
+                    {activeSession.sessionStartTime 
+                      ? format(new Date(activeSession.sessionStartTime), 'PPpp')
+                      : 'Recently'}
+                  </span>
+                </div>
+              </div>
+              <button 
+                className="continue-btn dashboard-button primary"
+                onClick={handleContinueSession}
+              >
+                Continue Session
+              </button>
+            </div>
+          </div>
+        )}
 
-        </div>
+        {/* Default CTA buttons - Show when no active session */}
+        {!activeSession && (
+          <div className="dashboard-cta-group">
+            <button
+              type="button"
+              className="dashboard-button primary"
+              onClick={() => navigate("/session/review")}
+            >
+              Start learning
+            </button>
+
+            <button
+              type="button"
+              className="dashboard-button secondary"
+              onClick={() => navigate("/sectionlist")}
+            >
+              Manage sections
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="dashboard-grid">

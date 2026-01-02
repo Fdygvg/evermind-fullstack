@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTheme } from '../../hooks/useTheme';
-import './css/ThemeSettings.css';
+import '../css/ThemeSettings.css';
 
 
 

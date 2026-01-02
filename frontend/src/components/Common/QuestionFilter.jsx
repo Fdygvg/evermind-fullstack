@@ -1,5 +1,5 @@
 import React from "react";
-import "./css/questionFilters.css";
+import "../css/questionFilter.css";
 
 const QuestionFilter = ({
   searchQuery,

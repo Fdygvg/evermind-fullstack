@@ -1,14 +1,14 @@
 import React from 'react';
-import '../Common/css/dailyCounter.css';
+import '../css/dailyCounter.css';
 
-const DailyCounter = ({ 
-  current, 
-  total, 
+const DailyCounter = ({
+  current,
+  total,
   showProgressBar = true,
   trackBreakdown = null // { new: 0, pending: 0, review: 0 }
 }) => {
   const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
-  
+
   const getStatus = () => {
     if (percentage >= 100) return 'complete';
     if (percentage >= 75) return 'high';
@@ -59,7 +59,7 @@ const DailyCounter = ({
       {showProgressBar && (
         <div className="progress-container">
           <div className="progress-bar">
-            <div 
+            <div
               className={`progress-fill progress-${status}`}
               style={{ width: `${percentage}%` }}
             >
@@ -68,7 +68,7 @@ const DailyCounter = ({
               </span>
             </div>
           </div>
-          
+
           <div className="progress-labels">
             <span className="progress-label start">0</span>
             <span className="progress-label middle">{Math.floor(total / 2)}</span>
@@ -82,14 +82,14 @@ const DailyCounter = ({
           <span className="remaining-count">{remaining}</span>
           <span className="remaining-text">questions remaining today</span>
         </div>
-        
+
         <div className="status-indicator">
           <div className={`status-dot status-${status}`}></div>
           <span className="status-text">
             {status === 'complete' ? 'Complete!' :
-             status === 'high' ? 'Almost there!' :
-             status === 'medium' ? 'Halfway!' :
-             status === 'low' ? 'Getting started' : 'Begin'}
+              status === 'high' ? 'Almost there!' :
+                status === 'medium' ? 'Halfway!' :
+                  status === 'low' ? 'Getting started' : 'Begin'}
           </span>
         </div>
       </div>

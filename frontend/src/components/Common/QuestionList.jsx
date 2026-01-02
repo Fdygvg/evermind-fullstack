@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import CodeBlock from "./CodeBlock";
-import "./css/questionList.css";
+import "../css/questionList.css";
 import { getRandomFlipEffect } from "../../utils/flipStyles";
 
-const QuestionList = ({ 
-  question, 
+const QuestionList = ({
+  question,
   isRevealed,
   onReveal,
   onEdit,
@@ -66,8 +66,8 @@ const QuestionList = ({
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
@@ -90,7 +90,7 @@ const QuestionList = ({
   const sessionStatus = getLastSessionStatus();
 
   return (
-    <div 
+    <div
       className={`question-card ${viewMode}-view ${isSelected ? 'selected' : ''} ${flipEffect.cssClass}`}
       data-question-id={question._id}
     >
@@ -107,7 +107,7 @@ const QuestionList = ({
 
       <div className={`card-flip-container ${isFlipped ? 'flipped' : ''} ${flipEffect.cssClass}`}>
         {/* FRONT SIDE */}
-        <div 
+        <div
           className="question-card-front"
           onClick={handleCardClick}
           style={{ borderTopColor: sectionColor }}
@@ -132,8 +132,8 @@ const QuestionList = ({
                 </div>
               )}
             </div>
-            
-            <button 
+
+            <button
               className="info-button"
               onClick={handleInfoClick}
               title="View question stats"
@@ -148,8 +148,8 @@ const QuestionList = ({
               <div className="answer-content">
                 <div className="answer-label">Answer:</div>
                 {question.isCode ? (
-                  <CodeBlock 
-                    text={question.answer} 
+                  <CodeBlock
+                    text={question.answer}
                     language={question.language || "javascript"}
                     showLineNumbers={true}
                   />
@@ -174,14 +174,14 @@ const QuestionList = ({
               <span className="stat-item">
                 <span className="stat-icon">📅</span>
                 <span className="stat-value">
-                  {question.lastReviewed ? 
+                  {question.lastReviewed ?
                     new Date(question.lastReviewed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                     : 'Never'
                   }
                 </span>
               </span>
             </div>
-            
+
             <div className="answer-indicator">
               {showAnswer ? '👁️ Answer shown' : '👁️‍🗨️ Click to reveal'}
             </div>
@@ -189,14 +189,14 @@ const QuestionList = ({
         </div>
 
         {/* BACK SIDE */}
-        <div 
+        <div
           className="question-card-back"
           onClick={handleFlipClose}
           style={{ borderTopColor: sectionColor }}
         >
           <div className="stats-header">
             <h3 className="stats-title">Question Stats</h3>
-            <button 
+            <button
               className="close-button"
               onClick={handleFlipClose}
               title="Close stats"
@@ -244,8 +244,8 @@ const QuestionList = ({
                 <div className="stat-item-back">
                   <span className="stat-label-back">Accuracy</span>
                   <span className="stat-value-back">
-                    {totalAttempts > 0 
-                      ? `${Math.round((question.totalCorrect || 0) / totalAttempts * 100)}%` 
+                    {totalAttempts > 0
+                      ? `${Math.round((question.totalCorrect || 0) / totalAttempts * 100)}%`
                       : 'N/A'}
                   </span>
                 </div>
@@ -256,10 +256,10 @@ const QuestionList = ({
             <div className="stat-section">
               <h4 className="stat-section-title">Last Session</h4>
               <div className="session-status">
-                <div 
+                <div
                   className="status-badge"
-                  style={{ 
-                    backgroundColor: `${sessionStatus.color}20`, 
+                  style={{
+                    backgroundColor: `${sessionStatus.color}20`,
                     borderColor: sessionStatus.color,
                     color: sessionStatus.color
                   }}
@@ -276,13 +276,13 @@ const QuestionList = ({
 
           {/* Action Buttons on Back */}
           <div className="back-actions">
-            <button 
+            <button
               className="back-btn edit-btn"
               onClick={handleEditClick}
             >
               ✏️ Edit
             </button>
-            <button 
+            <button
               className="back-btn delete-btn"
               onClick={handleDeleteClick}
             >
