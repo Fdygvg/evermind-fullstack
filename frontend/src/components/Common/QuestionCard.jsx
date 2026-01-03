@@ -267,137 +267,48 @@ const QuestionCard = ({
             <p>{currentQuestion.answer}</p>
           )}
 
-          {/* Smart Review Integration */}
-          {useSmartReview ? (
-            <div className="smart-review-rating-section">
-              {/* Priority Indicator */}
-              <div className="question-priority-info">
-                <PriorityIndicator
-                  priority={currentQuestion.priority || 0}
-                  size="small"
-                />
-                <span className="priority-text">
-                  {currentQuestion.priority === 0 ? "New Question" : `Review Priority: ${currentQuestion.priority}/5`}
-                </span>
-              </div>
-
-              {/* Smart Review Rating Buttons */}
-              <div className="smart-review-rating">
-                <p className="rating-prompt">Rate your knowledge (1-5):</p>
-                <RatingButtons
-                  onRate={async (rating) => {
-                    console.log("[SMART REVIEW] Rating clicked:", rating);
-                    console.log("[SMART REVIEW] Question ID:", currentQuestion?._id);
-
-                    try {
-                      // Play sound based on rating
-                      if (rating >= 4) {
-                        playSound("correct");
-                      } else if (rating === 3) {
-                        playSound("ding");
-                      } else {
-                        playSound("wrong");
-                      }
-
-                      // Map Smart Review rating to elimination action for backward compatibility
-                      let eliminationAction;
-                      if (rating <= 2) {
-                        eliminationAction = 'hard'; // Don't know
-                      } else if (rating === 3) {
-                        eliminationAction = 'medium'; // Kinda
-                      } else {
-                        eliminationAction = 'easy'; // I know it
-                      }
-
-                      console.log("[SMART REVIEW] Mapped to elimination:", eliminationAction);
-
-                      // Submit to Smart Review system
-                      if (onSmartReviewRate) {
-                        await onSmartReviewRate(currentQuestion._id, rating);
-                      }
-
-                      // Also trigger original elimination action if needed
-                      submitAnswer(eliminationAction);
-
-                    } catch (error) {
-                      console.error("[SMART REVIEW] Rating error:", error);
-                      playSound("error");
-                    }
-                  }}
-                  disabled={loading || isRating}
-                  compact={false}
-                />
-
-                {/* Rating Legend */}
-                <div className="rating-legend-smart">
-                  <div className="legend-item">
-                    <span className="legend-dot" style={{ backgroundColor: '#ef4444' }}></span>
-                    <span>1-2: Review today</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-dot" style={{ backgroundColor: '#3b82f6' }}></span>
-                    <span>5: Review in 2 weeks</span>
-                  </div>
-                </div>
-
-                {/* Undo Button */}
-                {onUndo && canUndo && (
-                  <button
-                    className="undo-rating-btn"
-                    onClick={() => {
-                      playSound("click");
-                      onUndo();
-                    }}
-                    disabled={loading || isRating}
-                  >
-                    ↩ Undo Last Rating
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            /* Original Elimination Buttons (for backward compatibility) */
-            <div className="answer-buttons-3">
-              <button
-                className="response-btn green-btn"
-                onClick={() => {
-                  console.log("[BUTTON] Easy (Green) button clicked");
-                  console.log("[BUTTON] Current question ID:", currentQuestion?._id);
-                  console.log("[BUTTON] Loading state:", loading);
-                  playSound("correct");
-                  submitAnswer('easy');
-                }}
-                disabled={loading}
-              >
-                <FaCheck /> I Know It
-              </button>
-              <button
-                className="response-btn yellow-btn"
-                onClick={() => {
-                  console.log("[BUTTON] Medium (Yellow) button clicked");
-                  console.log("[BUTTON] Current question ID:", currentQuestion?._id);
-                  console.log("[BUTTON] Loading state:", loading);
-                  submitAnswer('medium');
-                }}
-                disabled={loading}
-              >
-                <FaMinus /> Kinda
-              </button>
-              <button
-                className="response-btn red-btn"
-                onClick={() => {
-                  console.log("[BUTTON] Hard (Red) button clicked");
-                  console.log("[BUTTON] Current question ID:", currentQuestion?._id);
-                  console.log("[BUTTON] Loading state:", loading);
-                  playSound("wrong");
-                  submitAnswer('hard');
-                }}
-                disabled={loading}
-              >
-                <FaTimes /> Don't Know
-              </button>
-            </div>
-          )}
+          {/* Answer Rating Buttons - Legacy mode (easy/medium/hard) */}
+          {/* Note: Smart Review rating buttons are rendered by the parent component when Smart Review is enabled */}
+          <div className="answer-buttons-3">
+            <button
+              className="response-btn green-btn"
+              onClick={() => {
+                console.log("[BUTTON] Easy (Green) button clicked");
+                console.log("[BUTTON] Current question ID:", currentQuestion?._id);
+                console.log("[BUTTON] Loading state:", loading);
+                playSound("correct");
+                submitAnswer('easy');
+              }}
+              disabled={loading}
+            >
+              <FaCheck /> I Know It
+            </button>
+            <button
+              className="response-btn yellow-btn"
+              onClick={() => {
+                console.log("[BUTTON] Medium (Yellow) button clicked");
+                console.log("[BUTTON] Current question ID:", currentQuestion?._id);
+                console.log("[BUTTON] Loading state:", loading);
+                submitAnswer('medium');
+              }}
+              disabled={loading}
+            >
+              <FaMinus /> Kinda
+            </button>
+            <button
+              className="response-btn red-btn"
+              onClick={() => {
+                console.log("[BUTTON] Hard (Red) button clicked");
+                console.log("[BUTTON] Current question ID:", currentQuestion?._id);
+                console.log("[BUTTON] Loading state:", loading);
+                playSound("wrong");
+                submitAnswer('hard');
+              }}
+              disabled={loading}
+            >
+              <FaTimes /> Don't Know
+            </button>
+          </div>
         </div>
       ) : (
         <button

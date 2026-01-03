@@ -36,7 +36,7 @@
   --bg-card: var(--color-surface);
   --bg-button-primary: var(--color-primary);
   --bg-button-secondary: var(--color-secondary);
-  --bg-navbar: var(--color-background);
+  --bg-navbar: var(--color-surface);
   --bg-hero: var(--color-background);
 
   --text-primary: var(--color-text);

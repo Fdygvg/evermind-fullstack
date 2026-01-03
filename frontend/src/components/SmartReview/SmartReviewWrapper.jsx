@@ -32,7 +32,7 @@ const SmartReviewWrapper = ({
       {showDailyCounter && smartReview.todaysQuestions.length > 0 && (
         <DailyCounter
           current={smartReview.reviewedToday}
-          total={smartReview.todaysQuestions.length}
+          total={smartReview.initialQuestionCount || smartReview.todaysQuestions.length}
           showProgressBar={true}
           trackBreakdown={smartReview.trackBreakdown}
         />

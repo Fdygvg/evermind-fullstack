@@ -64,14 +64,21 @@ const Dashboard = () => {
   }
 
   const highlightSections = sections.slice(0, 4);
+
+  // Check if there's a valid resumable session (not Smart Review, has progress data)
+  const hasResumableSession = activeSession &&
+    activeSession.progress &&
+    activeSession.progress.total > 0 &&
+    !activeSession.useSmartReview;
+
   const completedQuestions = activeSession
-    ? activeSession.progress.total - activeSession.progress.remaining
+    ? activeSession.progress?.total - activeSession.progress?.remaining
     : 0;
   const progressMax = activeSession
-    ? Math.max(activeSession.progress.total, 1)
+    ? Math.max(activeSession.progress?.total || 1, 1)
     : 1;
   const progressPercent =
-    activeSession && activeSession.progress.total > 0
+    activeSession && activeSession.progress?.total > 0
       ? Math.round((completedQuestions / activeSession.progress.total) * 100)
       : 0;
 
@@ -116,8 +123,8 @@ const Dashboard = () => {
           session or explore a fresh focus area.
         </p>
 
-        {/* Resume Session Panel - Only show if active/paused session exists */}
-        {activeSession && (
+        {/* Resume Session Panel - Only show if valid active/paused session exists */}
+        {hasResumableSession && (
           <div className="resume-session-panel dashboard-card">
             <div className="panel-header">
               <h3>Resume Session</h3>
@@ -131,8 +138,8 @@ const Dashboard = () => {
                   <strong>{activeSession.progress.currentIndex + 1}</strong> / {activeSession.progress.total} questions
                 </div>
                 <div className="progress-bar-container">
-                  <div 
-                    className="progress-bar-fill" 
+                  <div
+                    className="progress-bar-fill"
                     style={{ width: `${progressPercent}%` }}
                   ></div>
                 </div>
@@ -145,13 +152,13 @@ const Dashboard = () => {
                 <div className="meta-item">
                   <span className="meta-label">Started:</span>
                   <span className="meta-value">
-                    {activeSession.sessionStartTime 
+                    {activeSession.sessionStartTime
                       ? format(new Date(activeSession.sessionStartTime), 'PPpp')
                       : 'Recently'}
                   </span>
                 </div>
               </div>
-              <button 
+              <button
                 className="continue-btn dashboard-button primary"
                 onClick={handleContinueSession}
               >
@@ -161,8 +168,8 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Default CTA buttons - Show when no active session */}
-        {!activeSession && (
+        {/* Default CTA buttons - Show when no resumable session */}
+        {!hasResumableSession && (
           <div className="dashboard-cta-group">
             <button
               type="button"
@@ -216,26 +223,23 @@ const Dashboard = () => {
       <section>
         <div className="nav-buttons-container">
           <button
-            className={`nav-btn ${
-              location.pathname === "/questions/add" ? "active" : ""
-            }`}
+            className={`nav-btn ${location.pathname === "/questions/add" ? "active" : ""
+              }`}
             onClick={() => navigate("/questions/add")}
           >
             + Add Question
           </button>
           <button
-            className={`nav-btn ${
-              location.pathname === "/analytics" ? "active" : ""
-            }`}
+            className={`nav-btn ${location.pathname === "/analytics" ? "active" : ""
+              }`}
             onClick={() => navigate("/analytics")}
           >
             📊 Analytics
           </button>
 
           <button
-            className={`nav-btn ${
-              location.pathname === "/history" ? "active" : ""
-            }`}
+            className={`nav-btn ${location.pathname === "/history" ? "active" : ""
+              }`}
             onClick={() => navigate("/history")}
           >
             📅 Session History

@@ -6,12 +6,25 @@
   padding: 1.5rem;
   transition: all 0.3s;
   box-shadow: var(--shadow-sm);
+  cursor: default;
+  position: relative;
 }
 
 .question-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   border-color: var(--color-primary);
+}
+
+/* Ensure question card content doesn't block pointer events */
+.question-card * {
+  pointer-events: auto;
+}
+
+.question-card .question-content,
+.question-card .question-header {
+  pointer-events: auto;
+  cursor: default;
 }
 
 .question-header {
@@ -110,15 +123,26 @@
   border: 2px solid transparent;
 }
 
+.action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .reveal-btn {
   background: var(--bg-secondary);
   color: var(--text-secondary);
   border-color: var(--border-light);
 }
 
-.reveal-btn:hover {
+.reveal-btn:hover:not(:disabled) {
   background: var(--color-surface);
   color: var(--text-primary);
+}
+
+/* Smart Review Rating Section - ensure it doesn't block interactions */
+.smart-review-rating-section {
+  pointer-events: auto;
+  cursor: default;
 }
 
 /* Responsive Design */

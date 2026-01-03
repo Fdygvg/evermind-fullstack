@@ -2,7 +2,7 @@ export const SMART_REVIEW_CONFIG = {
   // ============ DAILY LIMITS ============
   // Only applies to REVIEW track (Priority 1-5)
   // NEW (Priority 0) and PENDING are UNLIMITED
-  REVIEW_LIMIT_PERCENTAGE: 0.5, // 50% of review questions per section
+  REVIEW_LIMIT_PERCENTAGE: 0.5, // 50% of total questions per section (max review limit)
   
   // ============ SECTION ADVANCEMENT ============
   // Section advances to next virtual day when this threshold is met

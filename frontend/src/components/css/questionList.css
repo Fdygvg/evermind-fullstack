@@ -105,7 +105,7 @@
 
 .question-text {
   font-size: 1.1rem;
-  color: var(--text-inverse);
+  color: var(--color-text);
   margin: 0 0 0.5rem 0;
   line-height: 1.4;
   font-weight: 600;
@@ -118,8 +118,8 @@
 }
 
 .question-tag {
-  background: color-mix(in srgb, var(--text-inverse) 15%, transparent);
-  color: var(--text-inverse);
+  background: color-mix(in srgb, var(--color-text) 15%, transparent);
+  color: var(--color-text);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -127,8 +127,8 @@
 }
 
 .question-tag-more {
-  background: color-mix(in srgb, var(--text-inverse) 25%, transparent);
-  color: var(--text-inverse);
+  background: color-mix(in srgb, var(--color-text) 25%, transparent);
+  color: var(--color-text);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -138,7 +138,7 @@
 .info-button {
   background: none;
   border: none;
-  color: color-mix(in srgb, var(--text-inverse) 80%, transparent);
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
   font-size: 1.25rem;
   cursor: pointer;
   padding: 0.5rem;
@@ -154,8 +154,8 @@
 }
 
 .info-button:hover {
-  background: color-mix(in srgb, var(--text-inverse) 10%, transparent);
-  color: var(--text-inverse);
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
+  color: var(--color-text);
 }
 
 /* Answer dropdown */
@@ -175,20 +175,20 @@
 
 .answer-content {
   padding: 1rem;
-  background: color-mix(in srgb, var(--text-inverse) 10%, transparent);
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
   border-radius: 8px;
   border-left: 3px solid var(--color-primary);
 }
 
 .answer-label {
   font-size: 0.875rem;
-  color: var(--text-inverse);
+  color: var(--color-text);
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
 .answer-text {
-  color: var(--text-inverse);
+  color: var(--color-text);
   line-height: 1.5;
   white-space: pre-wrap;
 }
@@ -200,7 +200,7 @@
   align-items: center;
   margin-top: auto;
   padding-top: 1rem;
-  border-top: 1px solid color-mix(in srgb, var(--text-inverse) 10%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
 }
 
 .quick-stats {
@@ -213,7 +213,7 @@
   align-items: center;
   gap: 0.25rem;
   font-size: 0.875rem;
-  color: color-mix(in srgb, var(--text-inverse) 80%, transparent);
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
 }
 
 .stat-icon {
@@ -222,12 +222,12 @@
 
 .stat-value {
   font-weight: 600;
-  color: var(--text-inverse);
+  color: var(--color-text);
 }
 
 .answer-indicator {
   font-size: 0.75rem;
-  color: color-mix(in srgb, var(--text-inverse) 80%, transparent);
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
   opacity: 0.8;
 }
 
@@ -241,7 +241,7 @@
 
 .stats-title {
   font-size: 1.25rem;
-  color: var(--text-inverse);
+  color: var(--color-text);
   margin: 0;
   font-weight: 600;
 }
@@ -249,7 +249,7 @@
 .close-button {
   background: none;
   border: none;
-  color: color-mix(in srgb, var(--text-inverse) 80%, transparent);
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0.25rem;
@@ -263,8 +263,8 @@
 }
 
 .close-button:hover {
-  background: color-mix(in srgb, var(--text-inverse) 10%, transparent);
-  color: var(--text-inverse);
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
+  color: var(--color-text);
 }
 
 /* Stats Content */
@@ -280,7 +280,7 @@
 
 .stat-section-title {
   font-size: 1rem;
-  color: var(--text-inverse);
+  color: var(--color-text);
   margin: 0 0 0.75rem 0;
   font-weight: 600;
 }
@@ -293,7 +293,7 @@
 }
 
 .stat-item-back {
-  background: color-mix(in srgb, var(--text-inverse) 10%, transparent);
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
   padding: 0.75rem;
   border-radius: 8px;
   border-left: 3px solid var(--color-primary);
@@ -302,7 +302,7 @@
 .stat-label-back {
   display: block;
   font-size: 0.75rem;
-  color: color-mix(in srgb, var(--text-inverse) 80%, transparent);
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
   margin-bottom: 0.25rem;
 }
 
@@ -310,7 +310,7 @@
   display: block;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-inverse);
+  color: var(--color-text);
 }
 
 .stat-value-back.correct {
@@ -344,12 +344,12 @@
 
 .status-text {
   font-weight: 600;
-  color: var(--text-inverse);
+  color: var(--color-text);
 }
 
 .session-date {
   font-size: 0.875rem;
-  color: color-mix(in srgb, var(--text-inverse) 80%, transparent);
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
 }
 
 /* Next Review */
@@ -357,7 +357,7 @@
   padding: 1rem;
   background: var(--gradient-primary);
   border-radius: 8px;
-  color: var(--text-inverse);
+  color: var(--color-text);
 }
 
 .review-date {
@@ -377,7 +377,7 @@
   gap: 0.75rem;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid color-mix(in srgb, var(--text-inverse) 10%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
 }
 
 .back-btn {
@@ -397,7 +397,7 @@
 
 .edit-btn {
   background: var(--color-primary);
-  color: var(--text-inverse);
+  color: var(--color-text);
 }
 
 .edit-btn:hover {
@@ -406,7 +406,7 @@
 
 .delete-btn {
   background: var(--color-error);
-  color: var(--text-inverse);
+  color: var(--color-text);
 }
 
 .delete-btn:hover {

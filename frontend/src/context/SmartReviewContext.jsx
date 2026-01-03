@@ -1,5 +1,5 @@
 // frontend/src/context/SmartReviewContext.jsx
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import SmartReviewContextInstance from './SmartReviewContextInstance';
 import { smartReviewService } from '../services/smartReviewService';
 import { sessionService } from '../services/sessions';
@@ -22,7 +22,6 @@ export const SmartReviewProvider = ({ children }) => {
 
   const [ratingHistory, setRatingHistory] = useState([]);
   const [sectionProgress, setSectionProgress] = useState({});
-  const isRatingInProgressRef = useRef(false);
 
 
   const loadSectionProgress = async (sectionIds) => {
@@ -49,6 +48,12 @@ export const SmartReviewProvider = ({ children }) => {
 
       await loadSectionProgress(sectionIds);
       const questions = data.todaysQuestions || data.data?.todaysQuestions || [];
+
+      console.log('[SmartReview Context] Setting questions:', {
+        questionsCount: questions.length,
+        questions: questions.map(q => ({ id: q._id, question: q.question?.substring(0, 50) }))
+      });
+
       setState(prev => ({
         ...prev,
         sectionIds: sectionIds,
@@ -75,19 +80,11 @@ export const SmartReviewProvider = ({ children }) => {
   }, []); // Empty deps - no dependency on state
 
   const rateQuestion = useCallback(async (rating, questionId = null) => {
-    // Prevent concurrent calls
-    if (isRatingInProgressRef.current) {
-      console.log('[SmartReview] Rating already in progress, ignoring duplicate call');
-      return;
-    }
-
-    isRatingInProgressRef.current = true;
-
     // Fix stale closure: use functional setState to access current values
     let ratedQuestionId = null;
     let ratedQuestion = null;
     let questionIndex = -1;
-    
+
     // Get question from state (either by ID for Elimination Mode, or by currentIndex)
     setState(prev => {
       if (questionId) {
@@ -107,13 +104,12 @@ export const SmartReviewProvider = ({ children }) => {
           return { ...prev, isLoading: false };
         }
       }
-      
+
       ratedQuestionId = ratedQuestion._id;
       return { ...prev, isLoading: true };
     });
 
     if (!ratedQuestionId) {
-      isRatingInProgressRef.current = false;
       return;
     }
 
@@ -129,27 +125,22 @@ export const SmartReviewProvider = ({ children }) => {
       const result = response.data || response;
       console.log('[SmartReview] Rating result:', result);
 
-      // Update history and capture updated value
-      let updatedRatingHistory;
-      setRatingHistory(prev => {
-        updatedRatingHistory = [...prev, {
-          questionId: ratedQuestionId,
-          rating,
-          question: ratedQuestion,
-          timestamp: new Date()
-        }];
-        return updatedRatingHistory;
-      });
+      // Update history
+      setRatingHistory(prev => [...prev, {
+        questionId: ratedQuestionId,
+        rating,
+        question: ratedQuestion,
+        timestamp: new Date()
+      }]);
 
       // SPECIAL HANDLING FOR HARD RATING (1):
       // Don't remove from session, reinsert after 5 questions
       if (rating === 1 && result.isHard) {
         // Calculate where to reinsert (after 5 more questions from current position)
-        let hardQuestionState;
         setState(prev => {
           const currentPos = questionId ? questionIndex : prev.currentIndex;
           const insertPosition = currentPos + 5;
-          
+
           // Reinsert hard question into the questions array at the calculated position
           const updatedQuestions = [...prev.todaysQuestions];
           // Only insert if position is within bounds
@@ -165,100 +156,74 @@ export const SmartReviewProvider = ({ children }) => {
             updatedQuestions.splice(questionIndex, 1);
           }
 
-          hardQuestionState = {
+          return {
             ...prev,
             todaysQuestions: updatedQuestions,
             reviewedToday: prev.reviewedToday + 1,
             currentIndex: questionId ? prev.currentIndex : prev.currentIndex + 1,
             isLoading: false
           };
-          return hardQuestionState;
         });
 
-        // Auto-save progress for hard question
-        if (hardQuestionState && updatedRatingHistory) {
-          try {
-            const smartReviewState = {
-              currentIndex: hardQuestionState.currentIndex,
-              reviewedToday: hardQuestionState.reviewedToday,
-              todaysQuestions: hardQuestionState.todaysQuestions.map(q => q._id),
-              ratingHistory: updatedRatingHistory.map(r => ({ questionId: r.questionId, rating: r.rating })),
-              sectionIds: hardQuestionState.sectionIds,
-              initialQuestionCount: hardQuestionState.initialQuestionCount
-            };
-            
-            sessionService.updateProgress({
-              sectionIds: hardQuestionState.sectionIds,
-              currentIndex: hardQuestionState.currentIndex,
-              answeredQuestionIds: updatedRatingHistory.map(r => r.questionId),
-              status: 'active',
-              smartReviewState: smartReviewState
-            }).catch(err => {
-              console.error('[SmartReview] Failed to save progress:', err);
-            });
-          } catch (saveError) {
-            console.error('[SmartReview] Error saving progress:', saveError);
-          }
-        }
 
         console.log('[SmartReview] Hard question will reappear after 5 questions.');
         return result;
       }
 
       // For ratings 2-5: Normal flow - remove from session
-      let updatedState;
+
       setState(prev => {
         // For elimination mode (questionId provided), remove the question from array
         if (questionId) {
           const updatedQuestions = [...prev.todaysQuestions];
           updatedQuestions.splice(questionIndex, 1);
-          
-          updatedState = {
+
+          return {
             ...prev,
             todaysQuestions: updatedQuestions,
             reviewedToday: prev.reviewedToday + 1,
             // Keep currentIndex same in elimination mode (questions removed from array)
             isLoading: false
           };
-          return updatedState;
         }
-        
+
         // Normal mode: just increment index
-        updatedState = {
+        return {
           ...prev,
           reviewedToday: prev.reviewedToday + 1,
           currentIndex: prev.currentIndex + 1,
           isLoading: false
         };
-        return updatedState;
       });
 
       console.log('[SmartReview] Advanced to next question.');
 
-      // Auto-save Smart Review progress to session (using captured values, not stale closures)
-      if (updatedState && updatedRatingHistory) {
-        try {
+      // Auto-save Smart Review progress to session
+      try {
+        setState(prev => {
           const smartReviewState = {
-            currentIndex: updatedState.currentIndex,
-            reviewedToday: updatedState.reviewedToday,
-            todaysQuestions: updatedState.todaysQuestions.map(q => q._id),
-            ratingHistory: updatedRatingHistory.map(r => ({ questionId: r.questionId, rating: r.rating })),
-            sectionIds: updatedState.sectionIds,
-            initialQuestionCount: updatedState.initialQuestionCount
+            currentIndex: prev.currentIndex,
+            reviewedToday: prev.reviewedToday,
+            todaysQuestions: prev.todaysQuestions.map(q => q._id),
+            ratingHistory: ratingHistory.map(r => ({ questionId: r.questionId, rating: r.rating })),
+            sectionIds: prev.sectionIds,
+            initialQuestionCount: prev.initialQuestionCount
           };
-          
+
           sessionService.updateProgress({
-            sectionIds: updatedState.sectionIds,
-            currentIndex: updatedState.currentIndex,
-            answeredQuestionIds: updatedRatingHistory.map(r => r.questionId),
+            sectionIds: prev.sectionIds,
+            currentIndex: prev.currentIndex,
+            answeredQuestionIds: ratingHistory.map(r => r.questionId),
             status: 'active',
             smartReviewState: smartReviewState
           }).catch(err => {
             console.error('[SmartReview] Failed to save progress:', err);
           });
-        } catch (saveError) {
-          console.error('[SmartReview] Error saving progress:', saveError);
-        }
+
+          return prev;
+        });
+      } catch (saveError) {
+        console.error('[SmartReview] Error saving progress:', saveError);
       }
 
       return result;
@@ -266,11 +231,8 @@ export const SmartReviewProvider = ({ children }) => {
       console.error('[SmartReview] Error rating question:', error);
       setState(prev => ({ ...prev, isLoading: false }));
       throw error;
-    } finally {
-      // Always reset the flag, even if there's an error
-      isRatingInProgressRef.current = false;
     }
-  }, []); // Removed ratingHistory dependency to avoid stale closures - using captured values instead
+  }, [ratingHistory]); // Added ratingHistory dependency
 
   const undoLastRating = useCallback(async () => {
     if (ratingHistory.length === 0) return;
@@ -282,11 +244,44 @@ export const SmartReviewProvider = ({ children }) => {
 
       setRatingHistory(prev => prev.slice(0, -1));
 
-      setState(prev => ({
-        ...prev,
-        reviewedToday: Math.max(0, prev.reviewedToday - 1),
-        currentIndex: Math.max(0, prev.currentIndex - 1)
-      }));
+      setState(prev => {
+        const updatedQuestions = [...prev.todaysQuestions];
+        const questionToRestore = lastAction.question;
+
+        if (!questionToRestore) {
+          // No question to restore, just update counters
+          return {
+            ...prev,
+            reviewedToday: Math.max(0, prev.reviewedToday - 1),
+            currentIndex: Math.max(0, prev.currentIndex - 1)
+          };
+        }
+
+        // Check if question already exists in array (normal mode case)
+        const existingIndex = updatedQuestions.findIndex(q => q._id === questionToRestore._id);
+
+        if (existingIndex !== -1) {
+          // Question exists (normal mode) - just set currentIndex to point to it
+          return {
+            ...prev,
+            reviewedToday: Math.max(0, prev.reviewedToday - 1),
+            currentIndex: existingIndex
+          };
+        } else {
+          // Question doesn't exist (elimination mode or was removed) - insert it back
+          // Insert at currentIndex position so it becomes the current question
+          const insertPosition = Math.max(0, prev.currentIndex);
+          updatedQuestions.splice(insertPosition, 0, questionToRestore);
+
+          return {
+            ...prev,
+            todaysQuestions: updatedQuestions,
+            reviewedToday: Math.max(0, prev.reviewedToday - 1),
+            // Keep currentIndex the same - the question was inserted at this position
+            currentIndex: prev.currentIndex
+          };
+        }
+      });
 
       return true;
     } catch (error) {
@@ -298,7 +293,7 @@ export const SmartReviewProvider = ({ children }) => {
   const addMoreQuestions = useCallback(async (questionIds) => {
     try {
       let currentSectionIds = null;
-      
+
       setState(prev => {
         currentSectionIds = prev.sectionIds;
         return { ...prev, isLoading: true };
@@ -375,7 +370,7 @@ export const SmartReviewProvider = ({ children }) => {
       setSectionProgress({});
 
       console.log('[SmartReview] Session ended, unrated questions marked as pending');
-      
+
       return { success: true };
     } catch (error) {
       console.error('[SmartReview] Error ending session:', error);
@@ -385,7 +380,11 @@ export const SmartReviewProvider = ({ children }) => {
   }, [ratingHistory]);
 
   const currentQuestion = state.todaysQuestions[state.currentIndex];
-  const isSessionComplete = state.todaysQuestions.length > 0 && state.currentIndex >= state.todaysQuestions.length;
+  // Session is complete if:
+  // 1. Normal mode: currentIndex >= todaysQuestions.length (and there are questions)
+  // 2. Elimination mode: all questions reviewed (todaysQuestions.length === 0 and reviewedToday > 0)
+  const isSessionComplete = (state.todaysQuestions.length > 0 && state.currentIndex >= state.todaysQuestions.length) ||
+    (state.todaysQuestions.length === 0 && state.reviewedToday > 0 && state.initialQuestionCount > 0);
   const progress = state.todaysQuestions.length > 0
     ? state.initialQuestionCount > 0
       ? (state.reviewedToday / state.initialQuestionCount) * 100  // Use reviewed count for accuracy (works for Elimination Mode)

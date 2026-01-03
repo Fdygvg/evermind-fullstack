@@ -7,7 +7,6 @@ import ProgressBar from "../components/Common/ProgressBar";
 import QuestionCard from "../components/Common/QuestionCard";
 import FlashCard from "../components/Common/FlashCard";
 import CodeBlock from "../components/Common/CodeBlock";
-import CommandCenter from "../components/CommandCenter/CommandCenter";
 import SmartReviewWrapper from "../components/SmartReview/SmartReviewWrapper";
 import RatingButtons from "../components/SmartReview/RatingButtons";
 
@@ -30,9 +29,10 @@ const ActiveSession = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if Smart Review mode is enabled
-  const isSmartReviewMode = activeSession?.useSmartReview || false;
-  const sectionIds = activeSession?.sectionIds || [];
+  // Check if Smart Review mode is enabled - read from location state first, then active session
+  const isSmartReviewMode = location.state?.useSmartReview || activeSession?.useSmartReview || false;
+  const sectionIds = location.state?.sectionIds || activeSession?.sectionIds || [];
+  const cardMode = location.state?.cardMode || activeSession?.cardMode || 'normal';
 
   useEffect(() => {
     console.log("[SESSION] Active session:", {
@@ -78,7 +78,7 @@ const ActiveSession = () => {
       setSessionProgress(progress);
       setShowAnswer(false);
       setQuestionKey(prev => prev + 1);
-      
+
       console.log("[LOAD] Question state updated successfully");
     } catch (error) {
       console.error("[LOAD] Failed to load question:", error);
@@ -101,19 +101,19 @@ const ActiveSession = () => {
         console.log('[RESUME] Resuming session from saved state');
         setIsResuming(true);
         const sessionData = location.state.sessionData;
-        
+
         // Restore answered question IDs
         if (sessionData.progress?.answeredQuestionIds) {
           setAnsweredQuestionIds(sessionData.progress.answeredQuestionIds);
         }
-        
+
         // Set session progress
         if (sessionData.progress) {
           setSessionProgress(sessionData.progress);
         }
       }
     };
-    
+
     checkResume();
   }, [location.state]);
 
@@ -170,7 +170,7 @@ const ActiveSession = () => {
       if (autoSaveIntervalRef.current) {
         clearInterval(autoSaveIntervalRef.current);
       }
-      
+
       // Auto-pause on unmount
       if (!isSmartReviewMode && sessionProgress && activeSession) {
         sessionService.pauseSession().catch(err => {
@@ -191,20 +191,20 @@ const ActiveSession = () => {
 
   const submitAnswer = useCallback(async (responseType) => {
     console.log("[SUBMIT] submitAnswer called with:", responseType);
-    
+
     if (!currentQuestion?._id || loading) {
       console.log("[SUBMIT] ERROR: No current question or already loading, cannot submit");
       return;
     }
-    
+
     const questionId = currentQuestion._id;
     console.log("[SUBMIT] Current question ID:", questionId);
-    
+
     if (submittingQuestionIdRef.current === questionId) {
       console.log("[SUBMIT] BLOCKED: Already submitting for this question:", questionId);
       return;
     }
-    
+
     submittingQuestionIdRef.current = questionId;
     console.log("[SUBMIT] Marked question as submitting:", questionId);
 
@@ -219,16 +219,16 @@ const ActiveSession = () => {
         responseType,
       });
       console.log("[SUBMIT] Answer submitted successfully");
-      
+
       // Track answered question
       setAnsweredQuestionIds(prev => [...prev, questionId]);
-      
+
       if (responseType === 'easy') {
         setCurrentStreak(prev => prev + 1);
       } else {
         setCurrentStreak(0);
       }
-      
+
       console.log("[SUBMIT] Loading next question...");
       await loadNextQuestion();
     } catch (error) {
@@ -275,7 +275,7 @@ const ActiveSession = () => {
   // Smart Review Mode: Render with SmartReviewWrapper
   if (isSmartReviewMode) {
     return (
-      <SmartReviewWrapper 
+      <SmartReviewWrapper
         sectionIds={sectionIds}
         enableSmartReview={true}
         showDailyCounter={true}
@@ -328,7 +328,7 @@ const ActiveSession = () => {
 
               {/* Question Display */}
               <div className="question-card-wrapper">
-                {activeSession?.cardMode === "flashcard" ? (
+                {cardMode === "flashcard" ? (
                   <FlashCard
                     key={`${smartQuestion._id}-${questionKey}`}
                     question={smartQuestion.question}
@@ -354,10 +354,10 @@ const ActiveSession = () => {
                       submitAnswer={submitAnswer}
                       loading={isLoading}
                     />
-                    
+
                     {/* Smart Review Rating Buttons */}
                     {showAnswer && (
-                      <RatingButtons 
+                      <RatingButtons
                         onRate={rateQuestion}
                         disabled={isLoading}
                         compact={false}
@@ -371,11 +371,11 @@ const ActiveSession = () => {
               <div className="session-info">
                 <div className="mode-badge smart-review-badge">
                   🧠 Smart Review Mode
-                  {activeSession?.cardMode === "flashcard" && " • Flashcard"}
+                  {cardMode === "flashcard" && " • Flashcard"}
                 </div>
               </div>
 
-              <CommandCenter />
+
             </div>
           );
         }}
@@ -418,7 +418,7 @@ const ActiveSession = () => {
 
       {/* Question Card with Swipe Overlay or FlashCard */}
       <div className="question-card-wrapper" style={{ position: "relative" }}>
-        {activeSession?.cardMode === "flashcard" ? (
+        {cardMode === "flashcard" ? (
           <FlashCard
             key={`${currentQuestion._id}-${questionKey}`}
             question={currentQuestion.question}
@@ -448,15 +448,14 @@ const ActiveSession = () => {
       {/* Session Info */}
       <div className="session-info">
         <div className="mode-badge">
-          Card Style: {activeSession?.cardMode === "flashcard" ? "Flashcard" : "Normal"}
+          Card Style: {cardMode === "flashcard" ? "Flashcard" : "Normal"}
         </div>
         <div className="progress-numbers">
           Correct: {sessionProgress?.correct} | Wrong: {sessionProgress?.wrong}
         </div>
       </div>
 
-      {/* Command Center */}
-      <CommandCenter />
+
     </div>
   );
 };

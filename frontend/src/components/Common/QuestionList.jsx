@@ -2,6 +2,19 @@ import React, { useState, useEffect } from "react";
 import CodeBlock from "./CodeBlock";
 import "../css/questionList.css";
 import { getRandomFlipEffect } from "../../utils/flipStyles";
+import {
+  FaCheckCircle,
+  FaTimesCircle,
+  FaQuestionCircle,
+  FaHourglassHalf,
+  FaCalendarAlt,
+  FaEye,
+  FaEyeSlash,
+  FaEdit,
+  FaTrash,
+  FaInfoCircle,
+  FaTimes
+} from "react-icons/fa";
 
 const QuestionList = ({
   question,
@@ -80,10 +93,10 @@ const QuestionList = ({
   const getLastSessionStatus = () => {
     const status = question.lastSessionStatus;
     switch (status) {
-      case "knowit": return { text: "Know It", color: "#10B981", icon: "✅" };
-      case "kinda": return { text: "Kinda", color: "#F59E0B", icon: "🤔" };
-      case "dontknow": return { text: "Don't Know", color: "#EF4444", icon: "❌" };
-      default: return { text: "Not Attempted", color: "#94a3b8", icon: "⏳" };
+      case "knowit": return { text: "Know It", color: "#10B981", icon: <FaCheckCircle /> };
+      case "kinda": return { text: "Kinda", color: "#F59E0B", icon: <FaQuestionCircle /> };
+      case "dontknow": return { text: "Don't Know", color: "#EF4444", icon: <FaTimesCircle /> };
+      default: return { text: "Not Attempted", color: "#94a3b8", icon: <FaHourglassHalf /> };
     }
   };
 
@@ -138,7 +151,7 @@ const QuestionList = ({
               onClick={handleInfoClick}
               title="View question stats"
             >
-              (i)
+              <FaInfoCircle />
             </button>
           </div>
 
@@ -164,15 +177,15 @@ const QuestionList = ({
           <div className="question-footer">
             <div className="quick-stats">
               <span className="stat-item">
-                <span className="stat-icon">✅</span>
+                <span className="stat-icon"><FaCheckCircle /></span>
                 <span className="stat-value">{question.totalCorrect || 0}</span>
               </span>
               <span className="stat-item">
-                <span className="stat-icon">❌</span>
+                <span className="stat-icon"><FaTimesCircle /></span>
                 <span className="stat-value">{question.totalWrong || 0}</span>
               </span>
               <span className="stat-item">
-                <span className="stat-icon">📅</span>
+                <span className="stat-icon"><FaCalendarAlt /></span>
                 <span className="stat-value">
                   {question.lastReviewed ?
                     new Date(question.lastReviewed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -183,7 +196,15 @@ const QuestionList = ({
             </div>
 
             <div className="answer-indicator">
-              {showAnswer ? '👁️ Answer shown' : '👁️‍🗨️ Click to reveal'}
+              {showAnswer ? (
+                <>
+                  <FaEye className="icon-mr" /> Answer shown
+                </>
+              ) : (
+                <>
+                  <FaEyeSlash className="icon-mr" /> Click to reveal
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -201,7 +222,7 @@ const QuestionList = ({
               onClick={handleFlipClose}
               title="Close stats"
             >
-              ✕
+              <FaTimes />
             </button>
           </div>
 
@@ -280,13 +301,13 @@ const QuestionList = ({
               className="back-btn edit-btn"
               onClick={handleEditClick}
             >
-              ✏️ Edit
+              <FaEdit /> Edit
             </button>
             <button
               className="back-btn delete-btn"
               onClick={handleDeleteClick}
             >
-              🗑️ Delete
+              <FaTrash /> Delete
             </button>
           </div>
         </div>

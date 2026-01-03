@@ -26,6 +26,8 @@
   background: var(--bg-secondary, rgba(0, 0, 0, 0.03));
   border-radius: 50px;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  pointer-events: auto;
+  cursor: default;
 }
 
 /* Rating Number Buttons */
@@ -116,6 +118,13 @@
   cursor: not-allowed;
   transform: none !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+}
+
+/* Ensure container doesn't block interactions when buttons are disabled */
+.compact-rating-bar-container {
+  pointer-events: auto;
+  cursor: default;
 }
 
 /* Number Display */

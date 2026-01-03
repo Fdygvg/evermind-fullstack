@@ -7,7 +7,11 @@ class SmartReviewService {
 
     /**
      * Get today's questions for a user based on selected sections
-     * THREE-TRACK SYSTEM: NEW (unlimited) → PENDING (unlimited) → REVIEW (50% limit)
+     * THREE-TRACK SYSTEM: 
+     *   - NEW (Tier 1): UNLIMITED - all new questions are always included
+     *   - PENDING/ROLLED-OVER (Tier 2): Subject to 50% limit
+     *   - REVIEW (Tier 3): Subject to 50% limit
+     * The 50% limit (maxPerSession) applies ONLY to Tier 2 + Tier 3 combined
      * @param {string} userId - User ID
      * @param {Array} sectionIds - Array of section IDs
      * @returns {Object} - Today's questions, rolled over questions, and stats
@@ -30,26 +34,26 @@ class SmartReviewService {
             for (const sectionId of sectionIds) {
                 const progress = await SectionProgress.findOneAndUpdate(
                     { userId, sectionId },
-                    { 
-                        $setOnInsert: { 
-                            currentSessionDay: 1, 
+                    {
+                        $setOnInsert: {
+                            currentSessionDay: 1,
                             totalSessions: 0,
                             lastSessionDate: new Date()
                         }
                     },
                     { upsert: true, new: true, setDefaultsOnInsert: true }
                 );
-                
+
                 sectionProgresses.push(progress);
             }
 
             // 2. COLLECT QUESTIONS - THREE TRACKS PER SECTION
             const allQuestions = {
                 new: [],      // Priority 0 - UNLIMITED
-                pending: [],  // isPending=true - UNLIMITED  
-                review: []    // Priority 1-5 - LIMITED to 50%
+                pending: [],  // Rolled-over questions (wasRolledOver=true OR isPending=true) - LIMITED to 50%
+                review: []    // Priority 1-5, due today - LIMITED to 50%
             };
-            
+
             const sectionStats = {};
             const today = new Date();
             const rolledOverIds = [];
@@ -60,164 +64,184 @@ class SmartReviewService {
 
                 console.log(`[DEBUG] Section ${progress.sectionId}: Loading questions for Session Day ${currentDay}`);
 
-                // Get total questions count for debugging
+                // Get total questions count for dynamic maxPerSession calculation
                 const totalQuestionsInSection = await Question.countDocuments({
                     userId,
                     sectionId: progress.sectionId
                 });
 
-                // AUTO-ADVANCE LOGIC: If no questions are due for current session day,
-                // automatically advance to the next session day with questions
-                let questions = [];
-                let advancementsMade = 0;
-                const MAX_AUTO_ADVANCEMENTS = 30; // Prevent infinite loops
+                // Calculate dynamic maxPerSession: 50% of total questions in section
+                const maxPerSession = Math.ceil(totalQuestionsInSection * SMART_REVIEW_CONFIG.REVIEW_LIMIT_PERCENTAGE);
+                console.log(`[DEBUG] Section ${progress.sectionId}: maxPerSession = ${maxPerSession} (50% of ${totalQuestionsInSection} total questions)`);
 
-                while (questions.length === 0 && advancementsMade < MAX_AUTO_ADVANCEMENTS) {
-                    // Get questions for three tracks
-                    // NEW questions (priority 0): Always show (unlimited)
-                    // PENDING questions: Always show (unlimited)
-                    // REVIEW questions: Show if dueDate <= currentSessionDay (as numbers)
-                    questions = await Question.find({
+                // THREE-TIER PRIORITY QUEUE IMPLEMENTATION
+                // Tier 1: New Questions (Priority 0, never reviewed)
+                const tier1NewQuestions = await Question.find({
+                    userId,
+                    sectionId: progress.sectionId,
+                    priority: 0,
+                    timesReviewed: 0
+                }).sort({ _id: 1 }); // Sort by ID for consistent ordering
+
+                // Tier 2: Rolled-Over Questions (wasRolledOver: true OR isPending: true)
+                const tier2RolledOver = await Question.find({
+                    userId,
+                    sectionId: progress.sectionId,
+                    $or: [
+                        { wasRolledOver: true },
+                        { isPending: true }
+                    ]
+                }).sort({ wasRolledOver: -1, dueDate: 1 }); // wasRolledOver first, then by dueDate
+
+                // Tier 3: Priority Review Questions (dueDate === currentSessionDay, priority > 0)
+                const tier3Review = await Question.find({
+                    userId,
+                    sectionId: progress.sectionId,
+                    dueDate: currentDay, // Exact match - only questions due today
+                    priority: { $gt: 0, $lte: 5 },
+                    isPending: { $ne: true },
+                    wasRolledOver: { $ne: true }
+                }).sort({ priority: 1, dueDate: 1 });
+
+                console.log(`[DEBUG] Session Day ${currentDay}: Tier 1 (New)=${tier1NewQuestions.length}, Tier 2 (Rolled-Over)=${tier2RolledOver.length}, Tier 3 (Review)=${tier3Review.length}`);
+
+                // NEW QUESTIONS ARE UNLIMITED - always include all of them
+                // Only Tier 2 (rolled-over) and Tier 3 (review) are subject to the 50% limit
+                const limitedQuestions = [...tier2RolledOver, ...tier3Review];
+
+                // Apply maxPerSession limit ONLY to rolled-over and review questions
+                let includedLimitedQuestions = [];
+                let rolledOverQuestions = [];
+                const questionsToRollOver = [];
+
+                if (limitedQuestions.length > maxPerSession) {
+                    // Take exactly maxPerSession from limited questions in priority order
+                    includedLimitedQuestions = limitedQuestions.slice(0, maxPerSession);
+                    rolledOverQuestions = limitedQuestions.slice(maxPerSession);
+
+                    console.log(`[DEBUG] Session Day ${currentDay}: ${tier1NewQuestions.length} new (unlimited) + ${limitedQuestions.length} limited questions, taking ${maxPerSession} limited, rolling over ${rolledOverQuestions.length}`);
+
+                    // Mark questions for rollover - update their dueDate to next session day
+                    const nextSessionDay = currentDay + 1;
+                    for (const question of rolledOverQuestions) {
+                        questionsToRollOver.push({
+                            questionId: question._id,
+                            originalTier: question.priority === 0 ? 'new' :
+                                (question.wasRolledOver || question.isPending) ? 'rolledOver' : 'review',
+                            newDueDate: nextSessionDay
+                        });
+                    }
+                } else {
+                    // All limited questions within limit - include all of them
+                    includedLimitedQuestions = limitedQuestions;
+                    console.log(`[DEBUG] Session Day ${currentDay}: ${tier1NewQuestions.length} new (unlimited) + ${limitedQuestions.length} limited questions, all limited included (within limit of ${maxPerSession})`);
+                }
+
+                // Combine: ALL new questions (unlimited) + limited questions (capped at maxPerSession)
+                const includedQuestions = [...tier1NewQuestions, ...includedLimitedQuestions];
+
+                // Separate included questions into tracks for stats
+                const includedNew = tier1NewQuestions; // All new questions are always included
+                const includedRolledOver = includedLimitedQuestions.filter(q => q.wasRolledOver || q.isPending);
+                const includedReview = includedLimitedQuestions.filter(q => !q.wasRolledOver && !q.isPending && q.priority > 0);
+
+                // Separate rolled over questions by tier for proper handling
+                // Note: New questions are never rolled over anymore since they're unlimited
+                const rolledOverNew = 0; // New questions are never rolled over
+                const rolledOverPending = rolledOverQuestions.filter(q => q.isPending);
+                const rolledOverReview = rolledOverQuestions.filter(q => !q.isPending && q.priority > 0);
+
+                // Collect all rolled over IDs for bulk update
+                rolledOverIds.push(...rolledOverQuestions.map(q => q._id));
+
+                // Bulk update rolled-over questions to next session day
+                if (questionsToRollOver.length > 0) {
+                    const updatePromises = questionsToRollOver.map(({ questionId, newDueDate, originalTier }) => {
+                        const updateData = { dueDate: newDueDate };
+
+                        // Set appropriate flags based on original tier
+                        if (originalTier === 'rolledOver') {
+                            // Rolled-over questions keep wasRolledOver flag
+                            updateData.wasRolledOver = true;
+                        } else {
+                            // Review questions get wasRolledOver flag
+                            updateData.wasRolledOver = true;
+                        }
+
+                        return Question.findByIdAndUpdate(questionId, updateData);
+                    });
+
+                    await Promise.all(updatePromises);
+                    console.log(`[DEBUG] Updated ${questionsToRollOver.length} questions to Session Day ${currentDay + 1}`);
+                }
+
+                // Add to combined lists
+                allQuestions.new.push(...includedNew);
+                allQuestions.pending.push(...includedRolledOver); // Include ALL rolled-over questions (both isPending and wasRolledOver)
+                allQuestions.review.push(...includedReview);
+
+                // Store comprehensive stats for this section
+                sectionStats[progress.sectionId.toString()] = {
+                    currentSessionDay: currentDay,
+                    totalSessions: progress.totalSessions,
+                    maxPerSession: maxPerSession,
+                    maxPerSessionAppliesTo: 'rolledOver + review only (new questions unlimited)',
+                    // Tier counts (available)
+                    tier1Available: tier1NewQuestions.length,
+                    tier2Available: tier2RolledOver.length,
+                    tier3Available: tier3Review.length,
+                    // Included counts
+                    newCount: includedNew.length,
+                    rolledOverCount: includedRolledOver.length,
+                    reviewCount: includedReview.length,
+                    // Rolled over counts (only from Tier 2 and Tier 3)
+                    newRolledOver: 0, // New questions are never rolled over
+                    pendingRolledOver: rolledOverPending.length,
+                    reviewRolledOver: rolledOverReview.length,
+                    totalIncluded: includedQuestions.length,
+                    totalRolledOver: rolledOverQuestions.length
+                };
+
+                // AUTO-ADVANCE LOGIC: Only advance if no questions available after processing
+                // This ensures we don't process the same session day twice
+                const allAvailableQuestions = [...tier1NewQuestions, ...limitedQuestions];
+                if (includedQuestions.length === 0 && allAvailableQuestions.length === 0) {
+                    // Check if there are future questions to advance to
+                    const nextQuestion = await Question.findOne({
                         userId,
                         sectionId: progress.sectionId,
                         $or: [
-                            { priority: 0 },                    // NEW - always show (unlimited)
-                            { priority: { $exists: false } },   // Legacy questions
-                            { priority: null },                 // Legacy questions
-                            { isPending: true },                // PENDING - always show (unlimited)
-                            { 
-                                dueDate: { $lte: currentDay },  // REVIEW - due on or before this session day
-                                priority: { $gt: 0, $lte: 5 },
-                                isPending: { $ne: true }        // Exclude pending from review track
+                            { priority: 0, timesReviewed: 0 }, // New questions
+                            { wasRolledOver: true }, // Rolled over
+                            { isPending: true }, // Pending
+                            {
+                                dueDate: { $gt: currentDay },
+                                priority: { $gt: 0, $lte: 5 }
                             }
                         ]
-                    }).sort({ priority: 1, dueDate: 1 });
+                    }).sort({ dueDate: 1, priority: 1 });
 
-                    console.log(`[DEBUG] Session Day ${currentDay}: Found ${questions.length} questions`);
+                    if (nextQuestion) {
+                        const targetDay = nextQuestion.dueDate || (currentDay + 1);
+                        console.log(`[AUTO-ADVANCE] No questions for Session Day ${currentDay}. Advancing to Session Day ${targetDay}`);
 
-                    // If no questions found and there are questions in the section, auto-advance
-                    if (questions.length === 0 && totalQuestionsInSection > 0) {
-                        // IMPORTANT: Check if there are NEW (priority 0) or PENDING questions first
-                        // If they exist, we shouldn't auto-advance - they should show instead
-                        const newOrPendingQuestions = await Question.countDocuments({
-                            userId,
-                            sectionId: progress.sectionId,
-                            $or: [
-                                { priority: 0 },
-                                { priority: { $exists: false } },
-                                { priority: null },
-                                { isPending: true }
-                            ]
-                        });
+                        // Atomic advancement: update session day once
+                        await SectionProgress.findOneAndUpdate(
+                            { userId, sectionId: progress.sectionId },
+                            {
+                                currentSessionDay: targetDay,
+                                totalSessions: progress.totalSessions + (targetDay - currentDay)
+                            }
+                        );
 
-                        if (newOrPendingQuestions > 0) {
-                            console.log(`[AUTO-ADVANCE] Found ${newOrPendingQuestions} NEW/PENDING questions - should show these instead of advancing`);
-                            // Re-query to get NEW/PENDING questions
-                            questions = await Question.find({
-                                userId,
-                                sectionId: progress.sectionId,
-                                $or: [
-                                    { priority: 0 },
-                                    { priority: { $exists: false } },
-                                    { priority: null },
-                                    { isPending: true }
-                                ]
-                            }).sort({ priority: 1, dueDate: 1 });
-                            break;
-                        }
-
-                        // Only auto-advance if there are no NEW or PENDING questions
-                        // Check what's the earliest dueDate to know where to advance
-                        const nextQuestion = await Question.findOne({
-                            userId,
-                            sectionId: progress.sectionId,
-                            priority: { $gt: 0, $lte: 5 },
-                            dueDate: { $gt: currentDay }
-                        }).sort({ dueDate: 1 });
-
-                        if (nextQuestion) {
-                            const targetDay = nextQuestion.dueDate;
-                            console.log(`[AUTO-ADVANCE] No questions for Session Day ${currentDay}. Advancing to Session Day ${targetDay} (next due date)`);
-                            
-                            // Update the progress document directly
-                            await SectionProgress.findOneAndUpdate(
-                                { userId, sectionId: progress.sectionId },
-                                { 
-                                    currentSessionDay: targetDay,
-                                    totalSessions: progress.totalSessions + (targetDay - currentDay)
-                                }
-                            );
-                            
-                            currentDay = targetDay;
-                            advancementsMade += (targetDay - progress.currentSessionDay);
-                            progress.currentSessionDay = targetDay; // Update in-memory object
-                        } else {
-                            // No future questions found, break the loop
-                            console.log(`[AUTO-ADVANCE] No future questions found for section ${progress.sectionId}`);
-                            break;
-                        }
-                    } else {
-                        // Questions found or no questions in section at all
-                        break;
+                        progress.currentSessionDay = targetDay; // Update in-memory object
                     }
                 }
-
-                if (advancementsMade > 0) {
-                    console.log(`[AUTO-ADVANCE] Advanced ${advancementsMade} session(s) to Session Day ${currentDay}`);
-                }
-                
-                console.log(`[DEBUG] Section ${progress.sectionId}: Session Day ${currentDay}, Total questions: ${totalQuestionsInSection}, Found: ${questions.length}`);
-                
-                if (questions.length > 0) {
-                    const sample = questions[0];
-                    console.log(`[DEBUG] Sample question - priority: ${sample.priority}, dueDate: ${sample.dueDate}, isPending: ${sample.isPending}`);
-                } else if (totalQuestionsInSection > 0) {
-                    // Debug: show all questions if none matched
-                    console.warn(`[WARNING] Section has ${totalQuestionsInSection} questions but none available after auto-advancement`);
-                    const allQuestions = await Question.find({ userId, sectionId: progress.sectionId }).sort({ dueDate: 1 });
-                    console.log(`[DEBUG] All questions in section (sorted by dueDate):`);
-                    allQuestions.forEach((q, idx) => {
-                        console.log(`  Q${idx + 1}: priority=${q.priority}, dueDate=${q.dueDate}, isPending=${q.isPending}`);
-                    });
-                }
-
-                // Separate into three tracks
-                const newQuestions = questions.filter(q => q.priority === 0);
-                const pendingQuestions = questions.filter(q => q.isPending && q.priority > 0);
-                const reviewQuestions = questions.filter(q => !q.isPending && q.priority > 0);
-
-                // Apply 50% limit ONLY to review questions
-                const reviewLimit = Math.ceil(reviewQuestions.length * SMART_REVIEW_CONFIG.REVIEW_LIMIT_PERCENTAGE);
-                const includedReview = reviewQuestions.slice(0, reviewLimit);
-                const rolledOverReview = reviewQuestions.slice(reviewLimit);
-
-                // Collect rolled over IDs for bulk update
-                rolledOverIds.push(...rolledOverReview.map(q => q._id));
-
-                // Add to combined lists
-                allQuestions.new.push(...newQuestions);
-                allQuestions.pending.push(...pendingQuestions);
-                allQuestions.review.push(...includedReview);
-
-                // Store stats for this section
-                sectionStats[progress.sectionId.toString()] = {
-                    currentSessionDay: progress.currentSessionDay,
-                    totalSessions: progress.totalSessions,
-                    newCount: newQuestions.length,
-                    pendingCount: pendingQuestions.length,
-                    reviewCount: reviewQuestions.length,
-                    reviewIncluded: includedReview.length,
-                    reviewRolledOver: rolledOverReview.length
-                };
             }
 
-            // 3. BULK UPDATE: Mark rolled over questions (fix N+1 query problem)
-            if (rolledOverIds.length > 0) {
-                await Question.updateMany(
-                    { _id: { $in: rolledOverIds } },
-                    { wasRolledOver: true }
-                );
-            }
+            // 3. BULK UPDATE: Mark rolled over questions (already handled in per-section loop above)
+            // The rollover updates are done atomically per section to ensure proper dueDate assignment
+            // This section is kept for any additional bulk operations if needed
 
             // 4. COMBINE in priority order: NEW → PENDING → REVIEW
             const todaysQuestions = [
@@ -325,7 +349,7 @@ class SmartReviewService {
                 // Keep it available for reinsertion in current session
                 // Priority stays the same, dueDate stays the same
                 question.easeFactor = this.calculateNewEaseFactor(question, rating);
-                
+
                 await question.save();
 
                 return {
@@ -343,7 +367,7 @@ class SmartReviewService {
 
             // For ratings 2-5: Update to new session day
             question.priority = rating; // Priority = last rating
-            
+
             // Calculate new due SESSION DAY (not calendar date!)
             const newDueSessionDay = this.calculateNextDueDate(question, rating, currentSessionDay);
             question.dueDate = newDueSessionDay; // Store as NUMBER
@@ -402,7 +426,7 @@ class SmartReviewService {
         if (rating <= 2) {
             // Hard - decrease ease factor
             newEaseFactor = Math.max(
-                SMART_REVIEW_CONFIG.MIN_EASE_FACTOR, 
+                SMART_REVIEW_CONFIG.MIN_EASE_FACTOR,
                 newEaseFactor - SMART_REVIEW_CONFIG.EASE_ADJUSTMENT
             );
         } else if (rating >= 4) {
@@ -490,7 +514,7 @@ class SmartReviewService {
             // Mark as pending for next session (bulk update)
             const result = await Question.updateMany(
                 { _id: { $in: unratedQuestions.map(q => q._id) } },
-                { 
+                {
                     isPending: true,
                     // Clear rolled over status since they're now pending
                     wasRolledOver: false

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Eye } from "lucide-react";
 import CodeBlock from "../Common/CodeBlock";
 import RatingButtons from "../SmartReview/RatingButtons";
@@ -11,19 +11,21 @@ const EliminationQuestionCard = ({
   isRevealed,
   onToggleAnswer,
   rateQuestion,
-  isLoading,
   disabled = false
 }) => {
   const { playSound } = useSound();
+  const [isRatingThisQuestion, setIsRatingThisQuestion] = useState(false);
 
   const handleRate = async (rating) => {
     console.log("[ELIMINATION] Rating button clicked:", rating);
     console.log("[ELIMINATION] Question ID:", question._id);
 
-    if (!rateQuestion) {
-      console.error("[ELIMINATION] rateQuestion function not provided!");
+    if (!rateQuestion || isRatingThisQuestion) {
+      console.error("[ELIMINATION] rateQuestion function not provided or already rating!");
       return;
     }
+
+    setIsRatingThisQuestion(true);
 
     try {
       // Play sound based on rating
@@ -38,10 +40,17 @@ const EliminationQuestionCard = ({
       // Submit the rating
       await rateQuestion(rating);
       console.log("[ELIMINATION] Rating submitted successfully");
+      
+      // Reset loading state after a short delay to allow for smooth UI transition
+      // The question will be removed from the list, but this ensures the state is clean
+      setTimeout(() => {
+        setIsRatingThisQuestion(false);
+      }, 100);
 
     } catch (error) {
       console.error("[ELIMINATION] Error submitting rating:", error);
       playSound("error");
+      setIsRatingThisQuestion(false);
     }
   };
 
@@ -87,11 +96,13 @@ const EliminationQuestionCard = ({
         <button
           className="action-btn reveal-btn"
           onClick={() => {
-            onToggleAnswer();
-            playSound("bubble");
+            if (!isRatingThisQuestion && !disabled) {
+              onToggleAnswer();
+              playSound("bubble");
+            }
           }}
           title={isRevealed ? "Hide Answer" : "Reveal Answer"}
-          disabled={disabled}
+          disabled={isRatingThisQuestion || disabled}
         >
           <Eye size={18} />
           <span>{isRevealed ? "Hide Answer" : "Reveal Answer"}</span>
@@ -102,7 +113,7 @@ const EliminationQuestionCard = ({
       <div className="smart-review-rating-section">
         <RatingButtons
           onRate={handleRate}
-          disabled={isLoading || disabled}
+          disabled={isRatingThisQuestion || disabled}
           compact={false}
         />
       </div>

@@ -14,7 +14,7 @@ const ReviewSessionPage = () => {
   const [loading, setLoading] = useState(false);
   const [flipped, setFlipped] = useState(null); // tracks which card is flipped 
 
-  
+
   const { setActiveSession } = useSession()
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,16 +29,16 @@ const ReviewSessionPage = () => {
 
   useEffect(() => {
     loadSections();
-    
+
     // Check if resuming a session from dashboard
     const checkResumeSession = async () => {
       if (location.state?.resumeSession && location.state?.sessionData) {
         const sessionData = location.state.sessionData;
         console.log('[RESUME] Resuming session:', sessionData);
-        
+
         // Set the active session in context
         setActiveSession(sessionData);
-        
+
         // Navigate directly to active session page
         navigate('/session/start', {
           state: {
@@ -49,24 +49,24 @@ const ReviewSessionPage = () => {
         });
       }
     };
-    
+
     checkResumeSession();
   }, [location.state, navigate, setActiveSession]);
 
   useEffect(() => {
-  const cards = document.querySelectorAll('.section-card');
-  cards.forEach(card => {
-    card.addEventListener('click', function() {
-      if (this.classList.contains('selected')) {
-        this.classList.add('selected-remove');
-        setTimeout(() => this.classList.remove('selected-remove'), 300);
-      } else {
-        this.classList.add('selected-add');
-        setTimeout(() => this.classList.remove('selected-add'), 300);
-      }
+    const cards = document.querySelectorAll('.section-card');
+    cards.forEach(card => {
+      card.addEventListener('click', function () {
+        if (this.classList.contains('selected')) {
+          this.classList.add('selected-remove');
+          setTimeout(() => this.classList.remove('selected-remove'), 300);
+        } else {
+          this.classList.add('selected-add');
+          setTimeout(() => this.classList.remove('selected-add'), 300);
+        }
+      });
     });
-  });
-}, [sections]);
+  }, [sections]);
 
   const loadSections = async () => {
     try {
@@ -93,33 +93,30 @@ const ReviewSessionPage = () => {
 
     setLoading(true);
     try {
-      // If elimination mode, navigate directly to elimination page
+      // All modes now use Smart Review for consistent scheduling
       if (sessionType === "elimination") {
+        // Elimination Mode - uses SmartReviewWrapper in EliminationModePage
         navigate("/elimination", {
-          state: { sectionIds: selectedSections }
+          state: {
+            sectionIds: selectedSections,
+            useSmartReview: true
+          }
         });
-        setLoading(false);
-        return;
+      } else {
+        // Normal/Flashcard Mode - navigate to active session with Smart Review enabled
+        navigate("/session/start", {
+          state: {
+            sectionIds: selectedSections,
+            cardMode: cardMode,
+            useSmartReview: true
+          }
+        });
       }
-
-
-      console.log("[REVIEW] Starting session with cardMode:", cardMode);
-      const response = await sessionService.startSession({
-        sectionIds: selectedSections,
-        cardMode,
-      });
-
-      console.log("[REVIEW] Session created, response:", response.data.data.session);
-      // STORE THE SESSION DATA FOR ACTIVE SESSION
-      setActiveSession(response.data.data.session);
-
-      // Navigate to active session page
-      navigate("/session/start");
     } catch (error) {
       console.error("Failed to start session:", error);
       alert(
         "Failed to start session: " +
-          (error.response?.data?.message || "Unknown error")
+        (error.response?.data?.message || "Unknown error")
       );
     } finally {
       setLoading(false);
@@ -150,7 +147,7 @@ const ReviewSessionPage = () => {
                     onChange={(e) => setSessionType(e.target.value)}
                   />
                   <span>{type.label}</span>
-                 
+
                   <FaQuestionCircle
                     className="question-icon"
                     onClick={() => setFlipped(flipped === type.value ? null : type.value)}
@@ -173,44 +170,44 @@ const ReviewSessionPage = () => {
       {sessionType === "review" && (
         <div className="mode-selection">
           <h2>Select Card Style</h2>
-        <div className="mode-options">
-          {["normal", "flashcard"].map((cardModeName) => (
-            <div
-              key={cardModeName}
-              className={`mode-card ${flipped === cardModeName ? "flipped" : ""}`}
-            >
-              <div className="mode-card-front">
-                <label className="mode-option">
-                  <input
-                    type="radio"
-                    value={cardModeName}
-                    checked={cardMode === cardModeName}
-                    onChange={(e) => setCardMode(e.target.value)}
-                  />
-                  <span>{cardModeName === "normal" ? "Normal Cards" : "Flashcard Style"}</span>
-                 
-                  <FaQuestionCircle
-                    className="question-icon"
-                    onClick={() => setFlipped(flipped === cardModeName ? null : cardModeName)}
-                  />
-                </label>
-              </div>
+          <div className="mode-options">
+            {["normal", "flashcard"].map((cardModeName) => (
+              <div
+                key={cardModeName}
+                className={`mode-card ${flipped === cardModeName ? "flipped" : ""}`}
+              >
+                <div className="mode-card-front">
+                  <label className="mode-option">
+                    <input
+                      type="radio"
+                      value={cardModeName}
+                      checked={cardMode === cardModeName}
+                      onChange={(e) => setCardMode(e.target.value)}
+                    />
+                    <span>{cardModeName === "normal" ? "Normal Cards" : "Flashcard Style"}</span>
 
-              <div className="mode-card-back">
-                <div className="mode-description">
-                  <h3>{cardModeName === "normal" ? "Normal Cards" : "Flashcard Style"}</h3>
-                  <p>
-                    {cardModeName === "normal"
-                      ? "Traditional question and answer format with swipe gestures."
-                      : "Interactive flip cards with keyboard shortcuts."}
-                  </p>
-                  <button onClick={() => setFlipped(null)}>Close</button>
+                    <FaQuestionCircle
+                      className="question-icon"
+                      onClick={() => setFlipped(flipped === cardModeName ? null : cardModeName)}
+                    />
+                  </label>
+                </div>
+
+                <div className="mode-card-back">
+                  <div className="mode-description">
+                    <h3>{cardModeName === "normal" ? "Normal Cards" : "Flashcard Style"}</h3>
+                    <p>
+                      {cardModeName === "normal"
+                        ? "Traditional question and answer format with swipe gestures."
+                        : "Interactive flip cards with keyboard shortcuts."}
+                    </p>
+                    <button onClick={() => setFlipped(null)}>Close</button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
       )}
 
       <div className="section-selection">
@@ -219,11 +216,10 @@ const ReviewSessionPage = () => {
           {sections.map((section) => (
             <div
               key={section._id}
-              className={`section-card ${
-                selectedSections.includes(section._id) ? "selected" : ""
-              }`}
+              className={`section-card ${selectedSections.includes(section._id) ? "selected" : ""
+                }`}
               onClick={() => toggleSection(section._id)}
-              style={{ 
+              style={{
                 borderLeftColor: section.color,
                 background: `linear-gradient(135deg, 
                   ${hexToRgba(section.color, 0.2)}, 

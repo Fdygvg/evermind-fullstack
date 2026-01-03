@@ -201,6 +201,16 @@ const EliminationModePage = () => {
         showAddMore={true}
       >
         {({ todaysQuestions, rateQuestion, isLoading, isSessionComplete, canUndo, undoLastRating, sectionProgress }) => {
+          // DEBUG: Log the props received from SmartReviewWrapper
+          console.log('[EliminationMode] SmartReviewWrapper props:', {
+            todaysQuestions,
+            todaysQuestionsLength: todaysQuestions?.length,
+            isLoading,
+            isSessionComplete,
+            sectionProgress
+          });
+
+          // Check completion first (before checking if questions array is empty)
           if (isSessionComplete) {
             return (
               <div className="session-complete">
@@ -211,8 +221,20 @@ const EliminationModePage = () => {
             );
           }
 
-          if (!todaysQuestions || todaysQuestions.length === 0) {
+          // Show loading only during initial load
+          if (isLoading && (!todaysQuestions || todaysQuestions.length === 0)) {
             return <div className="loading">Loading Smart Review questions...</div>;
+          }
+
+          // If no questions and not loading, show message
+          if (!todaysQuestions || todaysQuestions.length === 0) {
+            console.log('[EliminationMode] No questions available!');
+            return (
+              <div className="no-questions">
+                <p>No questions available for review.</p>
+                <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+              </div>
+            );
           }
 
           return (
@@ -251,8 +273,7 @@ const EliminationModePage = () => {
                       isRevealed={revealedAnswers[question._id] || false}
                       onToggleAnswer={() => toggleAnswer(question._id)}
                       rateQuestion={(rating) => rateQuestion(rating, question._id)}
-                      isLoading={isLoading}
-                      disabled={isLoading}
+                      disabled={false}
                     />
                   ))}
                 </div>

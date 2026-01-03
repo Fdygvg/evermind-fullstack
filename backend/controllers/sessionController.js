@@ -6,23 +6,27 @@ import UserStats from '../models/UserStats.js';
 export const startSession = async (req, res) => {
   try {
     const { sectionIds, cardMode = 'normal' } = req.body;
-    
+
+    // Validate sectionIds
+    if (!sectionIds || !Array.isArray(sectionIds) || sectionIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'sectionIds is required and must be a non-empty array'
+      });
+    }
+
     // End any existing active session
     await ReviewSession.findOneAndUpdate(
       { userId: req.userId, isActive: true },
       { isActive: false, endTime: new Date() }
     );
 
-    // Get questions from selected sections that are due for review
-    const now = new Date();
+    // Get questions from selected sections
+    // For normal/flashcard modes, we include ALL active questions (scheduling is handled by Smart Review separately)
     const questions = await Question.find({
       userId: req.userId,
       sectionId: { $in: sectionIds },
-      isActive: true,
-      $or: [
-        { nextReviewDate: null },
-        { nextReviewDate: { $lte: now } }
-      ]
+      isActive: { $ne: false } // Include questions where isActive is true or not set
     });
 
     if (questions.length === 0) {
@@ -60,7 +64,7 @@ export const startSession = async (req, res) => {
     res.json({
       success: true,
       message: 'Session started successfully',
-      data: { 
+      data: {
         session: {
           _id: session._id,
           id: session._id,
@@ -104,10 +108,10 @@ export const getNextQuestion = async (req, res) => {
 
     // Get next question (first in remainingQuestions)
     const nextQuestion = session.remainingQuestions[0];
-    
+
     // Calculate current question index
     const currentIndex = session.allQuestions.length - session.remainingQuestions.length;
-    
+
     res.json({
       success: true,
       data: {
@@ -135,7 +139,7 @@ export const submitAnswer = async (req, res) => {
   try {
     const { questionId, responseType } = req.body;
     // responseType: 'easy' | 'medium' | 'hard'
-    
+
     const session = await ReviewSession.findOne({
       userId: req.userId,
       isActive: true
@@ -233,10 +237,10 @@ export const endSession = async (req, res) => {
   try {
     const session = await ReviewSession.findOneAndUpdate(
       { userId: req.userId, isActive: true },
-      { 
+      {
         isActive: false,
         status: 'completed',
-        endTime: new Date() 
+        endTime: new Date()
       },
       { new: true }
     );
@@ -256,7 +260,7 @@ export const endSession = async (req, res) => {
 
     // Calculate session duration in minutes
     const duration = Math.round((session.endTime - session.startTime) / 60000);
-    
+
     // Update stats
     userStats.totalSessions += 1;
     userStats.totalQuestionsReviewed += session.correctCount + session.wrongCount;
@@ -270,9 +274,9 @@ export const endSession = async (req, res) => {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (!lastSession || 
-        lastSession.toDateString() === yesterday.toDateString() ||
-        lastSession.toDateString() === today.toDateString()) {
+    if (!lastSession ||
+      lastSession.toDateString() === yesterday.toDateString() ||
+      lastSession.toDateString() === today.toDateString()) {
       userStats.currentStreak += 1;
     } else {
       userStats.currentStreak = 1; // Reset streak
@@ -313,11 +317,11 @@ export const getCurrentSession = async (req, res) => {
       userId: req.userId,
       status: { $in: ['active', 'paused'] }
     })
-    .populate('sectionIds', 'name color')
-    .populate('remainingQuestions')
-    .populate('correctQuestions')
-    .populate('wrongQuestions')
-    .sort({ lastUpdated: -1 }); // Get most recently updated
+      .populate('sectionIds', 'name color')
+      .populate('remainingQuestions')
+      .populate('correctQuestions')
+      .populate('wrongQuestions')
+      .sort({ lastUpdated: -1 }); // Get most recently updated
 
     if (!session) {
       return res.status(404).json({
@@ -369,8 +373,8 @@ export const getLastSessionResults = async (req, res) => {
       userId: req.userId,
       isActive: false
     })
-    .sort({ endTime: -1 })  
-    .limit(1);
+      .sort({ endTime: -1 })
+      .limit(1);
 
     if (!lastSession) {
       return res.status(404).json({
@@ -380,11 +384,11 @@ export const getLastSessionResults = async (req, res) => {
     }
 
     const totalQuestions = lastSession.correctCount + lastSession.wrongCount;
-    const accuracy = totalQuestions > 0 
+    const accuracy = totalQuestions > 0
       ? Math.round((lastSession.correctCount / totalQuestions) * 100)
       : 0;
 
-    const duration = lastSession.endTime 
+    const duration = lastSession.endTime
       ? Math.round((lastSession.endTime - lastSession.startTime) / 60000)  // minutes
       : 0;
 
@@ -412,7 +416,7 @@ export const getLastSessionResults = async (req, res) => {
 export const updateProgress = async (req, res) => {
   try {
     const { sectionIds, currentIndex, answeredQuestionIds, status, smartReviewState } = req.body;
-    
+
     let session = await ReviewSession.findOne({
       userId: req.userId,
       status: { $in: ['active', 'paused'] }
@@ -422,7 +426,7 @@ export const updateProgress = async (req, res) => {
     if (!session && smartReviewState) {
       // Extract sectionIds from smartReviewState or request body
       const extractedSectionIds = sectionIds || smartReviewState.sectionIds || [];
-      
+
       session = new ReviewSession({
         userId: req.userId,
         sectionIds: extractedSectionIds,
@@ -433,9 +437,9 @@ export const updateProgress = async (req, res) => {
         smartReviewState: smartReviewState,
         isActive: true
       });
-      
+
       await session.save();
-      
+
       return res.json({
         success: true,
         message: 'Smart Review session created and progress saved',
