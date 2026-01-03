@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { FaCheck, FaMinus, FaTimes } from 'react-icons/fa';
 import CodeBlock from "./CodeBlock";
 import { useSound } from "../../hooks/useSound";
 import "../css/questionCard.css";
@@ -269,46 +268,6 @@ const QuestionCard = ({
 
           {/* Answer Rating Buttons - Legacy mode (easy/medium/hard) */}
           {/* Note: Smart Review rating buttons are rendered by the parent component when Smart Review is enabled */}
-          <div className="answer-buttons-3">
-            <button
-              className="response-btn green-btn"
-              onClick={() => {
-                console.log("[BUTTON] Easy (Green) button clicked");
-                console.log("[BUTTON] Current question ID:", currentQuestion?._id);
-                console.log("[BUTTON] Loading state:", loading);
-                playSound("correct");
-                submitAnswer('easy');
-              }}
-              disabled={loading}
-            >
-              <FaCheck /> I Know It
-            </button>
-            <button
-              className="response-btn yellow-btn"
-              onClick={() => {
-                console.log("[BUTTON] Medium (Yellow) button clicked");
-                console.log("[BUTTON] Current question ID:", currentQuestion?._id);
-                console.log("[BUTTON] Loading state:", loading);
-                submitAnswer('medium');
-              }}
-              disabled={loading}
-            >
-              <FaMinus /> Kinda
-            </button>
-            <button
-              className="response-btn red-btn"
-              onClick={() => {
-                console.log("[BUTTON] Hard (Red) button clicked");
-                console.log("[BUTTON] Current question ID:", currentQuestion?._id);
-                console.log("[BUTTON] Loading state:", loading);
-                playSound("wrong");
-                submitAnswer('hard');
-              }}
-              disabled={loading}
-            >
-              <FaTimes /> Don't Know
-            </button>
-          </div>
         </div>
       ) : (
         <button

@@ -22,19 +22,71 @@
   white-space: nowrap;
 }
 
-.end-session-btn {
-  background: var(--color-error);
-  color: var(--text-inverse);
+/* Session Controls Header */
+.session-controls-header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.session-controls-header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
+  border-radius: 10px;
   font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
+}
+
+.session-controls-header button:active {
+  transform: scale(0.96);
+}
+
+/* Undo Button - Subtle neutral style */
+.undo-btn {
+  background: linear-gradient(135deg, var(--color-surface) 0%, var(--bg-secondary) 100%);
+  color: var(--color-text);
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+}
+
+.undo-btn:hover {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--color-surface) 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  transform: translateY(-1px);
+}
+
+/* Pause Button - Warm amber/orange style */
+.pause-session-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35) !important;
+}
+
+.pause-session-btn:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45) !important;
+  transform: translateY(-2px);
+}
+
+/* End Session Button - Red danger style */
+.end-session-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.35) !important;
 }
 
 .end-session-btn:hover {
-  background: var(--color-error);
-  opacity: 0.9;
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.45) !important;
+  transform: translateY(-2px);
 }
 
 /* Question Card */

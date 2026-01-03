@@ -50,3 +50,19 @@
     font-size: 1.25rem;
   }
 }
+
+/* Action Button (FAB) Positioning within Smart Review */
+.smart-review-wrapper .fab-container {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 1000;
+}
+
+/* Mobile Responsive for FAB */
+@media (max-width: 640px) {
+  .smart-review-wrapper .fab-container {
+    bottom: 20px;
+    right: 20px;
+  }
+}

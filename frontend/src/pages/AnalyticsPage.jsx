@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { statsService } from '../services/stats';
 import { sectionService } from '../services/sections.js';
+import '../css/analyticsPage.css';
 
+import { FaChartLine, FaFire, FaBookOpen, FaBullseye, FaClock, FaCheckCircle, FaTimesCircle, FaChartBar } from 'react-icons/fa';
 
 const AnalyticsPage = () => {
   const [timeRange, setTimeRange] = useState('30'); // days
@@ -17,7 +19,7 @@ const AnalyticsPage = () => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch detailed analytics
       const analyticsRes = await statsService.getAnalytics({ days: timeRange });
       const sectionsRes = await sectionService.getSections();
@@ -52,13 +54,13 @@ const AnalyticsPage = () => {
   return (
     <div className="analytics-container">
       <div className="analytics-header">
-        <h1>📊 Learning Analytics</h1>
+        <h1><FaChartBar /> Learning Analytics</h1>
         <p>Track your progress and performance</p>
-        
+
         <div className="time-range-selector">
           <label>Time Range:</label>
-          <select 
-            value={timeRange} 
+          <select
+            value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
             className="range-select"
           >
@@ -75,12 +77,12 @@ const AnalyticsPage = () => {
       {/* Summary Stats */}
       <div className="summary-stats">
         <div className="stat-card">
-          <div className="stat-icon">🔥</div>
+          <div className="stat-icon"><FaFire /></div>
           <div className="stat-content">
             <h3>{analytics?.sessionStats?.currentStreak || 0}</h3>
             <p>Current Streak</p>
             <div className="streak-progress">
-              <div 
+              <div
                 className="progress-bar"
                 style={{ width: `${calculateStreakProgress()}%` }}
               ></div>
@@ -90,7 +92,7 @@ const AnalyticsPage = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon">📚</div>
+          <div className="stat-icon"><FaBookOpen /></div>
           <div className="stat-content">
             <h3>{analytics?.sessionStats?.totalQuestions || 0}</h3>
             <p>Questions Reviewed</p>
@@ -99,7 +101,7 @@ const AnalyticsPage = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon">🎯</div>
+          <div className="stat-icon"><FaBullseye /></div>
           <div className="stat-content">
             <h3>{analytics?.sessionStats?.accuracyFormatted || '0%'}</h3>
             <p>Average Accuracy</p>
@@ -108,7 +110,7 @@ const AnalyticsPage = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon">⏱️</div>
+          <div className="stat-icon"><FaClock /></div>
           <div className="stat-content">
             <h3>{analytics?.sessionStats?.totalTimeFormatted || '0 min'}</h3>
             <p>Total Time</p>
@@ -125,8 +127,8 @@ const AnalyticsPage = () => {
             const catAnalytics = analytics?.categoryStats?.find(c => c._id === category._id);
             return (
               <div key={category._id} className="category-card">
-                <div 
-                  className="category-color" 
+                <div
+                  className="category-color"
                   style={{ backgroundColor: category.color }}
                 ></div>
                 <div className="category-info">
@@ -138,8 +140,8 @@ const AnalyticsPage = () => {
                         Accuracy: {catAnalytics.accuracy ? `${Math.round(catAnalytics.accuracy)}%` : 'N/A'}
                       </span>
                       <div className="breakdown">
-                        <span className="correct">✅ {catAnalytics.totalCorrect || 0}</span>
-                        <span className="wrong">❌ {catAnalytics.totalWrong || 0}</span>
+                        <span className="correct"><FaCheckCircle /> {catAnalytics.totalCorrect || 0}</span>
+                        <span className="wrong"><FaTimesCircle /> {catAnalytics.totalWrong || 0}</span>
                       </div>
                     </div>
                   )}
@@ -163,9 +165,9 @@ const AnalyticsPage = () => {
                 <div className="timeline-content">
                   <div className="session-mode">{session.cardMode === 'flashcard' ? 'Flashcard' : 'Normal'} Style</div>
                   <div className="session-stats">
-                    <span className="correct">✅ {session.correct}</span>
-                    <span className="wrong">❌ {session.wrong}</span>
-                    <span className="duration">⏱️ {session.duration}m</span>
+                    <span className="correct"><FaCheckCircle /> {session.correct}</span>
+                    <span className="wrong"><FaTimesCircle /> {session.wrong}</span>
+                    <span className="duration"><FaClock /> {session.duration}m</span>
                   </div>
                 </div>
               </div>
@@ -178,7 +180,7 @@ const AnalyticsPage = () => {
 
       {/* Insights */}
       <div className="insights-section">
-        <h2>📈 Insights</h2>
+        <h2><FaChartLine /> Insights</h2>
         <div className="insights-grid">
           <div className="insight-card">
             <h4>Best Performing Category</h4>
@@ -209,7 +211,7 @@ const AnalyticsPage = () => {
           <div className="insight-card">
             <h4>Consistency Score</h4>
             <p className="insight-value">
-              {analytics?.sessionStats?.totalSessions > 0 
+              {analytics?.sessionStats?.totalSessions > 0
                 ? Math.min(100, Math.round((analytics.sessionStats.totalSessions / parseInt(timeRange)) * 100))
                 : 0}%
             </p>

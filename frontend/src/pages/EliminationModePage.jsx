@@ -200,7 +200,7 @@ const EliminationModePage = () => {
         showDailyCounter={true}
         showAddMore={true}
       >
-        {({ todaysQuestions, rateQuestion, isLoading, isSessionComplete, canUndo, undoLastRating, sectionProgress }) => {
+        {({ todaysQuestions, rateQuestion, isLoading, isSessionComplete, canUndo, undoLastRating, sectionProgress, ratingHistory, reviewedToday, initialQuestionCount }) => {
           // DEBUG: Log the props received from SmartReviewWrapper
           console.log('[EliminationMode] SmartReviewWrapper props:', {
             todaysQuestions,
@@ -212,13 +212,27 @@ const EliminationModePage = () => {
 
           // Check completion first (before checking if questions array is empty)
           if (isSessionComplete) {
-            return (
-              <div className="session-complete">
-                <h2>🎉 Smart Review Complete!</h2>
-                <p>Great job completing today's elimination review!</p>
-                <button onClick={endSession}>End Session</button>
-              </div>
-            );
+            // Calculate stats from rating history
+            const ratingBreakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+            (ratingHistory || []).forEach(r => {
+              if (ratingBreakdown[r.rating] !== undefined) {
+                ratingBreakdown[r.rating]++;
+              }
+            });
+
+            // Navigate to results page with stats
+            navigate("/session/results", {
+              state: {
+                mode: 'elimination',
+                ratingBreakdown,
+                totalQuestions: initialQuestionCount || reviewedToday,
+                reviewedCount: reviewedToday,
+                sessionTime: sessionTime,
+                cardMode: 'elimination',
+                fromSession: true
+              }
+            });
+            return null;
           }
 
           // Show loading only during initial load

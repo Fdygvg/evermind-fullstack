@@ -38,7 +38,7 @@ import HomePage from "./pages/HomePage";
 import EliminationModePage from "./pages/EliminationModePage";
 import PreferencesPage from "./pages/PreferencesPage";
 import QuestionListPage from "./pages/QuestionListPage";
-// import TikTokReviewPage from "./pages/TiktokReviewPage";
+import TikTokReviewPage from "./pages/TikTokReviewPage";
 
 function App() {
   return (
@@ -47,88 +47,88 @@ function App() {
         <SessionProvider>
           <SoundProvider>
             <SmartReviewProvider>
-            <Router>
-              <div className="App">
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/home" element={<HomePage />} />
-                  <Route
-                    element={
-                      <ProtectedRoute>
-                        <MainLayout />
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/sessions" element={<ReviewSessionPage />} />
+              <Router>
+                <div className="App">
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/home" element={<HomePage />} />
                     <Route
-                      path="/session/review"
-                      element={<ReviewSessionPage />}
-                    />
-                    <Route path="/preferences" element={<PreferencesPage />} />
+                      element={
+                        <ProtectedRoute>
+                          <MainLayout />
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/sessions" element={<ReviewSessionPage />} />
+                      <Route
+                        path="/session/review"
+                        element={<ReviewSessionPage />}
+                      />
+                      <Route path="/preferences" element={<PreferencesPage />} />
+                      <Route
+                        path="/session/start"
+                        element={<ActiveSessionPage />}
+                      />
+                      <Route
+                        path="/sections/add"
+                        element={<AddEditSectionPage />}
+                      />
+                      <Route
+                        path="/sections/edit/:id"
+                        element={<AddEditSectionPage />}
+                      />
+                      <Route
+                        path="/sections"
+                        element={<SectionListPage />}
+                      />
+                      <Route
+                        path="/sections/:sectionId/questions"
+                        element={<QuestionListPage />}
+                      />
+                      <Route
+                        path="/sections/:sectionId/stats"
+                        element={<AnalyticsPage />}
+                      />
+                      <Route
+                        path="/session/results"
+                        element={<SessionResultsPage />}
+                      />
+                      <Route
+                        path="/elimination"
+                        element={<EliminationModePage />}
+                      />
+                      <Route
+                        path="/tiktok-review"
+                        element={<TikTokReviewPage />}
+                      />
+                      <Route path="/settings" element={<SettingsPage />} />
+                    </Route>
+
+                    <Route path="/sectionlist" element={<SectionListPage />} />
+                    <Route path="/questionlist" element={<QuestionListPage />} />
+                    <Route path="/questions/add" element={<AddQuestion />} />
                     <Route
-                      path="/session/start"
-                      element={<ActiveSessionPage />}
+                      path="/questions/bulk-import"
+                      element={<BulkImportPage />}
                     />
+                    <Route path="/questions/export" element={<ExportPage />} />
                     <Route
-                      path="/sections/add"
-                      element={<AddEditSectionPage />}
+                      path="/questions/edit/:id"
+                      element={<EditQuestionPage />}
                     />
-                    <Route
-                      path="/sections/edit/:id"
-                      element={<AddEditSectionPage />}
-                    />
-                    <Route
-                      path="/sections"
-                      element={<SectionListPage />}
-                    />
-                    <Route
-                      path="/sections/:sectionId/questions"
-                      element={<QuestionListPage />}
-                    />
-                    <Route
-                      path="/sections/:sectionId/stats"
-                      element={<AnalyticsPage />}
-                    />
-                    <Route
-                      path="/session/results"
-                      element={<SessionResultsPage />}
-                    />
-                    <Route
-                      path="/elimination"
-                      element={<EliminationModePage />}
-                    />
-                    {/* <Route
-                      path="/tiktok-review"
-                      element={<TikTokReviewPage />}
-                    /> */}
-                    <Route path="/settings" element={<SettingsPage />} />
-                  </Route>
-                
-                  <Route path="/sectionlist" element={<SectionListPage />} />
-                  <Route path="/questionlist" element={<QuestionListPage />} />
-                  <Route path="/questions/add" element={<AddQuestion />} />
-                  <Route
-                    path="/questions/bulk-import"
-                    element={<BulkImportPage />}
-                  />
-                  <Route path="/questions/export" element={<ExportPage />} />
-                  <Route
-                    path="/questions/edit/:id"
-                    element={<EditQuestionPage />}
-                  />
-                  <Route path="/analytics" element={<AnalyticsPage />} />
-                  <Route path="/history" element={<SessionHistoryPage />} />
-                  <Route path="/search" element={<SearchPage />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/verify-email" element={<VerifyEmail />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </div>
-            </Router>
+                    <Route path="/analytics" element={<AnalyticsPage />} />
+                    <Route path="/history" element={<SessionHistoryPage />} />
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/verify-email" element={<VerifyEmail />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </div>
+              </Router>
             </SmartReviewProvider>
           </SoundProvider>
         </SessionProvider>

@@ -116,12 +116,6 @@ const Flashcard = ({
 
   return (
     <div className={`flashcard-container ${compact ? 'compact' : ''}`}>
-      {/* Card number indicator */}
-      {!compact && (
-        <div className="card-counter">
-          Card {questionNumber} of {totalQuestions}
-        </div>
-      )}
 
       {/* The Card */}
       <div
@@ -193,25 +187,9 @@ const Flashcard = ({
         </button>
       )}
 
-      {/* Keyboard shortcuts hint */}
-      <div className="keyboard-hints">
-        <div className="shortcut">
-          <kbd>SPACE</kbd>
-          <span>Flip card</span>
-        </div>
-        {isFlipped && useSmartReview && (
-          <div className="shortcut">
-            <kbd>1-5</kbd>
-            <span>Rate (1=Hard, 5=Perfect)</span>
-          </div>
-        )}
-        <div className="shortcut">
-          <kbd>ESC</kbd>
-          <span>Reset</span>
-        </div>
-      </div>
+
     </div>
   );
 };
 
-export default Flashcard;
+export default Flashcard; 

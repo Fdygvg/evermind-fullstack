@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSession } from "../hooks/useSession";
 import { sessionService } from "../services/sessions";
-import ProgressBar from "../components/Common/ProgressBar";
 import QuestionCard from "../components/Common/QuestionCard";
 import FlashCard from "../components/Common/FlashCard";
 import CodeBlock from "../components/Common/CodeBlock";
@@ -244,22 +243,7 @@ const ActiveSession = () => {
     }
   }, [currentQuestion, loadNextQuestion, loading]);
 
-  const pauseSession = async () => {
-    try {
-      console.log('[PAUSE] Pausing session...');
-      // Save current progress
-      await sessionService.updateProgress({
-        currentIndex: sessionProgress?.currentQuestionIndex || 0,
-        answeredQuestionIds: answeredQuestionIds,
-        status: 'paused'
-      });
-      console.log('[PAUSE] Session paused successfully');
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Failed to pause session:", error);
-      alert("Failed to pause session. Please try again.");
-    }
-  };
+
 
   const endSession = async () => {
     if (window.confirm("Are you sure you want to end this session?")) {
@@ -281,15 +265,29 @@ const ActiveSession = () => {
         showDailyCounter={true}
         showAddMore={true}
       >
-        {({ currentQuestion: smartQuestion, rateQuestion, isLoading, isSessionComplete, canUndo, undoLastRating }) => {
+        {({ currentQuestion: smartQuestion, rateQuestion, isLoading, isSessionComplete, canUndo, undoLastRating, ratingHistory, reviewedToday, initialQuestionCount }) => {
           if (isSessionComplete) {
-            return (
-              <div className="session-complete">
-                <h2>🎉 Session Complete!</h2>
-                <p>Great job! You've completed today's review.</p>
-                <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
-              </div>
-            );
+            // Calculate stats from rating history
+            const ratingBreakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+            (ratingHistory || []).forEach(r => {
+              if (ratingBreakdown[r.rating] !== undefined) {
+                ratingBreakdown[r.rating]++;
+              }
+            });
+
+            // Navigate to results page with stats
+            navigate("/session/results", {
+              state: {
+                mode: 'smart-review',
+                ratingBreakdown,
+                totalQuestions: initialQuestionCount || reviewedToday,
+                reviewedCount: reviewedToday,
+                sessionTime: sessionTime,
+                cardMode: cardMode,
+                fromSession: true
+              }
+            });
+            return null;
           }
 
           if (!smartQuestion) {
@@ -300,24 +298,14 @@ const ActiveSession = () => {
             <div className="active-session smart-review-mode">
               {/* Progress Bar */}
               <div className="session-header">
-                <ProgressBar
-                  currentStreak={currentStreak}
-                  sessionTime={sessionTime}
-                  currentCount={sessionProgress?.total - sessionProgress?.remaining || 0}
-                  totalCount={activeSession?.totalQuestions || sessionProgress?.total || 0}
-                  correctCount={sessionProgress?.correct || 0}
-                  wrongCount={sessionProgress?.wrong || 0}
-                  showAccuracy={true}
-                  showTimer={true}
-                  compact={false}
-                />
+
                 <div className="session-controls-header">
                   {canUndo && (
                     <button className="undo-btn" onClick={undoLastRating}>
                       ↶ Undo Last Rating
                     </button>
                   )}
-                  <button className="pause-session-btn" onClick={pauseSession}>
+                  <button className="pause-session-btn">
                     ⏸ Pause
                   </button>
                   <button className="end-session-btn" onClick={endSession}>
@@ -390,31 +378,6 @@ const ActiveSession = () => {
 
   return (
     <div className="active-session">
-      {/* Progress Bar */}
-      <div className="session-header">
-        <ProgressBar
-          currentStreak={currentStreak}
-          sessionTime={sessionTime}
-          currentCount={sessionProgress?.total - sessionProgress?.remaining || 0}
-          totalCount={activeSession?.totalQuestions || sessionProgress?.total || 0}
-          correctCount={sessionProgress?.correct || 0}
-          wrongCount={sessionProgress?.wrong || 0}
-          showAccuracy={true}
-          showTimer={true}
-          compact={false}
-        />
-        <div className="progress-stats">
-          {sessionProgress?.remaining} questions remaining
-        </div>
-        <div className="session-controls-header">
-          <button className="pause-session-btn" onClick={pauseSession}>
-            ⏸ Pause
-          </button>
-          <button className="end-session-btn" onClick={endSession}>
-            End Session
-          </button>
-        </div>
-      </div>
 
       {/* Question Card with Swipe Overlay or FlashCard */}
       <div className="question-card-wrapper" style={{ position: "relative" }}>

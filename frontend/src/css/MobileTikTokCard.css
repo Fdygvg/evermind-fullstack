@@ -1,0 +1,43 @@
+/* Mobile TikTok Card Styles */
+.mobile-tiktok-card {
+  width: 90%;
+  max-width: 350px;
+  min-height: 500px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+.card-question {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.card-answer {
+  font-size: 1.1rem;
+  color: #3b82f6;
+}
+
+.mobile-tiktok-card button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+}

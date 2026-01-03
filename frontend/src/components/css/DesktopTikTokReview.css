@@ -1,0 +1,50 @@
+.desktop-tiktok-review {
+  display: grid;
+  grid-template-columns: 250px 1fr 100px;
+  height: 100vh;
+  background: var(--bg-primary);
+}
+
+.desktop-sidebar {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  padding: 20px;
+}
+
+.desktop-main {
+  display: flex;
+  flex-direction: column;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.desktop-card-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.desktop-loading,
+.desktop-no-questions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  color: var(--text-primary);
+  text-align: center;
+  padding: 40px;
+}
+
+.desktop-no-questions h3 {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+}
+
+.desktop-no-questions p {
+  color: var(--text-secondary);
+  opacity: 0.8;
+  font-size: 1.1rem;
+}

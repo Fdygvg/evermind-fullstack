@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { sectionService } from "../services/sections";
 import SectionList from "../components/Common/SectionList";
+import "../components/css/sectionList.css";
 
 const SectionListPage = () => {
   const [sections, setSections] = useState([]);
@@ -65,7 +66,7 @@ const SectionListPage = () => {
 
   const handleDeleteSection = async (sectionId, e) => {
     e.stopPropagation();
-    
+
     if (!window.confirm("Are you sure? This will delete all questions in this section too!")) {
       return;
     }
@@ -109,11 +110,11 @@ const SectionListPage = () => {
         <div className="header-content">
           <h1>📚 My Study Sections</h1>
           <p className="subtitle">
-            {sections.length} section{sections.length !== 1 ? 's' : ''} • 
+            {sections.length} section{sections.length !== 1 ? 's' : ''} •
             {sections.reduce((total, section) => total + (section.questionCount || 0), 0)} total questions
           </p>
         </div>
-        
+
         <div className="header-actions">
           <Link to="/sections/add" className="btn btn-primary">
             <span className="btn-icon">+</span> New Section
@@ -147,8 +148,8 @@ const SectionListPage = () => {
             className="search-input"
           />
           {searchQuery && (
-            <button 
-              className="clear-search" 
+            <button
+              className="clear-search"
               onClick={() => setSearchQuery("")}
             >
               ×
@@ -158,22 +159,24 @@ const SectionListPage = () => {
 
         <div className="sort-control">
           <label className="sort-label">Sort by:</label>
-          <select
-            value={sortOption}
-            onChange={handleSortChange}
-            className="sort-select"
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="select-wrapper">
+            <select
+              value={sortOption}
+              onChange={handleSortChange}
+              className="sort-select"
+            >
+              {sortOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Sections Grid */}
-      <div className="sections-grid">
+      <div className="list-container">
         {filteredSections.length === 0 ? (
           <div className="empty-state">
             {searchQuery ? (
@@ -181,8 +184,8 @@ const SectionListPage = () => {
                 <div className="empty-icon">🔍</div>
                 <h3>No sections found</h3>
                 <p>No sections match "{searchQuery}"</p>
-                <button 
-                  className="btn btn-outline" 
+                <button
+                  className="btn btn-outline"
                   onClick={() => setSearchQuery("")}
                 >
                   Clear search
@@ -200,9 +203,9 @@ const SectionListPage = () => {
             )}
           </div>
         ) : (
-          <SectionList 
-            sections={filteredSections} 
-            onDeleteSection={handleDeleteSection} 
+          <SectionList
+            sections={filteredSections}
+            onDeleteSection={handleDeleteSection}
             searchQuery={searchQuery}
           />
         )}

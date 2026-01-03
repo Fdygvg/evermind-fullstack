@@ -1,6 +1,17 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import "../css/sectionList.css";
+import {
+  FaEdit,
+  FaTrash,
+  FaEye,
+  FaQuestionCircle,
+  FaCheckCircle,
+  FaCalendarAlt,
+  FaSearch,
+  FaBook,
+  FaInfoCircle
+} from "react-icons/fa";
+import "../../components/css/sectionList.css"; // Improved path to match actual location if needed, otherwise relative to component file
 
 const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
   const navigate = useNavigate();
@@ -24,9 +35,7 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
     navigate(`/sections/${sectionId}/stats`);
   };
 
-  // Calculate progress percentage (example: based on questions answered)
   const calculateProgress = (section) => {
-    // You'll need to add this data to your section model
     const totalQuestions = section.questionCount || 0;
     const answeredQuestions = section.answeredCount || 0;
     return totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0;
@@ -37,13 +46,13 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
       <div className="empty-sections">
         {searchQuery ? (
           <>
-            <div className="empty-icon">🔍</div>
+            <div className="empty-icon"><FaSearch /></div>
             <h3>No sections found</h3>
             <p>No sections match "{searchQuery}"</p>
           </>
         ) : (
           <>
-            <div className="empty-icon">📚</div>
+            <div className="empty-icon"><FaBook /></div>
             <h3>No sections yet</h3>
             <p>Create your first section to organize your questions</p>
           </>
@@ -62,113 +71,91 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
             key={section._id}
             className="section-card"
             onClick={() => handleSectionClick(section._id)}
-            style={{ borderLeft: `4px solid ${section.color || "#667eea"}` }}
           >
-            <div className="section-card-header">
-              <div className="section-title-container">
+            <div className="card-accent" style={{ backgroundColor: section.color || "#667eea" }}></div>
+
+            <div className="card-content">
+              <div className="card-header">
                 <h3 className="section-title">{section.name}</h3>
                 <button
-                  className="section-info-btn"
+                  className="info-btn"
                   onClick={(e) => handleInfoClick(section._id, e)}
                   title="Section details"
                 >
-                  (i)
+                  <FaInfoCircle />
                 </button>
               </div>
 
-              {section.tags && section.tags.length > 0 && (
-                <div className="section-tags">
-                  {section.tags.slice(0, 2).map((tag, index) => (
-                    <span key={index} className="section-tag">
-                      {tag}
-                    </span>
-                  ))}
-                  {section.tags.length > 2 && (
-                    <span className="section-tag-more">
-                      +{section.tags.length - 2}
-                    </span>
-                  )}
+              <div className="card-tags">
+                {section.tags && section.tags.length > 0 && section.tags.slice(0, 3).map((tag, i) => (
+                  <span key={i} className="tag-pill">{tag}</span>
+                ))}
+              </div>
+
+              <p className="card-description">
+                {section.description || "No description provided"}
+              </p>
+
+              <div className="progress-section">
+                <div className="progress-header">
+                  <span>Progress</span>
+                  <span>{progress}%</span>
                 </div>
-              )}
-            </div>
+                <div className="progress-track">
+                  <div
+                    className="progress-fill"
+                    style={{
+                      width: `${progress}%`,
+                      backgroundColor: section.color || "#667eea"
+                    }}
+                  ></div>
+                </div>
+              </div>
 
-            <p className="section-description">
-              {section.description || "No description provided"}
-            </p>
+              <div className="card-stats">
+                <div className="stat" title="Total Questions">
+                  <FaQuestionCircle className="stat-icon" />
+                  <span>{section.questionCount || 0}</span>
+                </div>
+                <div className="stat" title="Answered">
+                  <FaCheckCircle className="stat-icon" />
+                  <span>{section.answeredCount || 0}</span>
+                </div>
+                <div className="stat date" title="Created Date">
+                  <FaCalendarAlt className="stat-icon" />
+                  <span>
+                    {section.createdAt ? new Date(section.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '-'}
+                  </span>
+                </div>
+              </div>
 
-            {/* Progress Bar */}
-            <div className="progress-container">
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{
-                    width: `${progress}%`,
-                    backgroundColor: section.color || "#667eea"
+              <div className="card-actions">
+                <button
+                  className="action-btn view"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSectionClick(section._id);
                   }}
-                />
-              </div>
-              <span className="progress-text">{progress}% complete</span>
-            </div>
-
-            <div className="section-stats">
-              <div className="stat-item">
-                <span className="stat-icon">❓</span>
-                <span className="stat-value">{section.questionCount || 0}</span>
-                <span className="stat-label">Questions</span>
-              </div>
-
-              <div className="stat-item">
-                <span className="stat-icon">✅</span>
-                <span className="stat-value">{section.answeredCount || 0}</span>
-                <span className="stat-label">Answered</span>
-              </div>
-
-              <div className="stat-item">
-                <span className="stat-icon">📅</span>
-                <span className="stat-value">
-                  {section.createdAt ?
-                    new Date(section.createdAt).toLocaleDateString('en-US', { month: 'short' })
-                    : 'N/A'}
-                </span>
-                <span className="stat-label">Created</span>
+                  title="View Questions"
+                >
+                  <FaEye /> View
+                </button>
+                <button
+                  className="action-btn edit"
+                  onClick={(e) => handleEditSection(section, e)}
+                  title="Edit Section"
+                >
+                  <FaEdit />
+                </button>
+                <button
+                  className="action-btn delete"
+                  onClick={(e) => handleDeleteClick(section._id, e)}
+                  title="Delete Section"
+                >
+                  <FaTrash />
+                </button>
               </div>
             </div>
-
-            <div className="section-actions">
-              <button
-                className="btn btn-edit"
-                onClick={(e) => handleEditSection(section, e)}
-                title="Edit section"
-              >
-                ✏️ Edit
-              </button>
-              <button
-                className="btn btn-delete"
-                onClick={(e) => handleDeleteClick(section._id, e)}
-                title="Delete section"
-              >
-                🗑️ Delete
-              </button>
-              <button
-                className="btn btn-view"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSectionClick(section._id);
-                }}
-                title="View questions"
-              >
-                👁️ View
-              </button>
-            </div>
-
-            {/* Last Updated */}
-            {section.updatedAt && (
-              <div className="section-footer">
-                <span className="updated-text">
-                  Updated {new Date(section.updatedAt).toLocaleDateString()}
-                </span>
-              </div>
-            )}
           </div>
         );
       })}

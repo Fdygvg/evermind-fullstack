@@ -80,14 +80,7 @@
   gap: 1rem;
 }
 
-/* Card counter */
-.card-counter {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
+
 
 /* Flashcard */
 .flashcard {

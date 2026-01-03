@@ -296,7 +296,12 @@ const Dashboard = () => {
         {highlightSections.length > 0 ? (
           <div className="section-list">
             {highlightSections.map((section) => (
-              <article key={section._id} className="section-card">
+              <article
+                key={section._id}
+                className="section-card"
+                onClick={() => navigate(`/sections/${section._id}/questions`)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div>
                   <h3>{section.name}</h3>
                   <p>{section.description || "No description yet"}</p>

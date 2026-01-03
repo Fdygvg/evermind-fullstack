@@ -4,7 +4,6 @@
   padding: 2rem;
   background-color: var(--bg-background);
   min-height: 100vh;
-  font-family: 'Inter', sans-serif;
   color: var(--text-primary);
   transition: background-color 0.3s ease;
 }

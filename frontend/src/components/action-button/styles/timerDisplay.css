@@ -1,0 +1,172 @@
+/* src/components/action-button/components/TimerDisplay.css */
+.timer-display {
+  position: fixed;
+  z-index: 99;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: var(--shadow-lg);
+  border: 2px solid var(--color-border);
+  min-width: 140px;
+  font-family: monospace;
+  font-variant-numeric: tabular-nums;
+  transition: all 0.3s ease;
+}
+
+/* Position variants */
+.timer-display--top-right {
+  top: 16px;
+  right: 16px;
+}
+
+.timer-display--top-left {
+  top: 16px;
+  left: 16px;
+}
+
+.timer-display--top-center {
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* State variants */
+.timer-display--low {
+  border-color: var(--color-warning);
+  background-color: color-mix(in srgb, var(--color-surface), var(--color-warning) 10%);
+}
+
+.timer-display--critical {
+  border-color: var(--color-error);
+  background-color: color-mix(in srgb, var(--color-surface), var(--color-error) 10%);
+  animation: pulse 1s infinite;
+}
+
+.timer-display--paused {
+  opacity: 0.7;
+  filter: grayscale(0.3);
+}
+
+/* Timer content */
+.timer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.timer-time {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.timer-display--low .timer-time {
+  color: var(--color-warning);
+}
+
+.timer-display--critical .timer-time {
+  color: var(--color-error);
+}
+
+/* Controls */
+.timer-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.timer-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-background);
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.timer-btn:hover {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  transform: scale(1.1);
+}
+
+.timer-btn:active {
+  transform: scale(0.95);
+}
+
+/* Progress bar */
+.timer-progress-bar {
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.timer-progress-fill {
+  height: 100%;
+  width: var(--timer-progress, 100%);
+  background: var(--color-primary);
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+.timer-display--low .timer-progress-fill {
+  background: var(--color-warning);
+}
+
+.timer-display--critical .timer-progress-fill {
+  background: var(--color-error);
+}
+
+/* Pulsing animation for critical state */
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(var(--color-error-rgb, 255, 0, 0), 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(var(--color-error-rgb, 255, 0, 0), 0);
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .timer-display {
+    min-width: 120px;
+    padding: 10px 14px;
+  }
+  
+  .timer-time {
+    font-size: 24px;
+  }
+  
+  .timer-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .timer-display,
+  .timer-progress-fill,
+  .timer-btn {
+    transition: none;
+  }
+  
+  .timer-display--critical {
+    animation: none;
+  }
+  
+  .timer-btn:hover {
+    transform: none;
+  }
+}
