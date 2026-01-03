@@ -41,6 +41,20 @@ export const SmartReviewProvider = ({ children }) => {
         throw new Error('Please select at least one section');
       }
 
+      // RESET STATE IMMEDIATELY to prevent "Session Complete" flash/redirect loop
+      setState(prev => ({
+        ...prev,
+        isLoading: true,
+        error: null,
+        todaysQuestions: [],
+        currentIndex: 0,
+        reviewedToday: 0,
+        dailyLimit: 0,
+        rolledOverCount: 0,
+        initialQuestionCount: 0
+      }));
+      setRatingHistory([]); // Ensure history is cleared
+
       const response = await smartReviewService.getTodaysQuestions(sectionIds);
       const data = response.data || response;
 
@@ -379,12 +393,58 @@ export const SmartReviewProvider = ({ children }) => {
     }
   }, [ratingHistory]);
 
+  /**
+   * Pause the current session - saves progress & marks as paused for later resume
+   * @param {string} mode - The current review mode (normal, flashcard, elimination, tiktok)
+   * @param {string} cardMode - The card display mode (normal, flashcard)
+   */
+  const pauseSession = useCallback(async (mode = 'normal', cardMode = 'normal') => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true }));
+
+      // Build Smart Review state for resume
+      const smartReviewState = {
+        currentIndex: state.currentIndex,
+        reviewedToday: state.reviewedToday,
+        todaysQuestions: state.todaysQuestions.map(q => q._id),
+        ratingHistory: ratingHistory.map(r => ({ questionId: r.questionId, rating: r.rating })),
+        sectionIds: state.sectionIds,
+        initialQuestionCount: state.initialQuestionCount,
+        mode: mode,
+        cardMode: cardMode
+      };
+
+      // Save progress to session
+      await sessionService.updateProgress({
+        sectionIds: state.sectionIds,
+        currentIndex: state.currentIndex,
+        answeredQuestionIds: ratingHistory.map(r => r.questionId),
+        status: 'paused',
+        smartReviewState: smartReviewState,
+        useSmartReview: true,
+        cardMode: cardMode,
+        currentMode: mode
+      });
+
+      console.log('[SmartReview] Session paused successfully');
+
+      setState(prev => ({ ...prev, isLoading: false }));
+
+      return { success: true };
+    } catch (error) {
+      console.error('[SmartReview] Error pausing session:', error);
+      setState(prev => ({ ...prev, isLoading: false }));
+      throw error;
+    }
+  }, [state, ratingHistory]);
+
   const currentQuestion = state.todaysQuestions[state.currentIndex];
   // Session is complete if:
   // 1. Normal mode: currentIndex >= todaysQuestions.length (and there are questions)
   // 2. Elimination mode: all questions reviewed (todaysQuestions.length === 0 and reviewedToday > 0)
   const isSessionComplete = (state.todaysQuestions.length > 0 && state.currentIndex >= state.todaysQuestions.length) ||
     (state.todaysQuestions.length === 0 && state.reviewedToday > 0 && state.initialQuestionCount > 0);
+
   const progress = state.todaysQuestions.length > 0
     ? state.initialQuestionCount > 0
       ? (state.reviewedToday / state.initialQuestionCount) * 100  // Use reviewed count for accuracy (works for Elimination Mode)
@@ -408,6 +468,7 @@ export const SmartReviewProvider = ({ children }) => {
     addMoreQuestions,
     loadSectionProgress,
     endSession,
+    pauseSession,
 
     // Service helpers (optional)
     getPriorityInfo: smartReviewService.getPriorityInfo,

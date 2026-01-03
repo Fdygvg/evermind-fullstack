@@ -2,20 +2,32 @@
   width: 100%;
   max-width: 480px;
   min-width: 300px;
+  /* Ensure background and text contrast with fallbacks */
+  background: #1e1e2e;
+  background: var(--bg-card, #1e1e2e);
+  color: #e0e0e0 !important;
+  color: var(--text-primary, #e0e0e0) !important;
+  border-radius: 12px;
 }
 
 .timer-modal-title {
   margin: 0 0 24px 0;
-  color: var(--color-text);
+  color: #e0e0e0 !important;
+  color: var(--text-primary, #e0e0e0) !important;
   font-size: 24px;
   font-weight: 600;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 .timer-section {
   margin-bottom: 32px;
   padding-bottom: 24px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-light, rgba(255, 255, 255, 0.1));
 }
 
 .timer-section:last-child {
@@ -26,14 +38,16 @@
 
 .timer-section-title {
   margin: 0 0 12px 0;
-  color: var(--color-text);
+  color: #e0e0e0 !important;
+  color: var(--text-primary, #e0e0e0) !important;
   font-size: 18px;
   font-weight: 600;
 }
 
 .timer-section-description {
   margin: 0 0 16px 0;
-  color: var(--color-text-secondary);
+  color: #a0a0a0 !important;
+  color: var(--text-secondary, #a0a0a0) !important;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -52,11 +66,12 @@
   font-weight: 700;
   color: var(--color-primary);
   font-variant-numeric: tabular-nums;
+  font-family: 'Outfit', sans-serif;
 }
 
 .duration-label {
   font-size: 16px;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 /* Slider */
@@ -68,7 +83,7 @@
   width: 100%;
   height: 8px;
   border-radius: 4px;
-  background: var(--color-border);
+  background: var(--bg-secondary);
   outline: none;
   -webkit-appearance: none;
 }
@@ -80,7 +95,7 @@
   border-radius: 50%;
   background: var(--color-primary);
   cursor: pointer;
-  border: 3px solid var(--color-surface);
+  border: 3px solid var(--bg-card);
   box-shadow: var(--shadow-md);
 }
 
@@ -90,7 +105,7 @@
   border-radius: 50%;
   background: var(--color-primary);
   cursor: pointer;
-  border: 3px solid var(--color-surface);
+  border: 3px solid var(--bg-card);
   box-shadow: var(--shadow-md);
 }
 
@@ -118,10 +133,10 @@
   flex-direction: column;
   align-items: center;
   padding: 12px 8px;
-  border: 2px solid var(--color-border);
+  border: 2px solid var(--border-light);
   border-radius: 8px;
-  background: transparent;
-  color: var(--color-text);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
@@ -131,10 +146,12 @@
   border-color: var(--color-primary);
   transform: translateY(-2px);
   box-shadow: var(--shadow-sm);
+  background: var(--bg-card);
 }
 
 .mark-option--selected {
   border-color: var(--color-primary);
+  background-color: rgba(99, 102, 241, 0.1); /* Fallback */
   background-color: color-mix(in srgb, var(--color-primary), transparent 90%);
   color: var(--color-primary);
   font-weight: 600;
@@ -145,7 +162,7 @@
 }
 
 .mark-number {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   margin-bottom: 4px;
 }
@@ -154,10 +171,12 @@
   font-size: 12px;
   text-align: center;
   opacity: 0.8;
+  color: var(--text-secondary);
 }
 
 .mark-option--selected .mark-label {
   opacity: 1;
+  color: var(--color-primary);
 }
 
 /* Actions */
@@ -206,4 +225,40 @@
   .mark-option:active {
     transform: none;
   }
+}
+
+/* Timer Active Notice */
+.timer-active-notice {
+  background-color: rgba(34, 197, 94, 0.1);
+  border: 1px solid var(--color-rating-5);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.timer-active-badge {
+  display: inline-block;
+  background-color: var(--color-rating-5);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.timer-active-notice p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Mark icon styling */
+.mark-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

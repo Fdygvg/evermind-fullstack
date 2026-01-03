@@ -1,82 +1,42 @@
 // src/components/action-button/components/TimerDisplay.jsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { FaPlay, FaPause, FaRedo } from 'react-icons/fa';
+import React, { useMemo } from 'react';
+import { FaPause, FaPlay, FaStop } from 'react-icons/fa';
 import '../styles/timerDisplay.css';
 
+/**
+ * TimerDisplay - Shows countdown timer with controls
+ * Can work in two modes:
+ * 1. Controlled: Parent provides timeLeft and callbacks
+ * 2. Uncontrolled: Manages its own timer state (legacy)
+ */
 const TimerDisplay = ({
   duration = 30,
-  isActive = false,
-  onTimerEnd,
+  timeLeft: externalTimeLeft,
+  isRunning = true,
+  onToggle,
+  onReset,
+  onStop,
   position = 'top-right'
 }) => {
-  const [timeLeft, setTimeLeft] = useState(duration);
-  const [isRunning, setIsRunning] = useState(isActive);
-  const [isLowTime, setIsLowTime] = useState(false);
-  const [isCritical, setIsCritical] = useState(false);
+  // Use external timeLeft if provided, otherwise duration
+  const timeLeft = externalTimeLeft !== undefined ? externalTimeLeft : duration;
 
   // Format seconds to MM:SS
-  const formatTime = useCallback((seconds) => {
+  const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  }, []);
+  };
 
-  // Handle timer end
-  useEffect(() => {
-    if (timeLeft <= 0 && isRunning) {
-      setIsRunning(false);
-      if (onTimerEnd) onTimerEnd();
-    }
-  }, [timeLeft, isRunning, onTimerEnd]);
-
-  // Update warning states
-  useEffect(() => {
-    const totalTime = duration;
-    const percentageLeft = timeLeft / totalTime;
-
-    setIsCritical(percentageLeft <= 0.1); // Last 10%
-    setIsLowTime(percentageLeft <= 0.3); // Last 30%
-  }, [timeLeft, duration]);
-
-  // Timer countdown logic
-  useEffect(() => {
-    let intervalId;
-
-    if (isRunning && timeLeft > 0) {
-      const startTime = Date.now();
-      const expectedEndTime = startTime + timeLeft * 1000;
-
-      intervalId = setInterval(() => {
-        const now = Date.now();
-        const remaining = Math.max(0, Math.ceil((expectedEndTime - now) / 1000));
-
-        setTimeLeft(remaining);
-
-        if (remaining <= 0) {
-          clearInterval(intervalId);
-        }
-      }, 100);
-    }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
+  // Calculate warning states
+  const { isLowTime, isCritical, progressPercentage } = useMemo(() => {
+    const percentageLeft = duration > 0 ? timeLeft / duration : 0;
+    return {
+      isLowTime: percentageLeft <= 0.3 && percentageLeft > 0.1,
+      isCritical: percentageLeft <= 0.1,
+      progressPercentage: percentageLeft * 100
     };
-  }, [isRunning, timeLeft]);
-
-  // Reset timer when duration changes
-  useEffect(() => {
-    setTimeLeft(duration);
-  }, [duration]);
-
-  // Start/stop timer
-  const handleToggle = () => {
-    setIsRunning(!isRunning);
-  };
-
-  const handleReset = () => {
-    setTimeLeft(duration);
-    setIsRunning(false);
-  };
+  }, [timeLeft, duration]);
 
   // Get appropriate class based on state
   const getTimerClass = () => {
@@ -94,9 +54,6 @@ const TimerDisplay = ({
     return className;
   };
 
-  // Get progress percentage for CSS variable
-  const progressPercentage = (timeLeft / duration) * 100;
-
   return (
     <div
       className={getTimerClass()}
@@ -111,23 +68,27 @@ const TimerDisplay = ({
         </div>
 
         <div className="timer-controls">
-          <button
-            className="timer-btn timer-btn--toggle"
-            onClick={handleToggle}
-            aria-label={isRunning ? 'Pause timer' : 'Start timer'}
-            title={isRunning ? 'Pause timer' : 'Start timer'}
-          >
-            {isRunning ? <FaPause /> : <FaPlay />}
-          </button>
+          {onToggle && (
+            <button
+              className="timer-btn timer-btn--toggle"
+              onClick={onToggle}
+              aria-label={isRunning ? 'Pause timer' : 'Resume timer'}
+              title={isRunning ? 'Pause timer' : 'Resume timer'}
+            >
+              {isRunning ? <FaPause /> : <FaPlay />}
+            </button>
+          )}
 
-          <button
-            className="timer-btn timer-btn--reset"
-            onClick={handleReset}
-            aria-label="Reset timer"
-            title="Reset timer"
-          >
-            <FaRedo />
-          </button>
+          {onStop && (
+            <button
+              className="timer-btn timer-btn--reset"
+              onClick={onStop}
+              aria-label="Stop timer"
+              title="Stop timer"
+            >
+              <FaStop />
+            </button>
+          )}
         </div>
       </div>
 

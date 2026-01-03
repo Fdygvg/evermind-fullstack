@@ -65,11 +65,10 @@ const Dashboard = () => {
 
   const highlightSections = sections.slice(0, 4);
 
-  // Check if there's a valid resumable session (not Smart Review, has progress data)
+  // Check if there's a valid resumable session (includes Smart Review sessions now)
   const hasResumableSession = activeSession &&
-    activeSession.progress &&
-    activeSession.progress.total > 0 &&
-    !activeSession.useSmartReview;
+    activeSession.status === 'paused' &&
+    (activeSession.progress?.total > 0 || activeSession.useSmartReview);
 
   const completedQuestions = activeSession
     ? activeSession.progress?.total - activeSession.progress?.remaining
@@ -93,19 +92,46 @@ const Dashboard = () => {
     const modeMap = {
       'normal': 'Normal Mode',
       'flashcard': 'Flashcard Mode',
-      'elimination': 'Elimination Mode'
+      'elimination': 'Elimination Mode',
+      'tiktok': 'TikTok Mode'
     };
     return modeMap[mode] || capitalize(mode);
   };
 
-  // Handle continue session
+  // Handle continue session - route based on session type
   const handleContinueSession = () => {
-    navigate('/session/start', {
-      state: {
-        resumeSession: true,
-        sessionData: activeSession
+    if (activeSession.useSmartReview) {
+      // Smart Review session - navigate to appropriate route based on mode
+      const mode = activeSession.currentMode || activeSession.smartReviewState?.mode || 'normal';
+      const cardMode = activeSession.cardMode || activeSession.smartReviewState?.cardMode || 'normal';
+      const sectionIds = activeSession.sectionIds || activeSession.smartReviewState?.sectionIds || [];
+
+      // Determine route based on mode
+      let targetRoute = '/session/start';
+      if (mode === 'elimination') {
+        targetRoute = '/elimination';
+      } else if (mode === 'tiktok') {
+        targetRoute = '/tiktok-review';
       }
-    });
+
+      navigate(targetRoute, {
+        state: {
+          resumeSession: true,
+          useSmartReview: true,
+          sectionIds: sectionIds,
+          cardMode: cardMode,
+          sessionData: activeSession
+        }
+      });
+    } else {
+      // Legacy session
+      navigate('/session/start', {
+        state: {
+          resumeSession: true,
+          sessionData: activeSession
+        }
+      });
+    }
   };
 
   return (

@@ -139,7 +139,7 @@ const ReviewSessionPage = () => {
       id: 'tiktok',
       label: 'TikTok Mode',
       icon: <FaTiktok />,
-      description: 'Short-form video learning feed.',
+      description: 'Short-form video learning feed. \n (Under construction)',
       color: '#000000' // or brand color
     }
   ];

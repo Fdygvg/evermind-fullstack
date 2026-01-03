@@ -66,3 +66,28 @@
     right: 20px;
   }
 }
+
+/* Timer Display Positioning */
+.smart-review-wrapper .timer-display {
+  position: fixed;
+  top: 100px;
+  right: 24px;
+  z-index: 999;
+}
+
+/* Mobile Responsive for Timer Display */
+@media (max-width: 768px) {
+  .smart-review-wrapper .timer-display {
+    top: 80px;
+    right: 16px;
+    min-width: 110px;
+  }
+}
+
+@media (max-width: 480px) {
+  .smart-review-wrapper .timer-display {
+    top: 70px;
+    right: 12px;
+    padding: 8px 12px;
+  }
+}

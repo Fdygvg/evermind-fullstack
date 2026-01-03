@@ -28,18 +28,21 @@ const ActiveSession = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if Smart Review mode is enabled - read from location state first, then active session
+  // Check if Smart Review mode is enabled
   const isSmartReviewMode = location.state?.useSmartReview || activeSession?.useSmartReview || false;
   const sectionIds = location.state?.sectionIds || activeSession?.sectionIds || [];
   const cardMode = location.state?.cardMode || activeSession?.cardMode || 'normal';
+  const mode = location.state?.mode || activeSession?.currentMode || activeSession?.smartReviewState?.mode || 'normal';
 
   useEffect(() => {
     console.log("[SESSION] Active session:", {
-      cardMode: activeSession?.cardMode,
-      useSmartReview: activeSession?.useSmartReview,
-      sectionIds: activeSession?.sectionIds
+      mode,
+      cardMode,
+      useSmartReview: isSmartReviewMode,
+      sectionIds: Array.isArray(sectionIds) ? sectionIds.length : 'unknown',
+      resuming: isResuming
     });
-  }, [activeSession]);
+  }, [activeSession, mode, cardMode, isSmartReviewMode, sectionIds, isResuming]);
 
   const loadNextQuestion = useCallback(async () => {
     if (isLoadingQuestionRef.current) {
@@ -127,6 +130,12 @@ const ActiveSession = () => {
       sessionStartTimeRef.current = Date.now();
       loadNextQuestion();
       setIsResuming(false);
+    } else if (isSmartReviewMode) {
+      // Initialize timer for Smart Review mode too
+      if (!sessionStartTimeRef.current) {
+        console.log("[INIT] Smart Review session started, tracking time");
+        sessionStartTimeRef.current = Date.now();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResuming]);
@@ -243,19 +252,6 @@ const ActiveSession = () => {
     }
   }, [currentQuestion, loadNextQuestion, loading]);
 
-
-
-  const endSession = async () => {
-    if (window.confirm("Are you sure you want to end this session?")) {
-      try {
-        await sessionService.endSession();
-        navigate("/dashboard");
-      } catch (error) {
-        console.error("Failed to end session:", error);
-      }
-    }
-  };
-
   // Smart Review Mode: Render with SmartReviewWrapper
   if (isSmartReviewMode) {
     return (
@@ -264,8 +260,11 @@ const ActiveSession = () => {
         enableSmartReview={true}
         showDailyCounter={true}
         showAddMore={true}
+        cardMode={cardMode}
+        mode={mode}
       >
-        {({ currentQuestion: smartQuestion, rateQuestion, isLoading, isSessionComplete, canUndo, undoLastRating, ratingHistory, reviewedToday, initialQuestionCount }) => {
+
+        {({ currentQuestion: smartQuestion, rateQuestion, isLoading, isSessionComplete, ratingHistory, reviewedToday, initialQuestionCount }) => {
           if (isSessionComplete) {
             // Calculate stats from rating history
             const ratingBreakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -296,24 +295,6 @@ const ActiveSession = () => {
 
           return (
             <div className="active-session smart-review-mode">
-              {/* Progress Bar */}
-              <div className="session-header">
-
-                <div className="session-controls-header">
-                  {canUndo && (
-                    <button className="undo-btn" onClick={undoLastRating}>
-                      ↶ Undo Last Rating
-                    </button>
-                  )}
-                  <button className="pause-session-btn">
-                    ⏸ Pause
-                  </button>
-                  <button className="end-session-btn" onClick={endSession}>
-                    End Session
-                  </button>
-                </div>
-              </div>
-
               {/* Question Display */}
               <div className="question-card-wrapper">
                 {cardMode === "flashcard" ? (
@@ -362,8 +343,6 @@ const ActiveSession = () => {
                   {cardMode === "flashcard" && " • Flashcard"}
                 </div>
               </div>
-
-
             </div>
           );
         }}

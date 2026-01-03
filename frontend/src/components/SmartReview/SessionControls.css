@@ -1,0 +1,103 @@
+/* SessionControls.css - Unified session control buttons */
+
+.session-controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+}
+
+.session-control-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.session-control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.session-control-btn .btn-icon {
+  font-size: 14px;
+}
+
+.session-control-btn .btn-label {
+  display: inline;
+}
+
+/* Undo Button */
+.session-control-btn.undo-btn {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+}
+
+.session-control-btn.undo-btn:hover:not(:disabled) {
+  background: var(--bg-tertiary, var(--bg-secondary));
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Pause Button */
+.session-control-btn.pause-btn {
+  background: var(--color-rating-4, #3b82f6);
+  color: white;
+}
+
+.session-control-btn.pause-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* End Button */
+.session-control-btn.end-btn {
+  background: var(--color-rating-1, #ef4444);
+  color: white;
+}
+
+.session-control-btn.end-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .session-controls-bar {
+    padding: 10px 12px;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .session-control-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .session-control-btn .btn-label {
+    display: none;
+  }
+
+  .session-control-btn .btn-icon {
+    font-size: 16px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+  .session-controls-bar {
+    flex-wrap: wrap;
+  }
+}

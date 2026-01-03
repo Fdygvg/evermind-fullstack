@@ -1,56 +1,40 @@
-// src/components/action-button/components/FabSpeedDial.jsx (final update for Phase 2)
-import React, { useState, useRef, useEffect } from 'react';
+// src/components/action-button/components/FabSpeedDial.jsx
+import React, { useState, useRef } from 'react';
+import { FaPlus, FaTimes } from 'react-icons/fa';
 import FabItem from './FabItem';
 import TimerSetupModal from './TimerSetupModal';
-import TimerDisplay from './TimerDisplay';
 import { TimerIcon } from './shared/icons';
 import useClickOutside from '../hooks/useClickOutside';
 import useFabAnimation from '../hooks/useFabAnimation';
+import { useTimer } from '../contexts/TimerContext';
 import '../styles/FabSpeedDial.css';
 
 const FabSpeedDial = ({ mode = 'normal' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showTimerModal, setShowTimerModal] = useState(false);
-  const [timerConfig, setTimerConfig] = useState(null);
-  const [isTimerActive, setIsTimerActive] = useState(false);
   const fabRef = useRef(null);
 
-  // Load saved timer config from localStorage
-  useEffect(() => {
-    const savedConfig = localStorage.getItem('timerConfig');
-    if (savedConfig) {
-      try {
-        setTimerConfig(JSON.parse(savedConfig));
-      } catch (e) {
-        console.error('Failed to parse saved timer config:', e);
-      }
-    }
-  }, []);
+  // Get timer context
+  const timer = useTimer();
 
   useClickOutside(fabRef, () => setIsOpen(false));
   const { getItemAnimationStyle } = useFabAnimation(isOpen);
 
+  // Build menu items based on timer state
   const menuItems = [
     {
       id: 'timer',
-      label: timerConfig ? 'Timer' : 'Set Timer',
+      label: timer.isTimerActive ? 'Timer' : 'Set Timer',
       icon: TimerIcon,
       onClick: () => setShowTimerModal(true),
+      active: timer.isTimerActive,
     },
   ];
 
+  // Handle timer modal save - starts the timer via context
   const handleTimerSave = (config) => {
-    setTimerConfig(config);
-    setIsTimerActive(true);
-
-    // Save to localStorage
-    localStorage.setItem('timerConfig', JSON.stringify(config));
-  };
-
-  const handleTimerEnd = () => {
-    console.log('Timer ended! Auto-marking question...');
-    setIsTimerActive(false);
-    // TODO: Trigger auto-mark logic
+    console.log('[FabSpeedDial] Starting timer with config:', config);
+    timer.startTimer(config);
   };
 
   const handleFabClick = () => {
@@ -64,16 +48,6 @@ const FabSpeedDial = ({ mode = 'normal' }) => {
 
   return (
     <>
-      {/* Timer Display (only shown when timer is active) */}
-      {timerConfig && isTimerActive && (
-        <TimerDisplay
-          duration={timerConfig.duration}
-          isActive={isTimerActive}
-          onTimerEnd={handleTimerEnd}
-          position="top-right"
-        />
-      )}
-
       {/* FAB Menu */}
       <div className="fab-container" ref={fabRef}>
         {menuItems.map((item, index) => (
@@ -87,19 +61,26 @@ const FabSpeedDial = ({ mode = 'normal' }) => {
               label={item.label}
               onClick={() => handleItemClick(item)}
               isVisible={isOpen}
+              active={item.active}
             />
           </div>
         ))}
 
         <button
-          className={`fab-main ${isOpen ? 'fab-main--open' : ''}`}
+          className={`fab-main ${isOpen ? 'fab-main--open' : ''} ${timer.isTimerActive ? 'fab-main--timer-active' : ''}`}
           onClick={handleFabClick}
           aria-expanded={isOpen}
           aria-label={isOpen ? 'Close action menu' : 'Open action menu'}
         >
           <span className="fab-main-icon">
-            {isOpen ? '×' : '+'}
+            {isOpen ? <FaTimes /> : <FaPlus />}
           </span>
+          {/* Timer indicator badge */}
+          {timer.isTimerActive && !isOpen && (
+            <span className="fab-timer-badge" title="Timer active">
+              ⏱️
+            </span>
+          )}
         </button>
       </div>
 
@@ -108,7 +89,9 @@ const FabSpeedDial = ({ mode = 'normal' }) => {
         isOpen={showTimerModal}
         onClose={() => setShowTimerModal(false)}
         onSave={handleTimerSave}
-        initialConfig={timerConfig}
+        initialConfig={timer.timerConfig}
+        isTimerActive={timer.isTimerActive}
+        onStopTimer={() => timer.stopTimer()}
       />
     </>
   );

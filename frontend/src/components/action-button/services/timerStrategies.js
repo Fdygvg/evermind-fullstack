@@ -5,6 +5,13 @@
  * - One question at a time
  * - Timer resets on any rating
  */
+// src/components/action-button/services/timerStrategies.js
+
+/**
+ * Normal/Flashcard/TikTok Mode Strategy
+ * - One question at a time
+ * - Timer resets on any rating
+ */
 export const createSingleQuestionStrategy = (options) => {
   const {
     getCurrentQuestionId,
@@ -12,13 +19,29 @@ export const createSingleQuestionStrategy = (options) => {
     onAdvanceToNextQuestion,  // Function to move to next question
     onTimerWarning,
     mode = 'normal',
+    autoRestart = true,
   } = options;
 
   let currentTimer = null;
   let isPaused = false;
 
   const startTimerInternal = (duration, defaultMark, questionId) => {
-    if (!questionId) return;
+    // Fallback if no question ID is available (e.g. loading or error state)
+    // This ensures the timer visual still works for the user
+    if (!questionId) {
+      console.warn(`[TIMER ${mode}] No question ID provided, waiting for question...`);
+      return;
+    }
+
+    // Don't start if already running for this question
+    if (currentTimer && currentTimer.questionId === questionId) {
+      return;
+    }
+
+    // Clear any existing timer
+    if (currentTimer) {
+      clearInterval(currentTimer.interval);
+    }
 
     console.log(`[TIMER ${mode}] Starting ${duration}s timer for question:`, questionId);
 
@@ -26,20 +49,22 @@ export const createSingleQuestionStrategy = (options) => {
 
     currentTimer = {
       questionId,
+      timeLeft, // Store initial time left
       startTime: Date.now(),
       duration,
       interval: setInterval(() => {
         if (isPaused) return;
 
-        timeLeft--;
+        currentTimer.timeLeft--; // Decrement stored time left
+        const currentTimeLeft = currentTimer.timeLeft;
 
         // Emit warnings
-        if (timeLeft === 30) onTimerWarning?.(30, 'low');
-        if (timeLeft === 10) onTimerWarning?.(10, 'critical');
-        if (timeLeft === 5) onTimerWarning?.(5, 'critical');
+        if (currentTimeLeft === 30) onTimerWarning?.(30, 'low');
+        if (currentTimeLeft === 10) onTimerWarning?.(10, 'critical');
+        if (currentTimeLeft === 5) onTimerWarning?.(5, 'critical');
 
         // Timer ended
-        if (timeLeft <= 0) {
+        if (currentTimeLeft <= 0) {
           clearInterval(currentTimer.interval);
           currentTimer = null;
 
@@ -48,18 +73,11 @@ export const createSingleQuestionStrategy = (options) => {
           // Auto-rate the current question
           onRateQuestion(questionId, defaultMark)
             .then(() => {
-              console.log(`[TIMER ${mode}] Auto-mark successful, advancing to next question`);
+              console.log(`[TIMER ${mode}] Auto-mark successful, advancing`);
               onAdvanceToNextQuestion?.();
 
-              // Restart timer for new question if autoRestart enabled
-              if (options.autoRestart) {
-                setTimeout(() => {
-                  const newQuestionId = getCurrentQuestionId();
-                  if (newQuestionId) {
-                    startTimerInternal(duration, defaultMark, newQuestionId);
-                  }
-                }, 500);
-              }
+              // Note: onQuestionChanged will handle restarting the timer
+              // when the new question is loaded
             })
             .catch(err => {
               console.error(`[TIMER ${mode}] Auto-mark failed:`, err);
@@ -78,25 +96,24 @@ export const createSingleQuestionStrategy = (options) => {
     onManualRate: (questionId, rating) => {
       console.log(`[TIMER ${mode}] Manual rating ${rating} for ${questionId}`);
 
-      // Clear current timer
+      // Clear current timer as we're done with this question
       if (currentTimer) {
         clearInterval(currentTimer.interval);
         currentTimer = null;
       }
 
-      // In these modes, rating automatically advances to next question
-      // The parent component handles advancement
-      // We just need to restart timer for the new question
+      // We don't auto-restart here anymore.
+      // We wait for onQuestionChanged to be called when the new question arrives.
+    },
 
-      setTimeout(() => {
-        if (options.autoRestart) {
-          const newQuestionId = getCurrentQuestionId();
-          if (newQuestionId && newQuestionId !== questionId) {
-            // Only restart if we're on a new question
-            startTimerInternal(options.duration, options.defaultMark, newQuestionId);
-          }
-        }
-      }, 100);
+    // New method: called when the active question ID changes
+    onQuestionChanged: (newQuestionId) => {
+      console.log(`[TIMER ${mode}] Question changed to: ${newQuestionId}`);
+
+      // If auto-restart is enabled, start timer for new question
+      if (autoRestart && newQuestionId) {
+        startTimerInternal(options.duration, options.defaultMark, newQuestionId);
+      }
     },
 
     pauseTimer: () => {
@@ -118,9 +135,7 @@ export const createSingleQuestionStrategy = (options) => {
     getCurrentQuestionId: () => currentTimer?.questionId,
     getTimeLeft: () => {
       if (!currentTimer) return 0;
-      // Calculate based on start time and duration
-      const elapsed = Math.floor((Date.now() - currentTimer.startTime) / 1000);
-      return Math.max(0, currentTimer.duration - elapsed);
+      return Math.max(0, currentTimer.timeLeft);
     },
   };
 };
@@ -170,18 +185,20 @@ export const createEliminationStrategy = (options) => {
     currentTimer = {
       questionId,
       questionIndex: index,
+      timeLeft, // Store initial time left
       startTime: Date.now(),
       duration,
       interval: setInterval(() => {
         if (isPaused) return;
 
-        timeLeft--;
+        currentTimer.timeLeft--; // Decrement stored time left
+        const currentTimeLeft = currentTimer.timeLeft;
 
-        if (timeLeft === 30) onTimerWarning?.(30, 'low');
-        if (timeLeft === 10) onTimerWarning?.(10, 'critical');
-        if (timeLeft === 5) onTimerWarning?.(5, 'critical');
+        if (currentTimeLeft === 30) onTimerWarning?.(30, 'low');
+        if (currentTimeLeft === 10) onTimerWarning?.(10, 'critical');
+        if (currentTimeLeft === 5) onTimerWarning?.(5, 'critical');
 
-        if (timeLeft <= 0) {
+        if (currentTimeLeft <= 0) {
           clearInterval(currentTimer.interval);
           const expiredQuestionId = currentTimer.questionId;
           currentTimer = null;
@@ -296,8 +313,7 @@ export const createEliminationStrategy = (options) => {
     getCurrentQuestionIndex: () => currentQuestionIndex,
     getTimeLeft: () => {
       if (!currentTimer) return 0;
-      const elapsed = Math.floor((Date.now() - currentTimer.startTime) / 1000);
-      return Math.max(0, currentTimer.duration - elapsed);
+      return Math.max(0, currentTimer.timeLeft);
     },
   };
 };
