@@ -4,7 +4,7 @@ import Modal from './shared/Modal';
 import Button from './shared/Button';
 import useNotes from '../hooks/useNotes';
 import { FaPlus, FaTrash, FaChevronLeft, FaPen } from 'react-icons/fa';
-import '../styles/NotesModal.css';
+import '../styles/notesModal.css';
 
 const NotesModal = ({ isOpen, onClose }) => {
   const { notes, addNote, updateNote, deleteNote } = useNotes();
