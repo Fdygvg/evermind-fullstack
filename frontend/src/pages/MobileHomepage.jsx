@@ -8,7 +8,7 @@ import {
     FaDatabase, FaRocket, FaChevronRight, FaUsers, FaPlay, FaCog,
     FaCompass, FaStar, FaGem, FaGraduationCap, FaCode, FaMousePointer
 } from 'react-icons/fa';
-import '../css/mobileHomePage.css';
+
 
 const Homepage = () => {
     // Theme from your CSS variables

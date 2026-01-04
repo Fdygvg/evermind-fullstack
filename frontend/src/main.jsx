@@ -7,7 +7,7 @@ import "./index.css";
 import "./css/themes.css";
 import "./css/auth.css";
 import "./css/miniPlayground.css";
-import "./css/mobileHomePage.css";
+import "./css/mobileHomepage.css";
 import "./css/desktopHomePage.css";
 import "./css/dashboard.css";
 import "./css/notFound.css";
