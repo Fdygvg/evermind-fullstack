@@ -108,6 +108,15 @@ const questionSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ReviewSession',
     default: null
+  },
+
+  isBookmarked: {
+    type: Boolean,
+    default: false
+  },
+  bookmarkedAt: {
+    type: Date,
+    default: null
   }
 },
   {
@@ -120,6 +129,7 @@ questionSchema.index({ userId: 1, sectionId: 1, priority: 1 });
 // Three-track system indexes
 questionSchema.index({ userId: 1, sectionId: 1, dueDate: 1, priority: 1 });
 questionSchema.index({ userId: 1, isPending: 1 });
+questionSchema.index({ userId: 1, isBookmarked: 1 });
 questionSchema.index({ userId: 1, sectionId: 1, lastReviewedAt: 1 });
 
 const Question = mongoose.model('Question', questionSchema);

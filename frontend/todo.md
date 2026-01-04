@@ -153,6 +153,7 @@ Evermind features multiple ways to master content, each tailored for different l
 ### 2.2 Study Modes
 - [ ] **Flashcard Mode Enhancement** – Improved flip animations, swipe gestures
 - [ ] **List Mode** – Display all questions at once with quick-mark buttons
+- [ ] **Normal Review Mode (Review All)** – Option to review ALL questions in a section without Smart Review logic applied
 - [ ] **Elimination Mode Improvements** – Fix any CSS/theme issues
 - [ ] **Swipe Controls** – Toggle swipe on/off, customize swipe actions
 
@@ -172,6 +173,7 @@ Evermind features multiple ways to master content, each tailored for different l
 - [ ] **Preset Sections on Registration** – Auto-create sections based on user's tech stack
 - [ ] **Section Copy Button** – Duplicate entire sections
 - [ ] **Select Multiple Questions** – Batch operations on questions
+- [ ] **External Imports** – Support importing from Anki, FlashQuiz, and other popular platforms
 
 ### 3.2 Question Features
 - [ ] **Bookmark Questions** – Save difficult questions for later review
@@ -332,6 +334,7 @@ Rules:
 
 ### 8.2 Responsive Design
 - [ ] **Full Mobile Responsiveness** – Media queries for all pages
+- [ ] **Adaptive Device UI** – Split core pages into mobile-specific and desktop-specific components for maximum responsiveness
 - [ ] **Text Box Library** – Rich text formatting for content
 - [ ] **Smooth Animations** – Polish all transitions
 

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Eye } from "lucide-react";
 import CodeBlock from "../Common/CodeBlock";
+import BookmarkButton from "../Common/BookmarkButton";
 import RatingButtons from "../SmartReview/RatingButtons";
 import "../css/eliminationQuestionCard.css";
 import { useSound } from "../../hooks/useSound";
@@ -40,7 +41,7 @@ const EliminationQuestionCard = ({
       // Submit the rating
       await rateQuestion(rating);
       console.log("[ELIMINATION] Rating submitted successfully");
-      
+
       // Reset loading state after a short delay to allow for smooth UI transition
       // The question will be removed from the list, but this ensures the state is clean
       setTimeout(() => {
@@ -55,7 +56,14 @@ const EliminationQuestionCard = ({
   };
 
   return (
-    <div className="question-card">
+    <div className="question-card" style={{ position: 'relative' }}>
+      {/* Bookmark Button */}
+      <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10 }}>
+        <BookmarkButton
+          questionId={question._id}
+          initialIsBookmarked={question.isBookmarked}
+        />
+      </div>
       <div className="question-header">
         <span className="question-number">#{index + 1}</span>
         {question.tags && question.tags.length > 0 && (

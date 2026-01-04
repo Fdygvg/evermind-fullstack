@@ -1,9 +1,10 @@
 // src/components/action-button/components/FabSpeedDial.jsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FaPlus, FaTimes } from 'react-icons/fa';
 import FabItem from './FabItem';
 import TimerSetupModal from './TimerSetupModal';
-import { TimerIcon } from './shared/icons';
+import NotesModal from './NotesModal';
+import { TimerIcon, NotesIcon, FocusIcon } from './shared/icons';
 import useClickOutside from '../hooks/useClickOutside';
 import useFabAnimation from '../hooks/useFabAnimation';
 import { useTimer } from '../contexts/TimerContext';
@@ -12,6 +13,8 @@ import '../styles/FabSpeedDial.css';
 const FabSpeedDial = ({ mode = 'normal' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showTimerModal, setShowTimerModal] = useState(false);
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  const [isFocusMode, setIsFocusMode] = useState(false);
   const fabRef = useRef(null);
 
   // Get timer context
@@ -29,7 +32,39 @@ const FabSpeedDial = ({ mode = 'normal' }) => {
       onClick: () => setShowTimerModal(true),
       active: timer.isTimerActive,
     },
+    {
+      id: 'notes',
+      label: 'Notes',
+      icon: NotesIcon,
+      onClick: () => setShowNotesModal(true),
+      active: false,
+    },
+    {
+      id: 'focus',
+      label: isFocusMode ? 'Exit Full View' : 'Full View',
+      icon: FocusIcon,
+      onClick: () => toggleFocusMode(),
+      active: isFocusMode,
+    },
   ];
+
+  // Manage Focus Mode Effect and Cleanup
+  useEffect(() => {
+    if (isFocusMode) {
+      document.body.classList.add('focus-mode');
+    } else {
+      document.body.classList.remove('focus-mode');
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove('focus-mode');
+    };
+  }, [isFocusMode]);
+
+  const toggleFocusMode = () => {
+    setIsFocusMode(!isFocusMode);
+  };
 
   // Handle timer modal save - starts the timer via context
   const handleTimerSave = (config) => {
@@ -92,6 +127,12 @@ const FabSpeedDial = ({ mode = 'normal' }) => {
         initialConfig={timer.timerConfig}
         isTimerActive={timer.isTimerActive}
         onStopTimer={() => timer.stopTimer()}
+      />
+
+      {/* Notes Modal */}
+      <NotesModal
+        isOpen={showNotesModal}
+        onClose={() => setShowNotesModal(false)}
       />
     </>
   );

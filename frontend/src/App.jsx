@@ -1,7 +1,7 @@
 // src/App.jsx
 import React from "react";
 import {
-  BrowserRouter as Router,
+  HashRouter as Router,
   Routes,
   Route,
   Navigate,
@@ -38,7 +38,7 @@ import HomePage from "./pages/HomePage";
 import EliminationModePage from "./pages/EliminationModePage";
 import PreferencesPage from "./pages/PreferencesPage";
 import QuestionListPage from "./pages/QuestionListPage";
-import TikTokReviewPage from "./pages/TikTokReviewPage";
+import TikTokReviewPage from "./pages/TiktokReviewPage";
 
 function App() {
   return (

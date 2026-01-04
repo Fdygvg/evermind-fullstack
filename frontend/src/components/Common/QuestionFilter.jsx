@@ -1,5 +1,27 @@
 import React from "react";
 import "../css/questionFilter.css";
+import {
+  FaSearch,
+  FaFilter,
+  FaSort,
+  FaBookmark,
+  FaCheck,
+  FaTimes,
+  FaQuestion,
+  FaSync,
+  FaBullseye,
+  FaRegQuestionCircle,
+  FaCalendarAlt,
+  FaSortAmountDown,
+  FaSortAmountUp,
+  FaSortAlphaDown,
+  FaSortAlphaUp,
+  FaList,
+  FaThLarge,
+  FaEye,
+  FaEyeSlash,
+  FaTrash
+} from "react-icons/fa";
 
 const QuestionFilter = ({
   searchQuery,
@@ -22,25 +44,26 @@ const QuestionFilter = ({
 }) => {
   // Filter options
   const filterOptions = [
-    { value: "all", label: "All Questions", icon: "📚" },
-    { value: "unanswered", label: "Unanswered", icon: "❓" },
-    { value: "answered", label: "Answered", icon: "✅" },
-    { value: "needs-review", label: "Needs Review", icon: "🔄" },
-    { value: "knowit", label: "Know It", icon: "🎯" },
-    { value: "kinda", label: "Kinda", icon: "🤔" },
-    { value: "dontknow", label: "Don't Know", icon: "❌" }
+    { value: "all", label: "All Questions", icon: <FaList /> },
+    { value: "unanswered", label: "Unanswered", icon: <FaQuestion /> },
+    { value: "answered", label: "Answered", icon: <FaCheck /> },
+    { value: "needs-review", label: "Needs Review", icon: <FaSync /> },
+    { value: "knowit", label: "Know It", icon: <FaBullseye /> },
+    { value: "kinda", label: "Kinda", icon: <FaRegQuestionCircle /> },
+    { value: "bookmarked", label: "Bookmarked", icon: <FaBookmark /> },
+    { value: "dontknow", label: "Don't Know", icon: <FaTimes /> }
   ];
 
   // Sort options
   const sortOptions = [
-    { value: "date", label: "Recently Added", icon: "📅" },
-    { value: "date-old", label: "Oldest First", icon: "📅" },
-    { value: "difficulty-asc", label: "Difficulty (Easy → Hard)", icon: "📊" },
-    { value: "difficulty-desc", label: "Difficulty (Hard → Easy)", icon: "📊" },
-    { value: "alphabetical", label: "Alphabetical (A-Z)", icon: "🔤" },
-    { value: "alphabetical-desc", label: "Alphabetical (Z-A)", icon: "🔤" },
-    { value: "review-date", label: "Next Review Date", icon: "⏰" },
-    { value: "answered", label: "Most Answered", icon: "💯" }
+    { value: "date", label: "Recently Added", icon: <FaCalendarAlt /> },
+    { value: "date-old", label: "Oldest First", icon: <FaCalendarAlt /> },
+    { value: "difficulty-asc", label: "Difficulty (Easy → Hard)", icon: <FaSortAmountUp /> },
+    { value: "difficulty-desc", label: "Difficulty (Hard → Easy)", icon: <FaSortAmountDown /> },
+    { value: "alphabetical", label: "Alphabetical (A-Z)", icon: <FaSortAlphaDown /> },
+    { value: "alphabetical-desc", label: "Alphabetical (Z-A)", icon: <FaSortAlphaUp /> },
+    { value: "review-date", label: "Next Review Date", icon: <FaCalendarAlt /> },
+    { value: "answered", label: "Most Answered", icon: <FaCheck /> }
   ];
 
   // Handle search input clear
@@ -89,7 +112,7 @@ const QuestionFilter = ({
   };
 
   // Check if any filter is active
-  const isAnyFilterActive = 
+  const isAnyFilterActive =
     searchQuery.trim() !== "" ||
     (filterOption?.value || filterOption) !== "all" ||
     difficultyFilter.length > 0 ||
@@ -101,7 +124,7 @@ const QuestionFilter = ({
       <div className="filters-top-row">
         <div className="search-container">
           <div className="search-input-wrapper">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><FaSearch /></span>
             <input
               type="text"
               placeholder="Search questions or answers..."
@@ -110,16 +133,16 @@ const QuestionFilter = ({
               className="search-input"
             />
             {searchQuery && (
-              <button 
+              <button
                 className="clear-search-btn"
                 onClick={handleClearSearch}
                 title="Clear search"
               >
-                ✕
+                <FaTimes />
               </button>
             )}
           </div>
-          
+
           <div className="search-stats">
             <span className="stats-text">
               {totalCount} question{totalCount !== 1 ? 's' : ''}
@@ -140,14 +163,14 @@ const QuestionFilter = ({
               onClick={() => setViewMode("list")}
               title="List View"
             >
-              ≡ List
+              <FaList /> List
             </button>
             <button
               className={`view-btn ${viewMode === "grid" ? "active" : ""}`}
               onClick={() => setViewMode("grid")}
               title="Grid View"
             >
-              ⏹️ Grid
+              <FaThLarge /> Grid
             </button>
           </div>
 
@@ -157,7 +180,7 @@ const QuestionFilter = ({
               onClick={onToggleAllReveal}
               title={allRevealed ? "Hide all answers" : "Reveal all answers"}
             >
-              {allRevealed ? "👁️ Hide All" : "👁️ Reveal All"}
+              {allRevealed ? <><FaEyeSlash /> Hide All</> : <><FaEye /> Reveal All</>}
             </button>
 
             <div className="select-all-container">
@@ -181,26 +204,28 @@ const QuestionFilter = ({
         {/* Status Filter */}
         <div className="filter-group">
           <label className="filter-label">
-            <span className="filter-icon">📋</span>
+            <span className="filter-icon"><FaFilter /></span>
             Status
           </label>
-          <select
-            value={filterOption?.value || filterOption || "all"}
-            onChange={handleFilterChange}
-            className="filter-select"
-          >
-            {filterOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.icon} {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="custom-select-wrapper">
+            <select
+              value={filterOption?.value || filterOption || "all"}
+              onChange={handleFilterChange}
+              className="filter-select"
+            >
+              {filterOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Difficulty Filter */}
         <div className="filter-group">
           <label className="filter-label">
-            <span className="filter-icon">📊</span>
+            <span className="filter-icon"><FaSortAmountUp /></span>
             Difficulty
           </label>
           <div className="difficulty-checkboxes">
@@ -214,7 +239,7 @@ const QuestionFilter = ({
                     onChange={() => handleDifficultyToggle(option.value)}
                     className="difficulty-checkbox"
                   />
-                  <span 
+                  <span
                     className="difficulty-dot"
                     style={{ backgroundColor: option.color }}
                   />
@@ -233,20 +258,22 @@ const QuestionFilter = ({
         {/* Sort Filter */}
         <div className="filter-group">
           <label className="filter-label">
-            <span className="filter-icon">↕️</span>
+            <span className="filter-icon"><FaSort /></span>
             Sort by
           </label>
-          <select
-            value={sortOption?.value || sortOption || "date"}
-            onChange={handleSortChange}
-            className="filter-select"
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.icon} {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="custom-select-wrapper">
+            <select
+              value={sortOption?.value || sortOption || "date"}
+              onChange={handleSortChange}
+              className="filter-select"
+            >
+              {sortOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Clear Filters Button */}
@@ -257,10 +284,10 @@ const QuestionFilter = ({
               onClick={handleClearAllFilters}
               title="Clear all filters"
             >
-              🗑️ Clear Filters
+              <FaTrash /> Clear Filters
             </button>
           )}
-          
+
           <div className="active-filters-count">
             {isAnyFilterActive ? (
               <span className="active-filters-badge">
@@ -283,44 +310,44 @@ const QuestionFilter = ({
             {searchQuery && (
               <span className="filter-tag">
                 Search: "{searchQuery}"
-                <button 
+                <button
                   onClick={() => setSearchQuery("")}
                   className="filter-tag-remove"
                 >
-                  ✕
+                  <FaTimes />
                 </button>
               </span>
             )}
             {(filterOption?.value || filterOption) !== "all" && (
               <span className="filter-tag">
                 {filterOption?.label || filterOptions.find(o => o.value === filterOption)?.label}
-                <button 
+                <button
                   onClick={() => setFilterOption(filterOptions[0])}
                   className="filter-tag-remove"
                 >
-                  ✕
+                  <FaTimes />
                 </button>
               </span>
             )}
             {difficultyFilter.length > 0 && (
               <span className="filter-tag">
                 {getDifficultyDisplay()}
-                <button 
+                <button
                   onClick={() => setDifficultyFilter([])}
                   className="filter-tag-remove"
                 >
-                  ✕
+                  <FaTimes />
                 </button>
               </span>
             )}
             {(sortOption?.value || sortOption) !== "date" && (
               <span className="filter-tag">
                 Sorted: {sortOption?.label || sortOptions.find(o => o.value === sortOption)?.label}
-                <button 
+                <button
                   onClick={() => setSortOption(sortOptions[0])}
                   className="filter-tag-remove"
                 >
-                  ✕
+                  <FaTimes />
                 </button>
               </span>
             )}

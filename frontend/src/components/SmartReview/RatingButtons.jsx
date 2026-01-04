@@ -27,9 +27,12 @@ const RatingButtons = ({ onRate, disabled = false, compact = false, useCompactBa
     setIsAnimating(true);
 
     try {
+      // PROMISE will resolve immediately now, but we still handle it
       await onRate(rating);
 
       // Reset animation after completion
+      // reduce this delay to make it feel snappier? 
+      // Actually 300ms is just for the click animation, validation.
       setTimeout(() => {
         setSelectedRating(null);
         setIsAnimating(false);

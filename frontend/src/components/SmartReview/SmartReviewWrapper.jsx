@@ -1,4 +1,3 @@
-// frontend/src/components/SmartReview/SmartReviewWrapper.jsx
 import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSmartReview } from '../../hooks/useSmartReview';
@@ -8,6 +7,8 @@ import AddMoreButton from './AddMoreButton';
 import SessionControls from './SessionControls';
 import { FabSpeedDial, TimerProvider, TimerDisplay, useTimer } from '../action-button';
 import '../css/smartReviewWrapper.css';
+import SwipeZoneContainer from './SwipeZoneContainer';
+
 
 // Command Center Configuration map per mode
 const COMMAND_CENTER_MODES = {
@@ -31,7 +32,6 @@ const COMMAND_CENTER_MODES = {
 
 /**
  * Inner component that has access to timer context
- * This separation allows us to use useTimer() inside TimerProvider
  */
 const SmartReviewContent = ({
   children,
@@ -40,7 +40,11 @@ const SmartReviewContent = ({
   showAddMore,
   mode,
   cardMode,
+  SwipeZoneContainer, // Received prop
+  onSwipeRate         // Received prop
 }) => {
+
+
   const timer = useTimer();
   const navigate = useNavigate();
   const location = useLocation();
@@ -242,7 +246,11 @@ const SmartReviewContent = ({
 
         // Helpers
         getPriorityInfo: smartReview.getPriorityInfo,
-        getRatingInfo: smartReview.getRatingInfo
+        getRatingInfo: smartReview.getRatingInfo,
+
+        // Components & Handlers for external wrapping
+        SwipeZoneContainer: SwipeZoneContainer,
+        onSwipeRate: onSwipeRate
       })}
 
       {/* Add More Questions Button */}
@@ -255,7 +263,11 @@ const SmartReviewContent = ({
       )}
 
       {/* Action Button (FAB) */}
-      <FabSpeedDial mode={mode} />
+      <FabSpeedDial
+        mode={mode}
+        currentQuestionId={smartReview.currentQuestion?._id}
+        questionText={smartReview.currentQuestion?.question}
+      />
 
       {/* Error Display */}
       {smartReview.error && (
@@ -268,6 +280,7 @@ const SmartReviewContent = ({
   );
 };
 
+
 const SmartReviewWrapper = ({
   children,
   sectionIds,
@@ -275,16 +288,24 @@ const SmartReviewWrapper = ({
   showDailyCounter = true,
   showAddMore = true,
   mode = 'default',
-  cardMode = 'normal'
+  cardMode = 'normal',
+  resumeData = null // New prop for resuming session
 }) => {
   const smartReview = useSmartReview();
 
   // Load questions when sectionIds change
+  // Load questions when sectionIds change OR resume if data present
   useEffect(() => {
-    if (enableSmartReview && sectionIds?.length > 0) {
+    if (!enableSmartReview) return;
+
+    if (resumeData) {
+      console.log('[SmartReviewWrapper] RESUMING SESSION with data:', resumeData);
+      smartReview.resumeSessionState(resumeData);
+    } else if (sectionIds?.length > 0) {
+      console.log('[SmartReviewWrapper] STARTING NEW SESSION for sections:', sectionIds);
       smartReview.loadTodaysQuestions(sectionIds);
     }
-  }, [sectionIds, enableSmartReview]);
+  }, [sectionIds, enableSmartReview, resumeData]); // Added resumeData dependency
 
   // If Smart Review is disabled, just render children without wrapper
   if (!enableSmartReview) {
@@ -309,6 +330,15 @@ const SmartReviewWrapper = ({
     return smartReview.rateQuestion(rating, questionId);
   }, [smartReview]);
 
+  // Handle rating from SwipeZone
+  const handleSwipeRate = useCallback(async (rating) => {
+    console.log(`[SmartReviewWrapper] Swipe Rate triggered: ${rating}`);
+    return smartReview.rateQuestion(rating);
+  }, [smartReview]);
+
+  // Determine if swipe should be enabled
+  const enableSwipe = cardMode !== 'tiktok';
+
   return (
     <TimerProvider
       mode={mode}
@@ -323,6 +353,8 @@ const SmartReviewWrapper = ({
         showAddMore={showAddMore}
         mode={mode}
         cardMode={cardMode}
+        SwipeZoneContainer={enableSwipe ? SwipeZoneContainer : null}
+        onSwipeRate={handleSwipeRate}
       />
     </TimerProvider>
   );

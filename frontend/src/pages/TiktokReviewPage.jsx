@@ -33,7 +33,7 @@ const TikTokReviewContent = ({
         }
       });
 
-      // Navigate to results page with stats
+      // Navigate to results page with statsmobile
       navigate("/session/results", {
         state: {
           mode: 'tiktok-review',
@@ -120,7 +120,8 @@ const TikTokReviewPage = () => {
       enableSmartReview={true}
       showDailyCounter={true}
       showAddMore={true}
-      mode="default" // Use default for now, can be 'tiktok' if we add specific config
+      mode="tiktok"
+      resumeData={location.state?.resumeSession ? location.state?.sessionData?.smartReviewState : null}
     >
       {(smartReviewData) => (
         <TikTokReviewContent

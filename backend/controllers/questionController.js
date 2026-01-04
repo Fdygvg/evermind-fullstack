@@ -114,11 +114,14 @@ export const bulkImportQuestions = async (req, res) => {
 export const updateQuestion = async (req, res) => {
   try {
     const { id } = req.params;
-    const { question, answer, sectionId, isCode } = req.body;
+    const { question, answer, sectionId, isCode, isBookmarked } = req.body;
 
     const updateData = { question, answer, sectionId };
     if (isCode !== undefined) {
       updateData.isCode = isCode;
+    }
+    if (isBookmarked !== undefined) {
+      updateData.isBookmarked = isBookmarked;
     }
 
     const updatedQuestion = await Question.findOneAndUpdate(
@@ -249,6 +252,41 @@ export const exportQuestions = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error exporting questions'
+    });
+  }
+};
+
+export const toggleBookmark = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find the question first to get current state (or just flip it atomically if we knew it)
+    const question = await Question.findOne({ _id: id, userId: req.userId });
+
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: "Question not found",
+      });
+    }
+
+    // Toggle
+    question.isBookmarked = !question.isBookmarked;
+    await question.save();
+
+    // Populate to return full object if needed by frontend lists
+    await question.populate("sectionId");
+
+    res.json({
+      success: true,
+      message: question.isBookmarked ? "Question bookmarked" : "Bookmark removed",
+      data: { question },
+    });
+  } catch (error) {
+    console.error("Toggle bookmark error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error toggling bookmark",
     });
   }
 };

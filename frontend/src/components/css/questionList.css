@@ -246,11 +246,11 @@
   font-weight: 600;
 }
 
-.close-button {
+.header-icon-btn {
   background: none;
   border: none;
   color: color-mix(in srgb, var(--color-text) 80%, transparent);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 4px;
@@ -262,9 +262,14 @@
   justify-content: center;
 }
 
-.close-button:hover {
+.header-icon-btn:hover {
   background: color-mix(in srgb, var(--color-text) 10%, transparent);
   color: var(--color-text);
+}
+
+.header-icon-btn.active {
+  color: #F59E0B;
+  opacity: 1;
 }
 
 /* Stats Content */

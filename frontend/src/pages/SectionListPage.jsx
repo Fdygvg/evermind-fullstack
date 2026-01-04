@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { sectionService } from "../services/sections";
 import SectionList from "../components/Common/SectionList";
 import "../components/css/sectionList.css";
+import { FaBookmark } from "react-icons/fa";
+
 
 const SectionListPage = () => {
   const [sections, setSections] = useState([]);
@@ -103,6 +105,25 @@ const SectionListPage = () => {
     );
   }
 
+  // Prepare display sections including Bookmarked
+  const bookmarkedSection = {
+    _id: 'bookmarked',
+    name: 'Bookmarked',
+    description: 'Questions you have saved for later',
+    color: '#F59E0B',
+    isVirtual: true
+  };
+
+  let displaySections = [...filteredSections];
+
+  const showBookmark =
+    sections.length > 0 &&
+    (!searchQuery || "bookmarked questions".includes(searchQuery.toLowerCase()));
+
+  if (showBookmark) {
+    displaySections.unshift(bookmarkedSection);
+  }
+
   return (
     <div className="section-list-page">
       {/* Header */}
@@ -177,7 +198,7 @@ const SectionListPage = () => {
 
       {/* Sections Grid */}
       <div className="list-container">
-        {filteredSections.length === 0 ? (
+        {displaySections.length === 0 ? (
           <div className="empty-state">
             {searchQuery ? (
               <>
@@ -204,7 +225,7 @@ const SectionListPage = () => {
           </div>
         ) : (
           <SectionList
-            sections={filteredSections}
+            sections={displaySections}
             onDeleteSection={handleDeleteSection}
             searchQuery={searchQuery}
           />

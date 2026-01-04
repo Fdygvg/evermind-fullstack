@@ -121,7 +121,8 @@
   padding: 2rem;
   display: flex;
   flex-direction: column;
-  background: var(--bg-card);
+  background-color: var(--bg-card, #1f2937); /* Fallback to dark if var missing */
+  background-image: none !important; /* Force remove any gradient */
   border: 2px solid var(--border-color);
   box-shadow: var(--shadow-lg);
 }

@@ -37,7 +37,17 @@ const Navbar = () => {
       <div className="navbar-brand">
         <Link to="/dashboard" className="navbar-logo">
           <img src={logo} alt="Evermind Logo" className="navbar-logo-icon" />
-          <span><strong>EVERMIND</strong></span>
+          <span className="navbar-logo-text">
+            {"EVERMIND".split("").map((letter, index) => (
+              <span
+                key={index}
+                className="breathe-letter"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {letter}
+              </span>
+            ))}
+          </span>
         </Link>
       </div>
 

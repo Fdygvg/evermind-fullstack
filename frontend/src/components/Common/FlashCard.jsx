@@ -1,12 +1,15 @@
 // Enhanced FlashCard with Smart Review Rating Buttons
 import React, { useState, useRef, useEffect } from 'react';
-import { FaSync, FaQuestionCircle } from 'react-icons/fa';
+import { FaSync } from 'react-icons/fa';
 import RatingButtons from '../SmartReview/RatingButtons';
+import BookmarkButton from './BookmarkButton';
 import '../css/flashCard.css';
 
 const Flashcard = ({
   question,
   answer,
+  questionId, // New prop
+  isBookmarked, // New prop
   questionNumber,
   totalQuestions,
   onAnswer,
@@ -115,7 +118,7 @@ const Flashcard = ({
   }, [disabled, showAnswerButtons, isFlipped, useSmartReview]);
 
   return (
-    <div className={`flashcard-container ${compact ? 'compact' : ''}`}>
+    <div className={`flashcard-container ${compact ? 'compact' : ''}`} style={{ position: 'relative' }}>
 
       {/* The Card */}
       <div
@@ -129,6 +132,15 @@ const Flashcard = ({
         <div className="card-inner">
           {/* Front side (Question) */}
           <div className="card-front">
+            {/* Bookmark Button (Front) */}
+            {questionId && (
+              <div style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 10 }} onClick={(e) => e.stopPropagation()}>
+                <BookmarkButton
+                  questionId={questionId}
+                  initialIsBookmarked={isBookmarked}
+                />
+              </div>
+            )}
             <div className="card-content">
               {isCode && CodeBlock ? (
                 <CodeBlock text={question} forceCode={true} />
@@ -138,18 +150,20 @@ const Flashcard = ({
                   <div className="question-text">{question}</div>
                 </>
               )}
-
-              {showHint && !isFlipped && (
-                <div className="flip-hint">
-                  <FaQuestionCircle size={20} />
-                  <span>Click or press SPACE to reveal answer</span>
-                </div>
-              )}
             </div>
           </div>
 
           {/* Back side (Answer) */}
           <div className="card-back">
+            {/* Bookmark Button (Back) */}
+            {questionId && (
+              <div style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 10 }} onClick={(e) => e.stopPropagation()}>
+                <BookmarkButton
+                  questionId={questionId}
+                  initialIsBookmarked={isBookmarked}
+                />
+              </div>
+            )}
             <div className="card-content">
               {isCode && CodeBlock ? (
                 <CodeBlock text={answer} forceCode={true} />
@@ -164,8 +178,8 @@ const Flashcard = ({
         </div>
       </div>
 
-      {/* Smart Review Rating Buttons (only show when flipped) */}
-      {useSmartReview && showAnswerButtons && (
+      {/* Smart Review Rating Buttons (Always visible in Smart Review Mode) */}
+      {useSmartReview && (
         <div className="flashcard-smart-review">
           <RatingButtons
             onRate={handleSmartReviewRating}
@@ -175,8 +189,8 @@ const Flashcard = ({
         </div>
       )}
 
-      {/* Flip button (show when not flipped or in non-smart-review mode) */}
-      {!showAnswerButtons && (
+      {/* Flip button (Only show if NOT in Smart Review mode) */}
+      {!useSmartReview && (
         <button
           className="flip-only-btn"
           onClick={handleFlip}
@@ -186,7 +200,6 @@ const Flashcard = ({
           {isFlipped ? 'Hide Answer' : 'Reveal Answer'}
         </button>
       )}
-
 
     </div>
   );

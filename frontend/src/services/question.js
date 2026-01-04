@@ -7,5 +7,7 @@ export const questionService = {
   deleteQuestion: (id) => API.delete(`/questions/${id}`),
   bulkImport: (importData) => API.post('/questions/bulk-import', importData),
   searchQuestions: (query) => API.get('/questions/search', { params: query }),
+  searchQuestions: (query) => API.get('/questions/search', { params: query }),
   exportQuestions: (params = {}) => API.get('/questions/export', { params }),
+  toggleBookmark: (id) => API.patch(`/questions/${id}/bookmark`),
 };

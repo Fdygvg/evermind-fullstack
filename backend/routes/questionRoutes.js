@@ -1,13 +1,14 @@
 // routes/questionRoutes.js
 import express from 'express';
-import { 
-  getQuestions, 
-  createQuestion, 
-  updateQuestion, 
+import {
+  getQuestions,
+  createQuestion,
+  updateQuestion,
   deleteQuestion,
   bulkImportQuestions,
   searchQuestions,
-  exportQuestions
+  exportQuestions,
+  toggleBookmark
 } from '../controllers/questionController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -21,6 +22,7 @@ router.get('/export', exportQuestions)
 router.post('/', createQuestion);
 router.post('/bulk-import', bulkImportQuestions);
 router.put('/:id', updateQuestion);
+router.patch('/:id/bookmark', toggleBookmark);
 router.delete('/:id', deleteQuestion);
 
 export default router;

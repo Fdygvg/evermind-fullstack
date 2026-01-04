@@ -31,6 +31,28 @@
   color: var(--text-primary);
   text-decoration: none;
   transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-logo-text {
+  display: flex;
+  font-weight: 700;
+}
+
+.breathe-letter {
+  display: inline-block;
+  animation: breathe 3s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 .navbar-logo-icon {

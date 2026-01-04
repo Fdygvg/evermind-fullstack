@@ -13,7 +13,9 @@ import {
   FaEdit,
   FaTrash,
   FaInfoCircle,
-  FaTimes
+  FaTimes,
+  FaBookmark,
+  FaRegBookmark
 } from "react-icons/fa";
 
 const QuestionList = ({
@@ -23,6 +25,7 @@ const QuestionList = ({
   onEdit,
   onDelete,
   onSelect,
+  onBookmark, // New prop
   isSelected,
   viewMode = "list",
   sectionColor = "#667eea"
@@ -54,6 +57,11 @@ const QuestionList = ({
   const handleInfoClick = (e) => {
     e.stopPropagation();
     setIsFlipped(!isFlipped);
+  };
+
+  const handleBookmarkClick = (e) => {
+    e.stopPropagation();
+    if (onBookmark) onBookmark();
   };
 
   const handleFlipClose = () => {
@@ -146,13 +154,34 @@ const QuestionList = ({
               )}
             </div>
 
-            <button
-              className="info-button"
-              onClick={handleInfoClick}
-              title="View question stats"
-            >
-              <FaInfoCircle />
-            </button>
+            <div className="header-buttons" style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className={`bookmark-button ${question.isBookmarked ? 'active' : ''}`}
+                onClick={handleBookmarkClick}
+                title={question.isBookmarked ? "Remove bookmark" : "Bookmark question"}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: question.isBookmarked ? '#F59E0B' : 'var(--text-tertiary)',
+                  fontSize: '1.1rem',
+                  padding: '2px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {question.isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
+              </button>
+
+              <button
+                className="info-button"
+                onClick={handleInfoClick}
+                title="View question stats"
+              >
+                <FaInfoCircle />
+              </button>
+            </div>
           </div>
 
           {/* Answer dropdown */}
@@ -217,13 +246,22 @@ const QuestionList = ({
         >
           <div className="stats-header">
             <h3 className="stats-title">Question Stats</h3>
-            <button
-              className="close-button"
-              onClick={handleFlipClose}
-              title="Close stats"
-            >
-              <FaTimes />
-            </button>
+            <div className="header-buttons-back" style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className={`header-icon-btn ${question.isBookmarked ? 'active' : ''}`}
+                onClick={handleBookmarkClick}
+                title={question.isBookmarked ? "Remove bookmark" : "Bookmark question"}
+              >
+                {question.isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
+              </button>
+              <button
+                className="header-icon-btn"
+                onClick={handleFlipClose}
+                title="Close stats"
+              >
+                <FaTimes />
+              </button>
+            </div>
           </div>
 
           <div className="stats-content">

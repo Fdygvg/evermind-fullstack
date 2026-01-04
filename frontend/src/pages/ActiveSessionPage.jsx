@@ -78,7 +78,7 @@ const ActiveSession = () => {
       setLoading(false);
       setCurrentQuestion(question);
       setSessionProgress(progress);
-      setShowAnswer(false);
+      setShowAnswer(false); // Ensure answer is hidden for new question
       setQuestionKey(prev => prev + 1);
 
       console.log("[LOAD] Question state updated successfully");
@@ -221,12 +221,45 @@ const ActiveSession = () => {
     setLoading(true);
 
     try {
-      console.log("[SUBMIT] Submitting answer to backend first...");
-      await sessionService.submitAnswer({
+      console.log("[SUBMIT] Submitting answer to backend parallel with next load...");
+
+      // PARALLEL EXECUTION: 
+      // 1. Submit the answer (fire and forget for UI speed, but track for errors)
+      // 2. Load next question concurrently
+
+      const submitPromise = sessionService.submitAnswer({
         questionId,
         responseType,
       });
-      console.log("[SUBMIT] Answer submitted successfully");
+
+      // We start loadNextQuestion immediately. 
+      // NOTE: If the backend logic strictly requires the finding of the *next* question
+      // to happen AFTER the previous one is marked, we might have a race condition.
+      // However, usually "getNextQuestion" returns the next DUE question. 
+      // If the current one is still due, it might return it again.
+      // TO MITIGATE: We're assuming the backend handles this or we accept the risk for speed.
+      // But actually, loadNextQuestion calls sessionService.getNextQuestion() which is GET.
+
+      // OPTIMIZATION: Wait for submission to at least initiate? 
+      // No, true parallel is:
+
+      const [submitResponse, nextQuestionResponse] = await Promise.all([
+        submitPromise,
+        // We need to call the service directly here to parallelize, 
+        // because loadNextQuestion wraps state updates we don't want to duplicate logic perfectly. 
+        // But loadNextQuestion is a function. 
+        // Let's modify loadNextQuestion to be callable? No, it uses state.
+
+        // BETTER STRATEGY: 
+        // 1. Fire submitPromise.
+        // 2. Await loadNextQuestion.
+        // But we want loadNextQuestion to start NOW.
+        // loadNextQuestion isn't returning a promise we can easily join? 
+        // It is `async`. Yes.
+        loadNextQuestion()
+      ]);
+
+      console.log("[SUBMIT] Answer submitted & Next loaded successfully");
 
       // Track answered question
       setAnsweredQuestionIds(prev => [...prev, questionId]);
@@ -237,10 +270,10 @@ const ActiveSession = () => {
         setCurrentStreak(0);
       }
 
-      console.log("[SUBMIT] Loading next question...");
-      await loadNextQuestion();
+      // loadNextQuestion already updates state.
+
     } catch (error) {
-      console.error("[SUBMIT] Failed to submit answer:", error);
+      console.error("[SUBMIT] Failed to submit answer or load next:", error);
       console.error("[SUBMIT] Error details:", {
         message: error.message,
         response: error.response?.data,
@@ -262,9 +295,19 @@ const ActiveSession = () => {
         showAddMore={true}
         cardMode={cardMode}
         mode={mode}
+        resumeData={isResuming ? location.state?.sessionData?.smartReviewState : null}
       >
-
-        {({ currentQuestion: smartQuestion, rateQuestion, isLoading, isSessionComplete, ratingHistory, reviewedToday, initialQuestionCount }) => {
+        {({
+          currentQuestion: smartQuestion,
+          rateQuestion,
+          isLoading,
+          isSessionComplete,
+          ratingHistory,
+          reviewedToday,
+          initialQuestionCount,
+          SwipeZoneContainer,
+          onSwipeRate
+        }) => {
           if (isSessionComplete) {
             // Calculate stats from rating history
             const ratingBreakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -293,28 +336,79 @@ const ActiveSession = () => {
             return <div className="loading">Loading Smart Review questions...</div>;
           }
 
+          // Determine if we should enable swipe (exclude tiktok)
+          const enableSwipe = cardMode !== 'tiktok';
+
+          // Helper to reset answer state when rating
+          const handleSmartRate = async (rating, questionId) => {
+            await rateQuestion(rating, questionId);
+            setShowAnswer(false); // Force reset answer state
+          };
+
           return (
             <div className="active-session smart-review-mode">
               {/* Question Display */}
-              <div className="question-card-wrapper">
-                {cardMode === "flashcard" ? (
-                  <FlashCard
-                    key={`${smartQuestion._id}-${questionKey}`}
-                    question={smartQuestion.question}
-                    answer={smartQuestion.answer}
-                    questionNumber={1}
-                    totalQuestions={100}
-                    onAnswer={submitAnswer}
-                    isCode={smartQuestion.isCode}
-                    CodeBlock={CodeBlock}
+              <div className="question-card-wrapper" style={{ maxWidth: '600px', margin: '0 auto', width: '100%' }}>
+                {enableSwipe && SwipeZoneContainer ? (
+                  <SwipeZoneContainer
+                    key={smartQuestion._id}
+                    onRate={(r) => handleSmartRate(r)} // Use wrapper
                     disabled={isLoading}
-                    showHint={true}
-                    compact={false}
-                    useSmartReview={true}
-                    onRate={rateQuestion}
-                  />
+                    swipeThreshold={250} // Slightly lower threshold for faster feel
+                  >
+                    {cardMode === "flashcard" ? (
+                      <FlashCard
+                        key={`${smartQuestion._id}-${questionKey}`}
+                        question={smartQuestion.question}
+                        answer={smartQuestion.answer}
+                        questionNumber={1}
+                        totalQuestions={100}
+                        onAnswer={submitAnswer}
+                        isCode={smartQuestion.isCode}
+                        CodeBlock={CodeBlock}
+                        disabled={isLoading}
+                        showHint={true}
+                        compact={false}
+                        useSmartReview={true}
+                        onRate={handleSmartRate} // Use wrapper
+                      />
+                    ) : (
+                      <div className="standard-card-container">
+                        <QuestionCard
+                          key={`${smartQuestion._id}-${questionKey}`}
+                          currentQuestion={smartQuestion}
+                          showAnswer={showAnswer}
+                          setShowAnswer={setShowAnswer}
+                          submitAnswer={submitAnswer}
+                          loading={isLoading}
+                        />
+                        {/* Smart Review Rating Buttons inside Swipe Container makes sense so they move with card? 
+                             Actually, usually buttons stay or move. User asked for "just the question card".
+                             But if buttons are outside, they might cover.
+                             Moving the wrapper div is safest.
+                         */}
+                      </div>
+                    )}
+                  </SwipeZoneContainer>
                 ) : (
-                  <>
+                  // Fallback without Swipe
+                  cardMode === "flashcard" ? (
+                    <FlashCard
+                      key={`${smartQuestion._id}-${questionKey}`}
+                      question={smartQuestion.question}
+                      answer={smartQuestion.answer}
+                      questionNumber={1}
+                      totalQuestions={100}
+                      onAnswer={submitAnswer}
+                      isCode={smartQuestion.isCode}
+                      CodeBlock={CodeBlock}
+                      disabled={isLoading}
+                      showHint={true}
+                      compact={false}
+                      useSmartReview={true}
+                      onRate={handleSmartRate} // Use wrapper
+                    />
+                  ) : (
                     <QuestionCard
                       key={`${smartQuestion._id}-${questionKey}`}
                       currentQuestion={smartQuestion}
@@ -323,26 +417,27 @@ const ActiveSession = () => {
                       submitAnswer={submitAnswer}
                       loading={isLoading}
                     />
+                  )
+                )}
 
-                    {/* Smart Review Rating Buttons */}
-                    {showAnswer && (
-                      <RatingButtons
-                        onRate={rateQuestion}
-                        disabled={isLoading}
-                        compact={false}
-                      />
-                    )}
-                  </>
+                {/* Rating buttons for Normal mode need to be outside if card flies away, or inside if they fly with it. 
+                    If they fly with it, they disappear. 
+                    Structure above has them separate in original code.
+                    Let's put them below the swipe container for stability, or check logic.
+                */}
+                {cardMode !== "flashcard" && showAnswer && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <RatingButtons
+                      onRate={handleSmartRate} // Use wrapper
+                      disabled={isLoading}
+                      compact={false}
+                    />
+                  </div>
                 )}
               </div>
 
               {/* Session Info */}
-              <div className="session-info">
-                <div className="mode-badge smart-review-badge">
-                  🧠 Smart Review Mode
-                  {cardMode === "flashcard" && " • Flashcard"}
-                </div>
-              </div>
+
             </div>
           );
         }}

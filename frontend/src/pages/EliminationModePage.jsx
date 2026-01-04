@@ -125,6 +125,13 @@ const EliminationModePage = () => {
       // Don't know - keep reviewing, but mark as wrong
       setWrongCount((prev) => prev + 1);
       setCurrentStreak(0);
+
+      // Fix: Reset revealed state so it closes when moved/recycled
+      setRevealedAnswers(prev => {
+        const newState = { ...prev };
+        delete newState[questionId];
+        return newState;
+      });
     }
   }, [filteredQuestions, revealedAnswers]);
 
@@ -199,8 +206,23 @@ const EliminationModePage = () => {
         enableSmartReview={true}
         showDailyCounter={true}
         showAddMore={true}
+        mode="elimination"
+        resumeData={location.state?.resumeSession ? location.state?.sessionData?.smartReviewState : null}
       >
-        {({ todaysQuestions, rateQuestion, isLoading, isSessionComplete, canUndo, undoLastRating, sectionProgress, ratingHistory, reviewedToday, initialQuestionCount }) => {
+        {({
+          todaysQuestions,
+          rateQuestion,
+          isLoading,
+          isSessionComplete,
+          canUndo,
+          undoLastRating,
+          sectionProgress,
+          ratingHistory,
+          reviewedToday,
+          initialQuestionCount,
+          SwipeZoneContainer,
+          onSwipeRate
+        }) => {
           // DEBUG: Log the props received from SmartReviewWrapper
           console.log('[EliminationMode] SmartReviewWrapper props:', {
             todaysQuestions,
@@ -279,17 +301,52 @@ const EliminationModePage = () => {
 
               <div className="questions-container">
                 <div className="questions-list">
-                  {todaysQuestions.map((question, index) => (
-                    <EliminationQuestionCard
-                      key={question._id}
-                      question={question}
-                      index={index}
-                      isRevealed={revealedAnswers[question._id] || false}
-                      onToggleAnswer={() => toggleAnswer(question._id)}
-                      rateQuestion={(rating) => rateQuestion(rating, question._id)}
-                      disabled={false}
-                    />
-                  ))}
+                  {todaysQuestions.map((question, index) => {
+                    const handleEliminationRate = (rating, qId) => {
+                      console.log(`[Elimination] Rate on ${qId}: ${rating}`);
+                      rateQuestion(rating, qId);
+                      // Close the card so it resets if recycled
+                      setRevealedAnswers(prev => {
+                        const newState = { ...prev };
+                        delete newState[qId];
+                        return newState;
+                      });
+                    };
+
+                    return (
+                      <div key={question._id} className="elimination-card-wrapper" style={{ marginBottom: '1rem' }}>
+                        {SwipeZoneContainer ? (
+                          <SwipeZoneContainer
+                            // Key is crucial for localized state
+                            key={question._id}
+                            onRate={(rating) => {
+                              handleEliminationRate(rating, question._id);
+                            }}
+                            disabled={false} // Allow independent swiping
+                            swipeThreshold={200}
+                          >
+                            <EliminationQuestionCard
+                              question={question}
+                              index={index}
+                              isRevealed={revealedAnswers[question._id] || false}
+                              onToggleAnswer={() => toggleAnswer(question._id)}
+                              rateQuestion={(rating) => handleEliminationRate(rating, question._id)}
+                              disabled={false}
+                            />
+                          </SwipeZoneContainer>
+                        ) : (
+                          <EliminationQuestionCard
+                            question={question}
+                            index={index}
+                            isRevealed={revealedAnswers[question._id] || false}
+                            onToggleAnswer={() => toggleAnswer(question._id)}
+                            rateQuestion={(rating) => handleEliminationRate(rating, question._id)}
+                            disabled={false}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
