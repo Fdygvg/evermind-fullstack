@@ -55,11 +55,13 @@ export const register = async (req, res) => {
 
     await user.save();
 
-    // Send verification email
-    await sendVerificationEmail(email, verificationToken);
-
-    // Generate token (user can login but with limited access)
+    // Generate token immediately (user can login but with limited access)
     const token = generateToken(user._id);
+
+    // Send verification email in background (don't wait for it)
+    sendVerificationEmail(email, verificationToken).catch(err => {
+      console.error('Failed to send verification email:', err);
+    });
 
     res.status(201).json({
       success: true,
@@ -71,22 +73,6 @@ export const register = async (req, res) => {
         isVerified: false,
       },
     });
-    if (
-      userPreferences.learningCategory ||
-      userPreferences.techStack?.length > 0
-    ) {
-      // Get recommended presets
-      const recommendedPresets = PresetService.getUserPresets(userPreferences);
-
-      // Create first preset automatically
-      if (recommendedPresets.length > 0) {
-        await PresetService.createPresetForUser(
-          user._id,
-          recommendedPresets[0].id,
-          recommendedPresets[0].category
-        );
-      }
-    }
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({
