@@ -21,10 +21,7 @@ connectDB();
 
 app.set("trust proxy", true);
 
-// Middleware
-app.use(helmet());
-
-// CORS configuration
+// CORS configuration - MUST be before other middleware
 const corsOptions = {
   origin: [
     'https://evermind-frontend.vercel.app',
@@ -35,10 +32,16 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 };
+
+// Handle preflight requests first
+app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+// Helmet with CORS-friendly settings
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "unsafe-none" },
+}));
 
 app.use(express.json());
 
