@@ -1,7 +1,7 @@
 // src/pages/PreferencesPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaSave, FaArrowRight, FaChevronLeft } from 'react-icons/fa';
+import { FaSave, FaArrowRight, FaChevronLeft, FaLaptopCode, FaLanguage, FaGlobeAmericas, FaBook, FaBullseye } from 'react-icons/fa';
 import { userService } from '../services/user';
 import { presetService } from '../services/preset';
 
@@ -20,17 +20,17 @@ const PreferencesPage = () => {
 
   // Step 1: Referral Source
   const referralSources = [
-    'TikTok', 'Instagram', 'Reddit', 'YouTube', 
+    'TikTok', 'Instagram', 'Reddit', 'YouTube',
     'ChatGPT', 'Google', 'Friend', 'Other'
   ];
 
   // Step 2: Learning Categories
   const learningCategories = [
-    { id: 'programming', name: 'Programming', icon: '💻' },
-    { id: 'languages', name: 'Languages (French, Spanish, etc.)', icon: '🗣️' },
-    { id: 'geography', name: 'Geography', icon: '🌍' },
-    { id: 'exams', name: 'Exams / School Subjects', icon: '📚' },
-    { id: 'custom', name: 'Custom', icon: '🎯' }
+    { id: 'programming', name: 'Programming', icon: <FaLaptopCode size={32} /> },
+    { id: 'languages', name: 'Languages', icon: <FaLanguage size={32} /> },
+    { id: 'geography', name: 'Geography', icon: <FaGlobeAmericas size={32} /> },
+    { id: 'exams', name: 'Exams / School Subjects', icon: <FaBook size={32} /> },
+    { id: 'custom', name: 'Custom', icon: <FaBullseye size={32} /> }
   ];
 
   // Step 3: Tech Stack (only shown if programming selected)
@@ -142,10 +142,10 @@ const PreferencesPage = () => {
     try {
       // Save preferences
       const response = await userService.updatePreferences(preferences);
-      
+
       if (response.data.success) {
         console.log('Preferences saved successfully');
-        
+
         // Auto-import presets based on selections
         setIsCreatingSections(true);
         try {
@@ -158,7 +158,7 @@ const PreferencesPage = () => {
           console.error('Error creating preset sections:', presetError);
           // Don't block navigation if preset import fails
         }
-        
+
         setIsCreatingSections(false);
         navigate('/dashboard');
       }
@@ -172,13 +172,13 @@ const PreferencesPage = () => {
 
   // Step content
   const renderStep = () => {
-    switch(currentStep) {
+    switch (currentStep) {
       case 1:
         return (
           <div className="step-content">
             <h2>How did you hear about Evermind?</h2>
             <p className="step-description">Help us improve by telling us where you found us!</p>
-            
+
             <div className="options-grid">
               {referralSources.map(source => (
                 <button
@@ -198,7 +198,7 @@ const PreferencesPage = () => {
           <div className="step-content">
             <h2>Choose what you're learning</h2>
             <p className="step-description">Select your primary learning category</p>
-            
+
             <div className="categories-grid">
               {learningCategories.map(category => (
                 <div
@@ -225,7 +225,7 @@ const PreferencesPage = () => {
           <div className="step-content">
             <h2>What are you currently learning?</h2>
             <p className="step-description">Select all that apply (multiple selection)</p>
-            
+
             <div className="tech-stack-grid">
               {techStackOptions.map(tech => (
                 <div
@@ -238,7 +238,7 @@ const PreferencesPage = () => {
                 </div>
               ))}
             </div>
-            
+
             {preferences.techStack.length > 0 && (
               <div className="selected-preview">
                 <p>Selected: {preferences.techStack.length} technologies</p>
@@ -252,7 +252,7 @@ const PreferencesPage = () => {
           <div className="step-content">
             <h2>What's your skill level?</h2>
             <p className="step-description">Help us personalize your learning experience</p>
-            
+
             <div className="skill-level-grid">
               {skillLevels.map(level => (
                 <div
@@ -273,7 +273,7 @@ const PreferencesPage = () => {
           <div className="step-content">
             <h2>How much time can you study daily?</h2>
             <p className="step-description">We'll help you plan accordingly</p>
-            
+
             <div className="time-options-grid">
               {studyTimeOptions.map(option => (
                 <div
@@ -298,15 +298,17 @@ const PreferencesPage = () => {
     <div className="preferences-container">
       {/* Header */}
       <header className="preferences-header">
-        <h1>🎯 Customize Your Evermind Experience</h1>
+        <h1 className="flex items-center justify-center gap-2">
+          <FaBullseye /> Customize Your Evermind Experience
+        </h1>
         <p className="subtitle">A few quick questions to personalize your learning journey</p>
       </header>
 
       {/* Progress Bar */}
       <div className="progress-section">
         <div className="progress-bar">
-          <div 
-            className="progress-fill" 
+          <div
+            className="progress-fill"
             style={{ width: `${(currentStep / 5) * 100}%` }}
           />
         </div>
@@ -318,14 +320,14 @@ const PreferencesPage = () => {
       {/* Main Content */}
       <div className="preferences-card">
         {renderStep()}
-        
+
         {/* Error Message */}
         {error && (
           <div className="error-message">
             {error}
           </div>
         )}
-        
+
         {/* Navigation Buttons */}
         <div className="navigation-buttons">
           {currentStep > 1 && (
@@ -334,8 +336,8 @@ const PreferencesPage = () => {
               Back
             </button>
           )}
-          
-          <button 
+
+          <button
             className="nav-btn next-btn"
             onClick={handleNext}
             disabled={
@@ -376,7 +378,7 @@ const PreferencesPage = () => {
       </div>
 
       {/* Skip for now (optional) */}
-      <button 
+      <button
         className="skip-btn"
         onClick={() => navigate('/dashboard')}
       >

@@ -12,6 +12,8 @@
   "dependencies": {
     "@ai-sdk/xai": "^2.0.39",
     "axios": "^1.7.9",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "date-fns": "^3.0.0",
     "draggable": "^4.2.0",
     "framer-motion": "^12.23.25",
@@ -26,10 +28,13 @@
     "react-router-dom": "^7.6.0",
     "react-select": "^5.10.2",
     "react-syntax-highlighter": "^16.1.0",
+    "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@tailwindcss/cli": "^4.1.18",
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
