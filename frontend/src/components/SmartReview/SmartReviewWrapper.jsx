@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSmartReview } from '../../hooks/useSmartReview';
 import { sessionService } from '../../services/sessions';
 import DailyProgress from './DailyProgress';
-import AddMoreButton from './AddMoreButton';
 import SessionControls from './SessionControls';
 import { FabSpeedDial, TimerProvider, TimerDisplay, useTimer } from '../action-button';
 import '../css/smartReviewWrapper.css';
@@ -37,7 +36,6 @@ const SmartReviewContent = ({
   children,
   smartReview,
   showDailyCounter,
-  showAddMore,
   mode,
   cardMode,
   SwipeZoneContainer, // Received prop
@@ -47,7 +45,6 @@ const SmartReviewContent = ({
 
   const timer = useTimer();
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Keep track of latest smartReview state for auto-save
   const smartReviewRef = useRef(smartReview);
@@ -253,15 +250,7 @@ const SmartReviewContent = ({
         onSwipeRate: onSwipeRate
       })}
 
-      {/* Add More Questions Button */}
-      {showAddMore && smartReview.rolledOverCount > 0 && (
-        <AddMoreButton
-          rolledOverCount={smartReview.rolledOverCount}
-          onAddMore={smartReview.addMoreQuestions}
-          disabled={smartReview.isLoading}
-        />
-      )}
-
+  
       {/* Action Button (FAB) */}
       <FabSpeedDial
         mode={mode}

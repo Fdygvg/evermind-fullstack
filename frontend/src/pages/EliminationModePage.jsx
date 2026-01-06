@@ -28,7 +28,9 @@ const EliminationModePage = () => {
 
   // Check if using Smart Review mode
   const isSmartReviewMode = location.state?.useSmartReview !== false; // Default to true
-  const [sectionIds, setSectionIds] = useState(location.state?.sectionIds || []);
+  const [sectionIds, setSectionIds] = useState(
+    location.state?.sectionIds || []
+  );
 
   // Load sections if none provided (for Smart Review mode)
   useEffect(() => {
@@ -37,11 +39,11 @@ const EliminationModePage = () => {
         try {
           const response = await sectionService.getSections();
           const sections = response.data?.data || response.data || [];
-          const ids = sections.map(s => s._id);
-          console.log('[Elimination] Loaded sections for Smart Review:', ids);
+          const ids = sections.map((s) => s._id);
+          console.log("[Elimination] Loaded sections for Smart Review:", ids);
           setSectionIds(ids);
         } catch (error) {
-          console.error('[Elimination] Error loading sections:', error);
+          console.error("[Elimination] Error loading sections:", error);
         }
       }
     };
@@ -63,23 +65,26 @@ const EliminationModePage = () => {
         if (location.state?.questions) {
           setQuestions(location.state.questions);
           setFilteredQuestions(location.state.questions);
-        }
-        else if (location.state?.sectionIds && location.state.sectionIds.length > 0) {
+        } else if (
+          location.state?.sectionIds &&
+          location.state.sectionIds.length > 0
+        ) {
           const response = await questionService.getQuestions({
-            sectionId: location.state.sectionIds.join(',')
+            sectionId: location.state.sectionIds.join(","),
           });
-          const questions = response.data.data?.questions || response.data.data || [];
+          const questions =
+            response.data.data?.questions || response.data.data || [];
           setQuestions(questions);
           setFilteredQuestions(questions);
-        }
-        else {
+        } else {
           const response = await questionService.getQuestions();
-          const questions = response.data.data?.questions || response.data.data || [];
+          const questions =
+            response.data.data?.questions || response.data.data || [];
           setQuestions(questions);
           setFilteredQuestions(questions);
         }
       } catch (error) {
-        console.error('Error loading questions:', error);
+        console.error("Error loading questions:", error);
         setQuestions([]);
         setFilteredQuestions([]);
       } finally {
@@ -100,40 +105,47 @@ const EliminationModePage = () => {
   }, []);
 
   // Handle question elimination with different levels
-  const handleQuestionAction = useCallback((questionId, action) => {
-    const question = filteredQuestions.find((q) => q._id === questionId);
-    if (!question) return;
+  const handleQuestionAction = useCallback(
+    (questionId, action) => {
+      const question = filteredQuestions.find((q) => q._id === questionId);
+      if (!question) return;
 
-    // Remove revealed state
-    const newRevealed = { ...revealedAnswers };
-    delete newRevealed[questionId];
-    setRevealedAnswers(newRevealed);
+      // Remove revealed state
+      const newRevealed = { ...revealedAnswers };
+      delete newRevealed[questionId];
+      setRevealedAnswers(newRevealed);
 
-    if (action === "know") {
-      // Full elimination - I know it perfectly
-      setEliminatedQuestions((prev) => [...prev, question]);
-      setFilteredQuestions((prev) => prev.filter((q) => q._id !== questionId));
-      setCorrectCount((prev) => prev + 1);
-      setCurrentStreak((prev) => prev + 1);
-    } else if (action === "kinda") {
-      // Partial elimination - Kinda know it
-      setPartialQuestions((prev) => [...prev, question]);
-      setFilteredQuestions((prev) => prev.filter((q) => q._id !== questionId));
-      setCorrectCount((prev) => prev + 1);
-      setCurrentStreak((prev) => prev + 1);
-    } else if (action === "dont-know") {
-      // Don't know - keep reviewing, but mark as wrong
-      setWrongCount((prev) => prev + 1);
-      setCurrentStreak(0);
+      if (action === "know") {
+        // Full elimination - I know it perfectly
+        setEliminatedQuestions((prev) => [...prev, question]);
+        setFilteredQuestions((prev) =>
+          prev.filter((q) => q._id !== questionId)
+        );
+        setCorrectCount((prev) => prev + 1);
+        setCurrentStreak((prev) => prev + 1);
+      } else if (action === "kinda") {
+        // Partial elimination - Kinda know it
+        setPartialQuestions((prev) => [...prev, question]);
+        setFilteredQuestions((prev) =>
+          prev.filter((q) => q._id !== questionId)
+        );
+        setCorrectCount((prev) => prev + 1);
+        setCurrentStreak((prev) => prev + 1);
+      } else if (action === "dont-know") {
+        // Don't know - keep reviewing, but mark as wrong
+        setWrongCount((prev) => prev + 1);
+        setCurrentStreak(0);
 
-      // Fix: Reset revealed state so it closes when moved/recycled
-      setRevealedAnswers(prev => {
-        const newState = { ...prev };
-        delete newState[questionId];
-        return newState;
-      });
-    }
-  }, [filteredQuestions, revealedAnswers]);
+        // Fix: Reset revealed state so it closes when moved/recycled
+        setRevealedAnswers((prev) => {
+          const newState = { ...prev };
+          delete newState[questionId];
+          return newState;
+        });
+      }
+    },
+    [filteredQuestions, revealedAnswers]
+  );
 
   // Toggle answer visibility
   const toggleAnswer = (questionId) => {
@@ -207,7 +219,11 @@ const EliminationModePage = () => {
         showDailyCounter={true}
         showAddMore={true}
         mode="elimination"
-        resumeData={location.state?.resumeSession ? location.state?.sessionData?.smartReviewState : null}
+        resumeData={
+          location.state?.resumeSession
+            ? location.state?.sessionData?.smartReviewState
+            : null
+        }
       >
         {({
           todaysQuestions,
@@ -221,22 +237,20 @@ const EliminationModePage = () => {
           reviewedToday,
           initialQuestionCount,
           SwipeZoneContainer,
-          onSwipeRate
         }) => {
-          // DEBUG: Log the props received from SmartReviewWrapper
-          console.log('[EliminationMode] SmartReviewWrapper props:', {
+          console.log("[EliminationMode] SmartReviewWrapper props:", {
             todaysQuestions,
             todaysQuestionsLength: todaysQuestions?.length,
             isLoading,
             isSessionComplete,
-            sectionProgress
+            sectionProgress,
           });
 
           // Check completion first (before checking if questions array is empty)
           if (isSessionComplete) {
             // Calculate stats from rating history
             const ratingBreakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-            (ratingHistory || []).forEach(r => {
+            (ratingHistory || []).forEach((r) => {
               if (ratingBreakdown[r.rating] !== undefined) {
                 ratingBreakdown[r.rating]++;
               }
@@ -245,30 +259,34 @@ const EliminationModePage = () => {
             // Navigate to results page with stats
             navigate("/session/results", {
               state: {
-                mode: 'elimination',
+                mode: "elimination",
                 ratingBreakdown,
                 totalQuestions: initialQuestionCount || reviewedToday,
                 reviewedCount: reviewedToday,
                 sessionTime: sessionTime,
-                cardMode: 'elimination',
-                fromSession: true
-              }
+                cardMode: "elimination",
+                fromSession: true,
+              },
             });
             return null;
           }
 
           // Show loading only during initial load
           if (isLoading && (!todaysQuestions || todaysQuestions.length === 0)) {
-            return <div className="loading">Loading Smart Review questions...</div>;
+            return (
+              <div className="loading">Loading Smart Review questions...</div>
+            );
           }
 
           // If no questions and not loading, show message
           if (!todaysQuestions || todaysQuestions.length === 0) {
-            console.log('[EliminationMode] No questions available!');
+            console.log("[EliminationMode] No questions available!");
             return (
               <div className="no-questions">
                 <p>No questions available for review.</p>
-                <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+                <button onClick={() => navigate("/dashboard")}>
+                  Back to Dashboard
+                </button>
               </div>
             );
           }
@@ -276,16 +294,7 @@ const EliminationModePage = () => {
           return (
             <div className="elimination-page smart-review-mode">
               <header className="page-header">
-                <div className="header-left">
-                  <button
-                    className="nav-btn"
-                    onClick={() => navigate("/dashboard")}
-                    title="Back to Dashboard"
-                  >
-                    <Home size={20} />
-                  </button>
-                  <h1>🧠 Smart Review • Elimination Mode</h1>
-                </div>
+                <div className="header-left"></div>
 
                 <div className="header-right">
                   {canUndo && (
@@ -306,7 +315,7 @@ const EliminationModePage = () => {
                       console.log(`[Elimination] Rate on ${qId}: ${rating}`);
                       rateQuestion(rating, qId);
                       // Close the card so it resets if recycled
-                      setRevealedAnswers(prev => {
+                      setRevealedAnswers((prev) => {
                         const newState = { ...prev };
                         delete newState[qId];
                         return newState;
@@ -314,7 +323,11 @@ const EliminationModePage = () => {
                     };
 
                     return (
-                      <div key={question._id} className="elimination-card-wrapper" style={{ marginBottom: '1rem' }}>
+                      <div
+                        key={question._id}
+                        className="elimination-card-wrapper"
+                        style={{ marginBottom: "1rem" }}
+                      >
                         {SwipeZoneContainer ? (
                           <SwipeZoneContainer
                             // Key is crucial for localized state
@@ -328,9 +341,13 @@ const EliminationModePage = () => {
                             <EliminationQuestionCard
                               question={question}
                               index={index}
-                              isRevealed={revealedAnswers[question._id] || false}
+                              isRevealed={
+                                revealedAnswers[question._id] || false
+                              }
                               onToggleAnswer={() => toggleAnswer(question._id)}
-                              rateQuestion={(rating) => handleEliminationRate(rating, question._id)}
+                              rateQuestion={(rating) =>
+                                handleEliminationRate(rating, question._id)
+                              }
                               disabled={false}
                             />
                           </SwipeZoneContainer>
@@ -340,7 +357,9 @@ const EliminationModePage = () => {
                             index={index}
                             isRevealed={revealedAnswers[question._id] || false}
                             onToggleAnswer={() => toggleAnswer(question._id)}
-                            rateQuestion={(rating) => handleEliminationRate(rating, question._id)}
+                            rateQuestion={(rating) =>
+                              handleEliminationRate(rating, question._id)
+                            }
                             disabled={false}
                           />
                         )}
@@ -348,15 +367,6 @@ const EliminationModePage = () => {
                     );
                   })}
                 </div>
-              </div>
-
-              <div className="session-controls">
-                <button
-                  className="control-btn end-session-btn"
-                  onClick={endSession}
-                >
-                  End Session
-                </button>
               </div>
             </div>
           );
@@ -398,7 +408,7 @@ const EliminationModePage = () => {
 
       <div className="questions-container">
         {(filteredQuestions?.length ?? 0) === 0 &&
-          (questions?.length ?? 0) > 0 ? (
+        (questions?.length ?? 0) > 0 ? (
           <div className="session-complete">
             <div className="celebration">
               <h2>🎉 ELIMINATION COMPLETE!</h2>
@@ -446,16 +456,6 @@ const EliminationModePage = () => {
           onReset={resetQuestion}
         />
       )}
-
-      <div className="session-controls">
-        <button
-          className="control-btn end-session-btn"
-          onClick={endSession}
-          disabled={(filteredQuestions?.length ?? 0) > 0}
-        >
-          End Session
-        </button>
-      </div>
     </div>
   );
 };

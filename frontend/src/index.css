@@ -9,7 +9,6 @@ body {
   font-family: 'Outfit', sans-serif;
   background: var(--gradient-primary);
   min-height: 100vh;
-  padding: 20px;
 }
 
 .dashboard {

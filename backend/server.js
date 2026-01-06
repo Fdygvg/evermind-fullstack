@@ -34,7 +34,6 @@ const corsOptions = {
 };
 
 // Handle preflight requests first
-app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
 // Helmet with CORS-friendly settings
