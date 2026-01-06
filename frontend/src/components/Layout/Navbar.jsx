@@ -5,7 +5,7 @@ import logo from '../../assets/logo.png';
 import '../css/navbar.css';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const navbarRef = useRef(null);
 
@@ -78,15 +78,8 @@ const Navbar = () => {
       <div className="navbar-user">
         {user ? (
           <>
-            {!user.isVerified && (
-              <Link to="/verify-email" className="navbar-pill">
-                Verify email
-              </Link>
-            )}
             <span className="navbar-username">{user.username || user.email}</span>
-            <button className="navbar-button" onClick={logout}>
-              Log out
-            </button>
+
           </>
         ) : (
           <Link to="/login" className="navbar-button ghost">

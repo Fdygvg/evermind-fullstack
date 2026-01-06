@@ -667,6 +667,7 @@
 }
 
 /* Responsive Design */
+/* Responsive Design */
 @media (max-width: 1024px) {
   .sections-grid {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -678,82 +679,85 @@
   
   .mode-selection,
   .section-selection {
-    margin: 1.5rem;
+    margin: 1.5rem auto;
     padding: 2rem;
+    width: 95%; /* Use percentage width */
   }
 }
 
 @media (max-width: 768px) {
   .sections-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); /* Full width cards */
   }
   
   .review-session-page h1 {
-    font-size: 2.5rem;
+    font-size: 2rem; /* Smaller title */
+    margin-bottom: 2rem;
   }
   
   .mode-options {
     grid-template-columns: 1fr;
-    max-width: 400px;
+    max-width: 100%;
     margin: 0 auto;
   }
   
   .start-button {
-    font-size: 1.5rem;
-    padding: 1.2rem 3rem;
-    min-width: 250px;
+    font-size: 1.25rem;
+    padding: 1rem 2rem;
+    width: 100%;
+    min-width: unset; /* Remove min-width constraint */
   }
   
   .selection-counter {
-    position: static;
-    margin: 2rem auto 0;
-    width: fit-content;
+    position: fixed; /* Keep fixed but maybe top or bottom center */
+    bottom: 1rem;
+    right: 50%;
+    transform: translateX(50%);
+    margin: 0;
+    width: auto;
     animation: none;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+  }
+
+  @keyframes float { 
+      /* disable float on mobile to save battery/distraction */ 
+      0%, 100% { transform: translate(50%, 0); }
+      50% { transform: translate(50%, 0); }
   }
 }
 
 @media (max-width: 480px) {
-  .sections-grid {
-    grid-template-columns: 1fr;
-  }
-  
   .review-session-page {
-    padding: 1rem;
-  }
-  
-  .review-session-page h1 {
-    font-size: 2rem;
+    padding: 0.5rem; /* Minimal padding */
   }
   
   .mode-selection,
   .section-selection {
-    padding: 1.5rem;
-    margin: 1rem 0;
+    padding: 1.25rem;
+    margin: 1rem auto;
+    border-radius: 16px; /* Smaller radius */
   }
-  
+
   .mode-card {
-    height: 180px;
-  }
-  
-  .mode-option span {
-    font-size: 1.5rem;
-    min-width: 200px;
-    padding: 1rem 2rem;
-  }
-  
-  .section-card {
+    height: auto;
     min-height: 160px;
-    padding: 1.5rem;
+  }
+  
+  /* Stack mode options vertically inside card if needed, or keep centered */
+
+  .section-card {
+    min-height: auto;
+    padding: 1.25rem;
   }
   
   .section-card h3 {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
+    padding-right: 30px;
   }
-  
-  .start-button {
-    font-size: 1.3rem;
-    padding: 1rem 2rem;
-    min-width: 200px;
+
+  .mode-description p {
+    font-size: 1rem;
   }
 }
 
