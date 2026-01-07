@@ -146,7 +146,6 @@ const Flashcard = ({
                 <CodeBlock text={question} forceCode={true} />
               ) : (
                 <>
-                  <h3 className="card-label">Question</h3>
                   <div className="question-text">{question}</div>
                 </>
               )}
@@ -169,7 +168,6 @@ const Flashcard = ({
                 <CodeBlock text={answer} forceCode={true} />
               ) : (
                 <>
-                  <h3 className="card-label">Answer</h3>
                   <div className="answer-text">{answer}</div>
                 </>
               )}

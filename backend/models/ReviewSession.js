@@ -12,7 +12,7 @@ const reviewSessionSchema = new mongoose.Schema({
   }],
   cardMode: {
     type: String,
-    enum: ['normal', 'flashcard', 'elimination'],
+    enum: ['normal', 'flashcard', 'elimination', 'tiktok'],
     default: 'normal'
   },
 
@@ -59,7 +59,7 @@ const reviewSessionSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  
+
   // Session resumption fields
   status: {
     type: String,
@@ -78,7 +78,7 @@ const reviewSessionSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  
+
   // Smart Review integration fields
   useSmartReview: {
     type: Boolean,
@@ -93,7 +93,7 @@ const reviewSessionSchema = new mongoose.Schema({
 });
 
 // Update lastUpdated on save
-reviewSessionSchema.pre('save', function() {
+reviewSessionSchema.pre('save', function () {
   this.lastUpdated = new Date();
 });
 

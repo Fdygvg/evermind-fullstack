@@ -290,3 +290,64 @@
   color: var(--text-secondary);
   text-align: center;
 }
+/* Responsive Mobile Styles */
+@media (max-width: 640px) {
+  .search-bar-container {
+    padding: 8px 10px;
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .search-input-group {
+    flex-wrap: wrap; /* Allow wrapping if needed, or adjust sizes */
+    gap: 8px;
+  }
+
+  /* Make the section filter take full width on a new row or hide it? 
+     Better: Simplify the top row to just Input + Search Button 
+  */
+  
+  .search-icon {
+    display: none; /* Hide icon to save space */
+  }
+
+  .search-input {
+    width: 100%; /* Force input to take available space */
+    min-width: 0; /* Allow shrinking */
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 8px 10px;
+  }
+
+  .section-filter {
+    /* Make section filter smaller or hide logic */
+    max-width: 100px;
+    font-size: 0.8rem;
+    padding: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .search-btn {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  /* Adjust dropdown position */
+  .suggestions-dropdown {
+    width: calc(100% + 2px); /* Account for borders */
+    left: -1px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Ultra small screens: Stack or simplify further */
+  .section-filter {
+    display: none; /* Hide filter deeply on very small screens to prevent spill */
+  }
+  
+  .search-btn {
+    /* Icon only button if we had an icon, but for now just smaller padding */
+    padding: 8px 10px;
+  }
+}

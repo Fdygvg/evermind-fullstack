@@ -336,15 +336,30 @@
 
 /* Modifiers for Smart Review Mode */
 .elimination-page.smart-review-mode .questions-list {
-  padding: 0; /* Full width for cards */
+  padding: 0; /* Full width by default */
   height: 100%;
 }
+
+@media (min-width: 769px) {
+  .elimination-page.smart-review-mode .questions-list {
+    padding: 10px 15px; /* Add padding on desktop so cards don't touch boundaries */
+  }
+}
+
 .elimination-page.smart-review-mode .question-card {
-  border-radius: 0; /* Square corners */
+  border-radius: 0; /* Square corners for mobile/fullwidth */
   border-left: none;
   border-right: none;
   margin-bottom: 0;
-  /* Removed force height to fix "too long" issue */
+}
+
+@media (min-width: 769px) {
+  .elimination-page.smart-review-mode .question-card {
+    border-radius: 12px; /* Restore corners on desktop */
+    border-left: 2px solid var(--border-color); /* Restore borders on desktop */
+    border-right: 2px solid var(--border-color);
+    margin-bottom: 1rem; /* Add spacing between cards */
+  }
 }
 
 .question-card {

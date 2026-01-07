@@ -102,15 +102,15 @@ const BulkImportPage = () => {
         try {
           const text = e.target.result;
           const lines = text.split('\n').filter(line => line.trim());
-          
+
           if (lines.length === 0) {
             reject(new Error('CSV file is empty'));
             return;
           }
 
           // Check if first line is header
-          const hasHeader = lines[0].toLowerCase().includes('question') && 
-                           lines[0].toLowerCase().includes('answer');
+          const hasHeader = lines[0].toLowerCase().includes('question') &&
+            lines[0].toLowerCase().includes('answer');
           const startIndex = hasHeader ? 1 : 0;
 
           const questions = [];
@@ -234,19 +234,19 @@ const BulkImportPage = () => {
         question: q.question,
         answer: q.answer,
         sectionId: selectedSection,
-        isCode: detectCodeInQuestion(q.question, q.answer)
+        isCode: detectCodeInQuestion(q.question, q.answer).isCode
       }));
 
       const response = await questionService.bulkImport(questionsToImport);
-      
+
       setMessage(`Successfully imported ${response.data.data.questions.length} questions!`);
-      
+
       // Clear inputs
       setTextInput('');
       setJsonFile(null);
       setCsvFile(null);
       setParsedQuestions([]);
-      
+
       // Reset file inputs
       document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
 
@@ -265,7 +265,7 @@ const BulkImportPage = () => {
     <div className="bulk-import-page">
       <div className="bulk-import-header">
         <h1>Bulk Import Questions</h1>
-        <button 
+        <button
           className="back-button"
           onClick={() => navigate('/sections')}
         >

@@ -105,6 +105,8 @@
   height: 100%;
   transition: transform 0.6s;
   transform-style: preserve-3d;
+  display: grid;
+  grid-template-areas: "card";
 }
 
 .flashcard.flipped .card-inner {
@@ -113,7 +115,7 @@
 
 .card-front,
 .card-back {
-  position: absolute;
+  grid-area: card; /* Stack both faces in the same grid cell */
   width: 100%;
   height: 100%;
   backface-visibility: hidden;
@@ -121,10 +123,15 @@
   padding: 2rem;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-card, #1f2937); /* Fallback to dark if var missing */
-  background-image: none !important; /* Force remove any gradient */
+  justify-content: flex-start; /* Force content to top */
+  align-items: stretch; /* Ensure full width */
+  text-align: left; /* Ensure text starts left */
+  background-color: var(--bg-card, #1f2937);
+  background-image: none !important;
   border: 2px solid var(--border-color);
   box-shadow: var(--shadow-lg);
+  /* Ensure overflow works for long content */
+  overflow: hidden; 
 }
 
 .card-back {
@@ -135,25 +142,24 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  height: 100%;
+  /* Use flex-grow instead of height: 100% to cooperate with padding */
+  flex: 1; 
+  height: auto; 
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scroll on container, let child handle it */
+  justify-content: flex-start; 
+  width: 100%;
 }
 
-.card-label {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 700;
-  margin: 0;
-}
-
+/* Ensure content captures scroll events */
 .question-text,
 .answer-text {
   font-size: 1.5rem;
   line-height: 1.6;
   color: var(--text-primary);
-  flex: 1;
+  margin: 0; /* Force top alignment */
+  text-align: left; /* Ensure reading starts from left */
+  width: 100%;
 }
 
 /* Flip hint */
@@ -294,23 +300,35 @@
 }
 
 /* Responsive */
-/* Responsive */
 @media (max-width: 768px) {
   .flashcard-container {
     padding: 1rem;
     width: 100%;
   }
 
+  /* Stabilize container height on mobile */
   .flashcard {
     height: auto;
-    min-height: 400px; /* Allow growing */
+    min-height: 400px; 
+    /* Prevent "drop" by ensuring the container doesn't collapse during flip */
+    display: flex; 
+    flex-direction: column;
+  }
+  
+  .card-inner {
+      flex: 1;
+      /* Grid is already set globally, fine to inherit */
   }
 
   .card-front,
   .card-back {
     padding: 1.25rem;
-    position: relative; /* Change from absolute for flexible height if needed, OR keep abs but ensure container is big enough */
-    /* For flip efffect, we must keep absolute, so we ensure parent height is sufficient via media query */
+    /* Remove absolute positioning logic if it existed, Grid handles it */
+    position: relative; /* Wait, grid items don't need position relative for layout, but for z-index context maybe? */
+    /* Actually for Grid overlap, we rely on grid-area: 1/1. 
+       We DO NOT want position absolute here on mobile either. */
+    height: auto; /* Allow expanding */
+    min-height: 100%; /* Fill container */
   }
 
   .question-text,
@@ -345,7 +363,7 @@
 
 @media (max-width: 480px) {
   .flashcard {
-    height: 300px;
+    min-height: 300px; /* Adjust minimums */
   }
 
   .question-text,

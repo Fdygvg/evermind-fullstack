@@ -1,4 +1,5 @@
 import BookmarkButton from './BookmarkButton';
+import CodeBlock from './CodeBlock';
 import { useEffect } from 'react';
 import { useSound } from '../../hooks/useSound';
 
@@ -32,11 +33,7 @@ const QuestionCard = ({
 
       <div className="question-section">
         <h2>Question</h2>
-        {currentQuestion.isCode ? (
-          <CodeBlock text={currentQuestion.question} forceCode={true} />
-        ) : (
-          <p>{currentQuestion.question}</p>
-        )}
+        <p>{currentQuestion.question}</p>
       </div>
 
       {showAnswer && currentQuestion?.answer ? (

@@ -62,8 +62,53 @@ const ActiveSession = () => {
       const { question, progress, completed } = response.data.data;
 
       if (completed) {
-        console.log("[LOAD] Session completed, navigating to results");
-        navigate("/session/results");
+        console.log("[LOAD] Session completed, ending session...");
+
+        // Call endSession to finalize stats on backend
+        try {
+          const endResponse = await sessionService.endSession();
+          const sessionResults = endResponse.data.data;
+
+          console.log("[LOAD] Session ended successfully, stats:", sessionResults);
+
+          navigate("/session/results", {
+            state: {
+              mode: 'session',
+              cardMode: cardMode,
+              // Backend returns: { correct, wrong, duration } in session object
+              // and { currentStreak, totalSessions } in stats object
+              reviewedCount: sessionResults.session.correct + sessionResults.session.wrong,
+              correctCount: sessionResults.session.correct,
+              wrongCount: sessionResults.session.wrong,
+              sessionTime: sessionResults.session.duration * 60, // Convert minutes back to seconds for display if needed, or update display to use minutes
+              // Wait, SessionResultsPage expects seconds for formatTime? 
+              // SessionResultsPage: formatTime takes seconds. Backend returns duration in minutes.
+              // Let's pass what we have. 
+              // Actually, ActiveSessionPage tracks `sessionTime` (seconds). We can pass that if we trust frontend time more, 
+              // OR use backend time. Backend time is robust. 
+              // Use backend duration (minutes) -> convert to seconds for compatibility or update ResultsPage?
+              // Let's us frontend tracked sessionTime for better precision (seconds) if backend only gives minutes.
+              // But backend duration is what is saved to DB.
+              // Let's use frontend sessionTime for display "Time Taken" but relies on backend for saving user stats.
+              // Actually, let's just use the frontend time we tracked: `sessionTime` state.
+              sessionTime: sessionTime,
+
+              ratingBreakdown: {
+                3: sessionResults.session.correct, // Approximate since we only have correct/wrong from legacy endpoint
+                1: sessionResults.session.wrong
+                // Ideally backend endSession should return full rating breakdown if we want it.
+                // For now, mapping correct->3 (Good) and wrong->1 (Hard) is a safe simple mapping if detailed breakdown isn't available.
+                // Or we can rely on `sessionProgress` if it had details.
+              },
+              fromSession: true
+            }
+          });
+        } catch (err) {
+          console.error("[LOAD] Error ending session:", err);
+          // Fallback navigation
+          navigate("/session/results");
+        }
+
         isLoadingQuestionRef.current = false;
         setLoading(false);
         return;

@@ -1,31 +1,41 @@
 import React from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { shouldUsePrism } from '../../utils/validationUtils';
+import { detectCode } from '../../utils/codeDetector';
 
 /**
  * Component to render code with syntax highlighting
  * Automatically detects code blocks and highlights them
  * If no code blocks found but text contains code patterns, treats entire text as code
+ * Now uses stricter code detection to prevent false positives
  */
 const CodeBlock = ({ text, language = 'javascript', forceCode = false }) => {
   if (!text) return null;
 
+  // Stricter code detection gate - only use Prism if text is really code
+  const codeDetection = detectCode(text);
+  const shouldHighlight = forceCode || shouldUsePrism(text);
   // Check if text contains code blocks (```code```)
   const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
   const inlineCodeRegex = /`([^`]+)`/g;
-  
+
   // Reset regex before use (they have global flag which maintains state)
   codeBlockRegex.lastIndex = 0;
   inlineCodeRegex.lastIndex = 0;
-  
-  // If forceCode is true and no code blocks, treat entire text as code
-  if (forceCode && !codeBlockRegex.test(text)) {
-    // Reset regex after use to prevent state pollution
-    codeBlockRegex.lastIndex = 0;
+
+  // If text has explicit code blocks, always render them
+  const hasExplicitCodeBlocks = codeBlockRegex.test(text);
+  codeBlockRegex.lastIndex = 0;
+
+  // If forceCode is true OR shouldHighlight is true and no explicit code blocks, treat entire text as code
+  if ((forceCode || shouldHighlight) && !hasExplicitCodeBlocks) {
+    // Use detected language from codeDetection if available
+    const detectedLang = codeDetection?.language || language;
     return (
       <div className="code-block-container">
         <SyntaxHighlighter
-          language={language}
+          language={detectedLang}
           style={vscDarkPlus}
           customStyle={{
             borderRadius: '8px',
@@ -40,10 +50,10 @@ const CodeBlock = ({ text, language = 'javascript', forceCode = false }) => {
       </div>
     );
   }
-  
+
   // Reset regex again (in case we didn't take the early return)
   codeBlockRegex.lastIndex = 0;
-  
+
   // Split text into parts (code and non-code)
   const parts = [];
   let lastIndex = 0;
@@ -67,7 +77,7 @@ const CodeBlock = ({ text, language = 'javascript', forceCode = false }) => {
     const inlineParts = [];
     let inlineLastIndex = 0;
     let inlineMatch;
-    
+
     // Reset inline code regex before use
     inlineCodeRegex.lastIndex = 0;
 

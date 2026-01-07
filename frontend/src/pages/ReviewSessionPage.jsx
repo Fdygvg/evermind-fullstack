@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { sectionService } from "../services/sections";
+import { sessionService } from "../services/sessions";
 import { useSession } from '../hooks/useSession'
 import { FaLayerGroup, FaBolt, FaTrash, FaTiktok } from "react-icons/fa";
 
@@ -78,29 +79,46 @@ const ReviewSessionPage = () => {
     setLoading(true);
     try {
       // Configuration based on selected mode
-      if (selectedMode === "elimination") {
-        navigate("/elimination", {
-          state: {
-            sectionIds: selectedSections,
-            useSmartReview: true
-          }
-        });
-      } else if (selectedMode === "tiktok") {
-        navigate("/tiktok-review", {
-          state: {
-            sectionIds: selectedSections,
-            useSmartReview: true
-          }
-        });
-      } else {
-        // Normal or Flashcard
-        navigate("/session/start", {
-          state: {
-            sectionIds: selectedSections,
-            cardMode: selectedMode, // 'normal' or 'flashcard'
-            useSmartReview: true
-          }
-        });
+      // Create session on backend first
+      const response = await sessionService.startSession({
+        sectionIds: selectedSections,
+        cardMode: selectedMode,
+        useSmartReview: selectedMode === 'tiktok' || selectedMode === 'elimination' // Default smart review for these modes? Or just pass as config.
+        // Actually backend startSession takes sectionIds and cardMode.
+      });
+
+      if (response.data.success) {
+        // Set active session in context if needed, but backend handles state.
+        // Navigate
+        if (selectedMode === "elimination") {
+          navigate("/elimination", {
+            state: {
+              sectionIds: selectedSections,
+              useSmartReview: true,
+              mode: 'elimination',
+              sessionData: response.data.data.session
+            }
+          });
+        } else if (selectedMode === "tiktok") {
+          navigate("/tiktok-review", {
+            state: {
+              sectionIds: selectedSections,
+              useSmartReview: true,
+              mode: 'tiktok-review',
+              sessionData: response.data.data.session
+            }
+          });
+        } else {
+          // Normal or Flashcard
+          navigate("/session/start", {
+            state: {
+              sectionIds: selectedSections,
+              cardMode: selectedMode,
+              useSmartReview: true, // This might need to be configurable?
+              sessionData: response.data.data.session
+            }
+          });
+        }
       }
     } catch (error) {
       console.error("Failed to start session:", error);
