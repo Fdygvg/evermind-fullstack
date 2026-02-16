@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -11,7 +12,7 @@ import sessionRoutes from "./routes/sessionRoutes.js";
 import statsRoutes from "./routes/statsRoutes.js";
 import presetRoutes from "./routes/presetRoutes.js";
 import smartReviewRoutes from './routes/smartReviewRoutes.js';
-
+import { apiLimiter } from "./middleware/authMiddleware.js";
 dotenv.config();
 // app config
 const app = express();
@@ -36,15 +37,26 @@ const corsOptions = {
 // Handle preflight requests first
 app.use(cors(corsOptions));
 
+app.use(
+  helmet.hsts({
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true,
+  })
+);
+
+
 // Helmet with CORS-friendly settings
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginOpenerPolicy: { policy: "unsafe-none" },
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '5mb' })); app.use(cookieParser());
 
-app.use("/api/", authRoutes);
+app.use("/api/auth", apiLimiter); // Apply limiter specifically to auth routes
+app.use("/api", authRoutes); // Auth routes have /auth prefix already defined
+
 app.use("/api/user", userRoutes);
 app.use("/api/sections", sectionRoutes);
 app.use("/api/questions", questionRoutes);

@@ -6,7 +6,29 @@ import {
   sendPasswordResetEmail,
   sendVerificationEmail,
 } from "../services/emailService.js";
+import { z } from "zod";
 import TokenBlacklist from "../models/TokenBlacklist.js";
+
+const commonPasswords = new Set([
+  "password", "123456", "12345678", "qwerty", "123456789",
+  "12345", "111111", "123123", "password123", "admin", "welcome"
+]);
+
+const passwordSchema = z.string()
+  .min(12, "Password must be at least 12 characters")
+  .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Must contain at least one number")
+  .regex(/[^A-Za-z0-9]/, "Must contain at least one special character")
+  .refine(pass => !commonPasswords.has(pass), {
+    message: "Password is too common"
+  });
+
+const registerSchema = z.object({
+  username: z.string().min(2, "Username must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: passwordSchema
+});
 
 // Generate JWT Token (OOP style - could be a method on User)
 const generateToken = (userId) => {
@@ -18,7 +40,23 @@ const generateToken = (userId) => {
 //Register User
 export const register = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const validation = registerSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      // Format Zod errors
+      const errors = validation.error.errors.map(err => ({
+        field: err.path[0],
+        message: err.message
+      }));
+
+      return res.status(400).json({
+        success: false,
+        message: "Validation Error",
+        errors: errors
+      });
+    }
+
+    const { username, email, password } = validation.data;
 
     const ip =
       req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
@@ -58,6 +96,15 @@ export const register = async (req, res) => {
     // Generate token immediately (user can login but with limited access)
     const token = generateToken(user._id);
 
+    // Set httpOnly cookie
+    res.cookie('evermind_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/'
+    });
+
     // Send verification email in background (don't wait for it)
     sendVerificationEmail(email, verificationToken).catch(err => {
       console.error('Failed to send verification email:', err);
@@ -69,7 +116,6 @@ export const register = async (req, res) => {
         "User registered successfully. Please check your email to verify your account.",
       data: {
         user: user.getProfile(),
-        token,
         isVerified: false,
       },
     });
@@ -159,7 +205,8 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     // Find user and select password explicitly
-    const user = await User.findOne({ email }).select("+password");
+    const normalizedEmail = email.toLowerCase().trim;
+    const user = await User.findOne({ normalizedEmail }).select("+password");
 
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({
@@ -170,12 +217,20 @@ export const login = async (req, res) => {
 
     const token = generateToken(user._id);
 
+    res.cookie('evermind_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/'
+    });
+
     res.json({
       success: true,
       message: "Login successful",
       data: {
         user: user.getProfile(),
-        token,
+
       },
     });
   } catch (error) {
@@ -214,13 +269,30 @@ export const getProfile = async (req, res) => {
 //Logout
 export const logout = async (req, res) => {
   try {
-    const token = req.headers.authorization.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Get token from cookie or Authorization header
+    let token;
+    if (req.cookies && req.cookies.evermind_token) {
+      token = req.cookies.evermind_token;
+    } else if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
 
-    // Add token to blacklist
-    await TokenBlacklist.create({
-      token,
-      expiresAt: new Date(decoded.exp * 1000), // Convert JWT expiry to Date
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      // Add token to blacklist
+      await TokenBlacklist.create({
+        token,
+        expiresAt: new Date(decoded.exp * 1000),
+      });
+    }
+
+    // Clear the cookie
+    res.clearCookie('evermind_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/'
     });
 
     res.json({
@@ -229,6 +301,13 @@ export const logout = async (req, res) => {
     });
   } catch (error) {
     console.error("Logout error:", error);
+    // Still clear the cookie even if there's an error
+    res.clearCookie('evermind_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/'
+    });
     res.status(500).json({
       success: false,
       message: "Error during logout",

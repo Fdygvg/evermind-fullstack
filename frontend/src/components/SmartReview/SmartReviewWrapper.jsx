@@ -202,10 +202,12 @@ const SmartReviewContent = ({
           current={smartReview.reviewedToday}
           total={smartReview.initialQuestionCount || smartReview.todaysQuestions.length}
           showProgressBar={true}
-          trackBreakdown={smartReview.trackBreakdown}
+          trackBreakdown={mode === 'simplified' ? null : smartReview.trackBreakdown}
           currentStreak={stats.currentStreak}
           correctCount={stats.correctCount}
           wrongCount={stats.wrongCount}
+          title={mode === 'simplified' ? "Session Progress" : "Today's Progress"}
+          subtitle={mode === 'simplified' ? "questions remaining" : "questions remaining today"}
         />
       )}
 
@@ -250,7 +252,7 @@ const SmartReviewContent = ({
         onSwipeRate: onSwipeRate
       })}
 
-  
+
       {/* Action Button (FAB) */}
       <FabSpeedDial
         mode={mode}
@@ -278,23 +280,26 @@ const SmartReviewWrapper = ({
   showAddMore = true,
   mode = 'default',
   cardMode = 'normal',
-  resumeData = null // New prop for resuming session
+  resumeData = null, // Prop for resuming Smart Review state
+  initialSession = null // New prop for initializing with specific session data (e.g. Quick Play)
 }) => {
   const smartReview = useSmartReview();
 
-  // Load questions when sectionIds change
-  // Load questions when sectionIds change OR resume if data present
+  // Load questions logic
   useEffect(() => {
     if (!enableSmartReview) return;
 
-    if (resumeData) {
-      console.log('[SmartReviewWrapper] RESUMING SESSION with data:', resumeData);
+    if (initialSession) {
+      console.log('[SmartReviewWrapper] INITIALIZING FROM SESSION:', initialSession);
+      smartReview.initializeFromSession(initialSession);
+    } else if (resumeData) {
+      console.log('[SmartReviewWrapper] RESUMING SMART REVIEW STATE:', resumeData);
       smartReview.resumeSessionState(resumeData);
     } else if (sectionIds?.length > 0) {
-      console.log('[SmartReviewWrapper] STARTING NEW SESSION for sections:', sectionIds);
+      console.log('[SmartReviewWrapper] STARTING NEW SMART REVIEW SESSION for sections:', sectionIds);
       smartReview.loadTodaysQuestions(sectionIds);
     }
-  }, [sectionIds, enableSmartReview, resumeData]); // Added resumeData dependency
+  }, [sectionIds, enableSmartReview, resumeData, initialSession]); // Dependencies updated
 
   // If Smart Review is disabled, just render children without wrapper
   if (!enableSmartReview) {

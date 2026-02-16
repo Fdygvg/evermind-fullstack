@@ -164,7 +164,7 @@ export const SmartReviewProvider = ({ children }) => {
         return {
           ...prev,
           todaysQuestions: updatedQuestions,
-          reviewedToday: prev.reviewedToday + 1,
+          reviewedToday: prev.reviewedToday, // Don't increment for Hard (it's re-queued)
           currentIndex: questionId ? prev.currentIndex : prev.currentIndex + 1,
           // Do NOT set isLoading=true, we want instant update
         };
@@ -516,7 +516,34 @@ export const SmartReviewProvider = ({ children }) => {
           console.error('[SmartReviewContext] Resume failed to load questions:', err);
         });
       }
-    }, [loadTodaysQuestions])
+    }, [loadTodaysQuestions]),
+
+    // Initialize session directly from data (for Quick Play / Simplified Mode)
+    initializeFromSession: useCallback((sessionData) => {
+      console.log('[SmartReviewContext] Initializing from session data:', sessionData);
+
+      const questions = sessionData.remainingQuestions || sessionData.questions || [];
+
+      setState(prev => ({
+        ...prev,
+        sectionIds: sessionData.sectionIds || [],
+        todaysQuestions: questions,
+        currentIndex: sessionData.currentIndex || 0,
+        reviewedToday: sessionData.currentIndex || (sessionData.totalQuestions ? (sessionData.totalQuestions - questions.length) : 0),
+        initialQuestionCount: sessionData.totalQuestions || questions.length,
+        dailyLimit: 0,
+        rolledOverCount: 0,
+        trackBreakdown: null, // Not applicable for quick play
+        isLoading: false,
+        error: null
+      }));
+
+      setRatingHistory([]); // Start fresh for this session segment or restore if needed
+
+      // If resuming a paused session that had history, we might need to restore it
+      // but typically we just start from where we left off with remaining questions.
+
+    }, [])
   };
 
   return (

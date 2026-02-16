@@ -15,7 +15,9 @@ const DailyProgress = ({
   showAccuracy = true,
   showTimer = true,
   showStats = true, // Show session stats bar by default
-  compact = false
+  compact = false,
+  title = "Today's Progress",
+  subtitle = "questions remaining today"
 }) => {
   const [animatedStreak, setAnimatedStreak] = useState(currentStreak);
   const [previousStreak, setPreviousStreak] = useState(currentStreak);
@@ -130,7 +132,7 @@ const DailyProgress = ({
       )}
 
       <div className="counter-header">
-        <h3 className="counter-title">Today's Progress</h3>
+        <h3 className="counter-title">{title}</h3>
         <div className="counter-stats">
           <span className="current">{current}</span>
           <span className="separator">/</span>
@@ -187,7 +189,7 @@ const DailyProgress = ({
       <div className="counter-footer">
         <div className="remaining-info">
           <span className="remaining-count">{remaining}</span>
-          <span className="remaining-text">questions remaining today</span>
+          <span className="remaining-text">{subtitle}</span>
         </div>
 
         <div className="status-indicator">

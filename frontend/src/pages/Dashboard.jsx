@@ -134,6 +134,27 @@ const Dashboard = () => {
     }
   };
 
+  const handleEndSession = async () => {
+    if (!window.confirm("Are you sure you want to end your active session?")) return;
+
+    try {
+      setLoading(true);
+      // Check if it's a simplified session
+      const isSimplified = activeSession.isSimplified || activeSession.currentMode === 'simplified';
+
+      if (isSimplified) {
+        await sessionService.endSimplifiedSession(activeSession._id || activeSession.sessionId);
+      } else {
+        await sessionService.endSession();
+      }
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to end session:", err);
+      setError("Could not end session. Please try again.");
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="dashboard-page">
       {error && <div className="dashboard-error">{error}</div>}
@@ -189,6 +210,13 @@ const Dashboard = () => {
                 onClick={handleContinueSession}
               >
                 Continue Session
+              </button>
+              <button
+                className="end-btn dashboard-button secondary"
+                onClick={handleEndSession}
+                style={{ marginTop: '10px', width: '100%', borderColor: '#ef4444', color: '#ef4444' }}
+              >
+                End Session
               </button>
             </div>
           </div>

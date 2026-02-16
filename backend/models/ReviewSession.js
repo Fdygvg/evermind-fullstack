@@ -87,6 +87,12 @@ const reviewSessionSchema = new mongoose.Schema({
   smartReviewState: {
     type: mongoose.Schema.Types.Mixed,
     default: null
+  },
+
+  // Quick Play (Simplified Review) fields
+  isSimplified: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

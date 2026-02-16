@@ -3,22 +3,26 @@ import React, { useState } from 'react';
 import '../css/ratingButtons.css';
 import CompactRatingBar from './CompactRatingBar';
 
-const RatingButtons = ({ onRate, disabled = false, compact = false, useCompactBar = true, showLabels = false }) => {
+const RatingButtons = ({ onRate, disabled = false, compact = false, useCompactBar = true, showLabels = false, isSimplified = false }) => {
   const [selectedRating, setSelectedRating] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
   // Use new compact rating bar by default
   if (useCompactBar) {
-    return <CompactRatingBar onRate={onRate} disabled={disabled} showLabels={showLabels} />;
+    return <CompactRatingBar onRate={onRate} disabled={disabled} showLabels={showLabels} isSimplified={isSimplified} />;
   }
 
-  const ratings = [
+  const allRatings = [
     { value: 1, label: 'Hard', emoji: '😫', color: '#dc2626', interval: 'Today' },
     { value: 2, label: 'Medium', emoji: '😕', color: '#f59e0b', interval: '1 day' },
     { value: 3, label: 'Good', emoji: '😐', color: '#3b82f6', interval: '3 days' },
     { value: 4, label: 'Easy', emoji: '🙂', color: '#10b981', interval: '7 days' },
     { value: 5, label: 'Perfect', emoji: '😄', color: '#06b6d4', interval: '14 days' }
   ];
+
+  const ratings = isSimplified
+    ? allRatings.filter(r => r.value === 1 || r.value === 4)
+    : allRatings;
 
   const handleRatingClick = async (rating) => {
     if (disabled || isAnimating) return;

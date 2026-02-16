@@ -5,7 +5,7 @@ import UserStats from '../models/UserStats.js';
 
 export const startSession = async (req, res) => {
   try {
-    const { sectionIds, cardMode = 'normal' } = req.body;
+    const { sectionIds, cardMode, isSimplified } = req.body;
 
     // Validate sectionIds
     if (!sectionIds || !Array.isArray(sectionIds) || sectionIds.length === 0) {
@@ -15,11 +15,18 @@ export const startSession = async (req, res) => {
       });
     }
 
-    // End any existing active session
-    await ReviewSession.findOneAndUpdate(
-      { userId: req.userId, isActive: true },
-      { isActive: false, endTime: new Date() }
-    );
+    // End any existing active session (only simplified sessions for same sections if isSimplified)
+    if (isSimplified) {
+      await ReviewSession.updateMany(
+        { userId: req.userId, isActive: true, isSimplified: true, sectionIds: { $in: sectionIds } },
+        { isActive: false, status: 'completed', endTime: new Date() }
+      );
+    } else {
+      await ReviewSession.findOneAndUpdate(
+        { userId: req.userId, isActive: true },
+        { isActive: false, status: 'completed', endTime: new Date() }
+      );
+    }
 
     // Get questions from selected sections
     // For normal/flashcard modes, we include ALL active questions (scheduling is handled by Smart Review separately)
@@ -44,7 +51,7 @@ export const startSession = async (req, res) => {
     const session = new ReviewSession({
       userId: req.userId,
       sectionIds,
-      cardMode,
+      cardMode: cardMode || 'normal',
       allQuestions: questionIds,
       remainingQuestions: questionIds,
       correctQuestions: [],
@@ -56,10 +63,14 @@ export const startSession = async (req, res) => {
       isActive: true,
       status: 'active',
       currentIndex: 0,
-      answeredQuestionIds: []
+      answeredQuestionIds: [],
+      isSimplified: isSimplified || false
     });
 
     await session.save();
+
+    // Populate questions for frontend usage
+    await session.populate('remainingQuestions');
 
     res.json({
       success: true,
@@ -69,9 +80,10 @@ export const startSession = async (req, res) => {
           _id: session._id,
           id: session._id,
           cardMode: session.cardMode,
+          isSimplified: session.isSimplified,
           totalQuestions: session.allQuestions.length,
-          allQuestions: session.allQuestions,
-          remainingQuestions: session.remainingQuestions.length
+          allQuestions: session.allQuestions, // Keep IDs for lightweight reference if needed
+          remainingQuestions: session.remainingQuestions // Now populated with full objects
         }
       }
     });
@@ -98,19 +110,32 @@ export const getNextQuestion = async (req, res) => {
       });
     }
 
-    if (session.remainingQuestions.length === 0) {
-      return res.json({
-        success: true,
-        message: 'Session completed!',
-        data: { completed: true }
-      });
+    // For simplified sessions, use the currentIndex pointer
+    let nextQuestion;
+    let currentIndex;
+
+    if (session.isSimplified) {
+      if (session.currentIndex >= session.remainingQuestions.length) {
+        return res.json({
+          success: true,
+          message: 'Session completed!',
+          data: { completed: true }
+        });
+      }
+      nextQuestion = session.remainingQuestions[session.currentIndex];
+      currentIndex = session.currentIndex;
+    } else {
+      // Legacy behavior for normal sessions (queue-based)
+      if (session.remainingQuestions.length === 0) {
+        return res.json({
+          success: true,
+          message: 'Session completed!',
+          data: { completed: true }
+        });
+      }
+      nextQuestion = session.remainingQuestions[0];
+      currentIndex = session.allQuestions.length - session.remainingQuestions.length;
     }
-
-    // Get next question (first in remainingQuestions)
-    const nextQuestion = session.remainingQuestions[0];
-
-    // Calculate current question index
-    const currentIndex = session.allQuestions.length - session.remainingQuestions.length;
 
     res.json({
       success: true,
@@ -118,7 +143,7 @@ export const getNextQuestion = async (req, res) => {
         question: nextQuestion,
         progress: {
           total: session.allQuestions.length,
-          remaining: session.remainingQuestions.length,
+          remaining: session.remainingQuestions.length - (session.isSimplified ? session.currentIndex : 0),
           currentQuestionIndex: currentIndex,
           correct: session.correctCount,
           wrong: session.wrongCount,
@@ -166,45 +191,73 @@ export const submitAnswer = async (req, res) => {
       });
     }
 
-    // Remove from remaining questions first
-    session.remainingQuestions = session.remainingQuestions.filter(
-      id => id.toString() !== questionId
-    );
-
     // Handle based on response type
-    if (responseType === 'easy') {
-      // Green button: Schedule for 3 days later, remove from session
-      question.nextReviewDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-      question.reviewDifficulty = 'easy';
-      question.lastDifficultyRating = new Date();
-      question.totalCorrect += 1;
-      session.correctCount += 1;
-      session.correctQuestions.push(questionId);
-    } else if (responseType === 'medium') {
-      // Yellow button: Schedule for tomorrow, remove from session
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0); // Start of tomorrow
-      question.nextReviewDate = tomorrow;
-      question.reviewDifficulty = 'medium';
-      question.lastDifficultyRating = new Date();
-      session.mediumCount += 1;
-      session.mediumQuestions.push(questionId);
-    } else if (responseType === 'hard') {
-      // Red button: Keep in session, reinsert after 5-7 cards (spaced repetition)
-      question.reviewDifficulty = 'hard';
-      question.lastDifficultyRating = new Date();
-      question.totalWrong += 1;
-      session.wrongCount += 1;
-      session.wrongQuestions.push(questionId);
+    if (session.isSimplified) {
+      // POINTER BASED LOGIC for Simplified Session
+      // Just move the pointer, do not remove questions
+      session.currentIndex = (session.currentIndex || 0) + 1;
 
-      // Reinsert after 5-7 cards
-      const reintDelay = Math.floor(Math.random() * 3) + 5; // 5-7
-      const insertAt = Math.min(
-        currentQuestionIndex + reintDelay,
-        session.remainingQuestions.length
+      // Update question stats (optional: do we want to schedule spaced repetition for Simplified? 
+      // User said "Just IDs, Lightweight state". But usually we still record stats?
+      // Let's assume we still record correct/wrong counts on the question but MAYBE NOT nextReviewDate if it's "Review All"?
+      // Usually "Review All" implies Cram Mode / Extra study, so affecting Spaced Repetition might be side-effect.
+      // But user didn't specify to disable stats. Let's record stats but NOT mutate session arrays.
+
+      if (responseType === 'easy' || responseType === 'medium') {
+        question.totalCorrect += 1;
+        session.correctCount += 1;
+        // We don't push to correctQuestions array to save space/complexity if using pointer? 
+        // usage of session.correctQuestions is for results page. Let's keep it sync.
+        session.correctQuestions.push(questionId);
+      } else {
+        question.totalWrong += 1;
+        session.wrongCount += 1;
+        session.wrongQuestions.push(questionId);
+      }
+      // Note: We are NOT rescheduling nextReviewDate here to avoid messing up the main schedule?
+      // Or should we? "Review All" usually acts outside of schedule. Let's treat it as "Extra Study".
+      // We will update lastReviewed.
+    } else {
+      // QUEUE BASED LOGIC for Normal Session
+      // Remove from remaining questions first
+      session.remainingQuestions = session.remainingQuestions.filter(
+        id => id.toString() !== questionId
       );
-      session.remainingQuestions.splice(insertAt, 0, questionId);
+
+      if (responseType === 'easy') {
+        // Green button: Schedule for 3 days later, remove from session
+        question.nextReviewDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+        question.reviewDifficulty = 'easy';
+        question.lastDifficultyRating = new Date();
+        question.totalCorrect += 1;
+        session.correctCount += 1;
+        session.correctQuestions.push(questionId);
+      } else if (responseType === 'medium') {
+        // Yellow button: Schedule for tomorrow, remove from session
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0); // Start of tomorrow
+        question.nextReviewDate = tomorrow;
+        question.reviewDifficulty = 'medium';
+        question.lastDifficultyRating = new Date();
+        session.mediumCount += 1;
+        session.mediumQuestions.push(questionId);
+      } else if (responseType === 'hard') {
+        // Red button: Keep in session, reinsert after 5-7 cards (spaced repetition)
+        question.reviewDifficulty = 'hard';
+        question.lastDifficultyRating = new Date();
+        question.totalWrong += 1;
+        session.wrongCount += 1;
+        session.wrongQuestions.push(questionId);
+
+        // Reinsert after 5-7 cards
+        const reintDelay = Math.floor(Math.random() * 3) + 5; // 5-7
+        const insertAt = Math.min(
+          currentQuestionIndex + reintDelay,
+          session.remainingQuestions.length
+        );
+        session.remainingQuestions.splice(insertAt, 0, questionId);
+      }
     }
 
     question.lastReviewed = new Date();
@@ -217,7 +270,9 @@ export const submitAnswer = async (req, res) => {
       data: {
         progress: {
           total: session.allQuestions.length,
-          remaining: session.remainingQuestions.length,
+          remaining: session.isSimplified
+            ? session.remainingQuestions.length - session.currentIndex
+            : session.remainingQuestions.length,
           correct: session.correctCount,
           medium: session.mediumCount,
           wrong: session.wrongCount
@@ -536,6 +591,156 @@ export const pauseSession = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error pausing session'
+    });
+  }
+};
+
+// Get all active simplified sessions for the current user (for section card Play/Pause state)
+export const getSimplifiedSessions = async (req, res) => {
+  try {
+    const sessions = await ReviewSession.find({
+      userId: req.userId,
+      isSimplified: true,
+      isActive: true,
+      status: { $in: ['active', 'paused'] }
+    }).select('sectionIds remainingQuestions allQuestions correctCount wrongCount status');
+
+    // Build a map: sectionId -> session summary
+    const sessionMap = {};
+    sessions.forEach(session => {
+      session.sectionIds.forEach(sectionId => {
+        sessionMap[sectionId.toString()] = {
+          sessionId: session._id,
+          status: session.status,
+          remaining: session.remainingQuestions.length,
+          total: session.allQuestions.length,
+          correctCount: session.correctCount,
+          wrongCount: session.wrongCount
+        };
+      });
+    });
+
+    res.json({
+      success: true,
+      data: { sessionMap }
+    });
+  } catch (error) {
+    console.error('Get simplified sessions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching simplified sessions'
+    });
+  }
+};
+
+// Resume a simplified session: reshuffle remaining questions and return session data
+export const resumeSimplifiedSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    const session = await ReviewSession.findOne({
+      _id: sessionId,
+      userId: req.userId,
+      isSimplified: true,
+      isActive: true
+    }).populate('remainingQuestions');
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active simplified session found'
+      });
+    }
+
+    // DO NOT Reshuffle remaining questions for pointer persistence
+    // const shuffled = [...session.remainingQuestions].sort(() => Math.random() - 0.5);
+    // session.remainingQuestions = shuffled.map(q => q._id);
+
+    // Just activate the session
+    session.status = 'active';
+    session.lastUpdated = new Date();
+    await session.save();
+
+    // Use current index to determine actual remaining questions for frontend
+    // const effectiveRemaining = session.remainingQuestions.slice(session.currentIndex || 0);
+
+    res.json({
+      success: true,
+      message: 'Session resumed',
+      data: {
+        session: {
+          _id: session._id,
+          id: session._id,
+          cardMode: session.cardMode,
+          isSimplified: true,
+          totalQuestions: session.allQuestions.length,
+          allQuestions: session.allQuestions, // IDs
+          remainingQuestions: session.remainingQuestions, // Return FULL array for pointer logic
+          currentIndex: session.currentIndex || 0,
+          correctCount: session.correctCount,
+          wrongCount: session.wrongCount,
+          status: session.status
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Resume simplified session error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error resuming simplified session'
+    });
+  }
+};
+
+// End a specific simplified session by ID
+export const endSimplifiedSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    const session = await ReviewSession.findOneAndUpdate(
+      { _id: sessionId, userId: req.userId, isSimplified: true, isActive: true },
+      { isActive: false, status: 'completed', endTime: new Date() },
+      { new: true }
+    );
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active simplified session found'
+      });
+    }
+
+    // Update user stats
+    let userStats = await UserStats.findOne({ userId: req.userId });
+    if (!userStats) {
+      userStats = new UserStats({ userId: req.userId });
+    }
+
+    const duration = Math.round((session.endTime - session.startTime) / 60000);
+    userStats.totalSessions += 1;
+    userStats.totalQuestionsReviewed += session.correctCount + session.wrongCount;
+    userStats.totalCorrectAnswers += session.correctCount;
+    userStats.totalTimeSpent += duration;
+    userStats.lastSessionDate = new Date();
+    await userStats.save();
+
+    res.json({
+      success: true,
+      message: 'Simplified session ended',
+      data: {
+        session: {
+          correct: session.correctCount,
+          wrong: session.wrongCount,
+          total: session.allQuestions.length,
+          duration
+        }
+      }
+    });
+  } catch (error) {
+    console.error('End simplified session error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error ending simplified session'
     });
   }
 };

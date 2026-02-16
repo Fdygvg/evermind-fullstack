@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaEdit,
@@ -9,12 +9,34 @@ import {
   FaCalendarAlt,
   FaSearch,
   FaBook,
-  FaInfoCircle
+  FaInfoCircle,
+  FaPlay,
+  FaPause,
+  FaStop
 } from "react-icons/fa";
-import "../../components/css/sectionList.css"; // Improved path to match actual location if needed, otherwise relative to component file
+import { sessionService } from "../../services/sessions";
+import "../../components/css/sectionList.css";
 
 const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
   const navigate = useNavigate();
+  const [simplifiedSessions, setSimplifiedSessions] = useState({});
+  const [loadingAction, setLoadingAction] = useState(null); // track which section is loading
+
+  // Fetch active simplified sessions on mount
+  useEffect(() => {
+    fetchSimplifiedSessions();
+  }, []);
+
+  const fetchSimplifiedSessions = async () => {
+    try {
+      const response = await sessionService.getSimplifiedSessions();
+      if (response.data.success) {
+        setSimplifiedSessions(response.data.data.sessionMap || {});
+      }
+    } catch (error) {
+      console.error("Failed to fetch simplified sessions:", error);
+    }
+  };
 
   const handleSectionClick = (sectionId) => {
     navigate(`/sections/${sectionId}/questions`);
@@ -33,6 +55,92 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
   const handleInfoClick = (sectionId, e) => {
     e.stopPropagation();
     navigate(`/sections/${sectionId}/stats`);
+  };
+
+  // Quick Play: Start a new simplified session
+  const handlePlayClick = async (sectionId, e) => {
+    e.stopPropagation();
+    setLoadingAction(sectionId);
+    try {
+      const response = await sessionService.startSession({
+        sectionIds: [sectionId],
+        cardMode: 'normal',
+        isSimplified: true
+      });
+
+      if (response.data.success) {
+        const sessionData = response.data.data.session;
+        navigate("/session/start", {
+          state: {
+            sectionIds: [sectionId],
+            cardMode: 'normal',
+            useSmartReview: false,
+            isSimplified: true,
+            sessionData
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Failed to start simplified session:", error);
+      alert("Failed to start session: " + (error.response?.data?.message || "Unknown error"));
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  // Quick Play: Resume a paused simplified session
+  const handleResumeClick = async (sectionId, e) => {
+    e.stopPropagation();
+    const sessionInfo = simplifiedSessions[sectionId];
+    if (!sessionInfo) return;
+
+    setLoadingAction(sectionId);
+    try {
+      const response = await sessionService.resumeSimplifiedSession(sessionInfo.sessionId);
+
+      if (response.data.success) {
+        const sessionData = response.data.data.session;
+        navigate("/session/start", {
+          state: {
+            sectionIds: [sectionId],
+            cardMode: 'normal',
+            useSmartReview: false,
+            isSimplified: true,
+            resumeSession: true,
+            sessionData
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Failed to resume simplified session:", error);
+      alert("Failed to resume session: " + (error.response?.data?.message || "Unknown error"));
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  // Quick Play: End a simplified session
+  const handleEndClick = async (sectionId, e) => {
+    e.stopPropagation();
+    const sessionInfo = simplifiedSessions[sectionId];
+    if (!sessionInfo) return;
+
+    if (!window.confirm("End this review session?")) return;
+
+    setLoadingAction(sectionId);
+    try {
+      await sessionService.endSimplifiedSession(sessionInfo.sessionId);
+      // Remove from local state
+      setSimplifiedSessions(prev => {
+        const updated = { ...prev };
+        delete updated[sectionId];
+        return updated;
+      });
+    } catch (error) {
+      console.error("Failed to end simplified session:", error);
+    } finally {
+      setLoadingAction(null);
+    }
   };
 
   const calculateProgress = (section) => {
@@ -66,6 +174,8 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
       {sections.map((section) => {
         const isVirtual = section.isVirtual || section._id === 'bookmarked';
         const progress = !isVirtual ? calculateProgress(section) : 0;
+        const activeSession = simplifiedSessions[section._id];
+        const isLoading = loadingAction === section._id;
 
         return (
           <div
@@ -145,6 +255,38 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
               )}
 
               <div className="card-actions">
+                {/* Quick Play buttons */}
+                {!isVirtual && (
+                  activeSession ? (
+                    <>
+                      <button
+                        className="action-btn play resume"
+                        onClick={(e) => handleResumeClick(section._id, e)}
+                        title={`Resume session (${activeSession.remaining}/${activeSession.total} remaining)`}
+                        disabled={isLoading}
+                      >
+                        <FaPause /> Resume
+                      </button>
+                      <button
+                        className="action-btn play end"
+                        onClick={(e) => handleEndClick(section._id, e)}
+                        title="End session"
+                        disabled={isLoading}
+                      >
+                        <FaStop />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="action-btn play start"
+                      onClick={(e) => handlePlayClick(section._id, e)}
+                      title="Quick Play - Review all questions"
+                      disabled={isLoading}
+                    >
+                      <FaPlay />
+                    </button>
+                  )
+                )}
                 <button
                   className="action-btn view"
                   onClick={(e) => {

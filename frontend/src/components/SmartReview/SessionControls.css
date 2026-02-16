@@ -16,9 +16,13 @@
     0 10px 15px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
   transition: all 0.3s ease;
-  width: fit-content;
+  width: 100%;
+  max-width: 600px; /* Prevent becoming too wide on desktop */
   margin-left: auto;
   margin-right: auto;
+  flex-wrap: wrap; /* Allow wrapping on very small screens */
+  position: relative;
+  z-index: 60; /* Ensure above SwipeZone (10) and other overlays */
 }
 
 .session-controls-bar:hover {

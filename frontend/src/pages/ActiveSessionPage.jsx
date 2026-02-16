@@ -29,7 +29,10 @@ const ActiveSession = () => {
   const location = useLocation();
 
   // Check if Smart Review mode is enabled
-  const isSmartReviewMode = location.state?.useSmartReview || activeSession?.useSmartReview || false;
+  const isSimplified = location.state?.isSimplified || false;
+  const sessionData = location.state?.sessionData;
+  const resumeSession = location.state?.resumeSession;
+  const isSmartReviewMode = isSimplified || location.state?.useSmartReview || activeSession?.useSmartReview || false;
   const sectionIds = location.state?.sectionIds || activeSession?.sectionIds || [];
   const cardMode = location.state?.cardMode || activeSession?.cardMode || 'normal';
   const mode = location.state?.mode || activeSession?.currentMode || activeSession?.smartReviewState?.mode || 'normal';
@@ -80,17 +83,7 @@ const ActiveSession = () => {
               reviewedCount: sessionResults.session.correct + sessionResults.session.wrong,
               correctCount: sessionResults.session.correct,
               wrongCount: sessionResults.session.wrong,
-              sessionTime: sessionResults.session.duration * 60, // Convert minutes back to seconds for display if needed, or update display to use minutes
-              // Wait, SessionResultsPage expects seconds for formatTime? 
-              // SessionResultsPage: formatTime takes seconds. Backend returns duration in minutes.
-              // Let's pass what we have. 
-              // Actually, ActiveSessionPage tracks `sessionTime` (seconds). We can pass that if we trust frontend time more, 
-              // OR use backend time. Backend time is robust. 
-              // Use backend duration (minutes) -> convert to seconds for compatibility or update ResultsPage?
-              // Let's us frontend tracked sessionTime for better precision (seconds) if backend only gives minutes.
-              // But backend duration is what is saved to DB.
-              // Let's use frontend sessionTime for display "Time Taken" but relies on backend for saving user stats.
-              // Actually, let's just use the frontend time we tracked: `sessionTime` state.
+
               sessionTime: sessionTime,
 
               ratingBreakdown: {
@@ -336,11 +329,14 @@ const ActiveSession = () => {
       <SmartReviewWrapper
         sectionIds={sectionIds}
         enableSmartReview={true}
-        showDailyCounter={true}
-        showAddMore={true}
+        showDailyCounter={true} // Show progress for all modes
+        showAddMore={!isSimplified} // Hide add more for simplified
+        mode={mode === 'tiktok' ? 'tiktok' : (isSimplified ? 'simplified' : 'normal')}
         cardMode={cardMode}
-        mode={mode}
-        resumeData={isResuming ? location.state?.sessionData?.smartReviewState : null}
+        // For Smart Review, resumeData is used if resuming.
+        // For Simplified, we ALWAYS have sessionData with questions to initialize from.
+        resumeData={!isSimplified && resumeSession ? sessionData : null}
+        initialSession={isSimplified ? sessionData : null}
       >
         {({
           currentQuestion: smartQuestion,
@@ -397,9 +393,10 @@ const ActiveSession = () => {
                 {enableSwipe && SwipeZoneContainer ? (
                   <SwipeZoneContainer
                     key={smartQuestion._id}
-                    onRate={(r) => handleSmartRate(r)} // Use wrapper
+                    onRate={(r) => handleSmartRate(r)}
                     disabled={isLoading}
-                    swipeThreshold={250} // Slightly lower threshold for faster feel
+                    swipeThreshold={250}
+                    isSimplified={isSimplified}
                   >
                     {cardMode === "flashcard" ? (
                       <FlashCard
@@ -470,12 +467,13 @@ const ActiveSession = () => {
                     Structure above has them separate in original code.
                     Let's put them below the swipe container for stability, or check logic.
                 */}
-                {cardMode !== "flashcard" && showAnswer && (
+                {cardMode !== "flashcard" && (showAnswer || isSimplified) && (
                   <div style={{ marginTop: '1rem' }}>
                     <RatingButtons
-                      onRate={handleSmartRate} // Use wrapper
+                      onRate={handleSmartRate}
                       disabled={isLoading}
                       compact={false}
+                      isSimplified={isSimplified}
                     />
                   </div>
                 )}
