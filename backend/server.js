@@ -20,7 +20,7 @@ const app = express();
 //c0nect t0 database
 connectDB();
 
-app.set("trust proxy", true);
+app.set("trust proxy", 1); // Trust first proxy (safe for Heroku/Vercel)
 
 // CORS configuration - MUST be before other middleware
 const corsOptions = {

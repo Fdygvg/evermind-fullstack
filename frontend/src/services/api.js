@@ -1,7 +1,7 @@
-import axios from 'axios';
+import axios from "axios";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL + "/api",
+  baseURL: "https://evermind-backend-vbu8.onrender.com/api",
   withCredentials: true, // Send cookies with every request
 });
 
@@ -11,10 +11,10 @@ API.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Cookie will be cleared by backend, just redirect
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default API;
