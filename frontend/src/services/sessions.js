@@ -9,7 +9,7 @@ export const sessionService = {
   getActiveSession: () => API.get('/sessions/current'),
   getLastResults: () => API.get('/sessions/last-results'),
   updateProgress: (data) => API.post('/sessions/update-progress', data),
-  pauseSession: () => API.post('/sessions/pause'),
+  pauseSession: (sessionId) => API.post('/sessions/pause', sessionId ? { sessionId } : {}),
 
   // Simplified (Quick Play) session methods
   getSimplifiedSessions: () => API.get('/sessions/simplified'),

@@ -17,7 +17,8 @@ export const SmartReviewProvider = ({ children }) => {
     trackBreakdown: null,
     isLoading: false,
     error: null,
-    initialQuestionCount: 0
+    initialQuestionCount: 0,
+    sessionId: null
   });
 
   const [ratingHistory, setRatingHistory] = useState([]);
@@ -396,7 +397,8 @@ export const SmartReviewProvider = ({ children }) => {
         smartReviewState: smartReviewState,
         useSmartReview: true,
         cardMode: cardMode,
-        currentMode: mode
+        currentMode: mode,
+        sessionId: state.sessionId || undefined
       });
 
       console.log('[SmartReview] Session paused successfully');
@@ -535,7 +537,8 @@ export const SmartReviewProvider = ({ children }) => {
         rolledOverCount: 0,
         trackBreakdown: null, // Not applicable for quick play
         isLoading: false,
-        error: null
+        error: null,
+        sessionId: sessionData._id || sessionData.id || null
       }));
 
       setRatingHistory([]); // Start fresh for this session segment or restore if needed

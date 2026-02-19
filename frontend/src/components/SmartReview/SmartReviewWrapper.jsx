@@ -71,7 +71,8 @@ const SmartReviewContent = ({
               mode: mode || 'normal',
               cardMode: cardMode || 'normal'
             },
-            status: 'active'
+            status: 'active',
+            sessionId: current.sessionId || undefined
           });
           console.log('[SmartReviewWrapper] Auto-saved progress');
         } catch (error) {

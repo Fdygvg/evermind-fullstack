@@ -470,12 +470,22 @@ export const getLastSessionResults = async (req, res) => {
 
 export const updateProgress = async (req, res) => {
   try {
-    const { sectionIds, currentIndex, answeredQuestionIds, status, smartReviewState } = req.body;
+    const { sectionIds, currentIndex, answeredQuestionIds, status, smartReviewState, sessionId } = req.body;
 
-    let session = await ReviewSession.findOne({
-      userId: req.userId,
-      status: { $in: ['active', 'paused'] }
-    });
+    let session;
+    if (sessionId) {
+      // Find the specific session by ID (for simplified/quick-play sessions)
+      session = await ReviewSession.findOne({
+        _id: sessionId,
+        userId: req.userId,
+        status: { $in: ['active', 'paused'] }
+      });
+    } else {
+      session = await ReviewSession.findOne({
+        userId: req.userId,
+        status: { $in: ['active', 'paused'] }
+      });
+    }
 
     // If no session exists but smartReviewState is provided, create one for Smart Review
     if (!session && smartReviewState) {
@@ -559,10 +569,14 @@ export const updateProgress = async (req, res) => {
 
 export const pauseSession = async (req, res) => {
   try {
-    const session = await ReviewSession.findOne({
-      userId: req.userId,
-      status: 'active'
-    });
+    const { sessionId } = req.body || {};
+
+    let query = { userId: req.userId, status: 'active' };
+    if (sessionId) {
+      query._id = sessionId;
+    }
+
+    const session = await ReviewSession.findOne(query);
 
     if (!session) {
       return res.status(404).json({

@@ -1,0 +1,85 @@
+Total entries: 83
+
+Index 0: Define data structure and explain the relationship between data structures and algorithms.
+Index 1: Differentiate between primitive and non-primitive data structures with examples.
+Index 2: What are primitive data types? List four common primitive data types and describe their typical characteristics.
+Index 3: What is contiguous vs non-contiguous data organization?
+Index 4: Define Abstract Data Type (ADT) and explain data abstraction.
+Index 5: List and explain four advantages of Abstract Data Types.
+Index 6: What are the three essential components of every ADT? Illustrate with listType.
+Index 7: Explain sequential organization and why insertion/deletion is expensive.
+Index 8: Describe steps for selecting an appropriate data structure.
+Index 9: Differentiate between Array vs Structure, Linear vs Non-linear, and Static vs Dynamic data structures.
+Index 10: Define an array and explain why it is called a finite ordered collection of homogeneous data elements. What does direct access mean?
+Index 11: List three advantages and three disadvantages of using arrays. Why is insertion at the front potentially expensive?
+Index 12: Explain the difference between the length of an array, the index of an item, and the base type of an array.
+Index 13: Write the syntax for declaring an array, creating an array, initializing an array with values, and finding the length of an array.
+Index 14: What is the difference between int[] arr and int arr[] syntax? Which is preferred and why?
+Index 15: What happens if you try to access arr[arr.length]? What runtime error occurs and why?
+Index 16: Explain why arrays in some languages are treated as objects. What is stored in the array variable name?
+Index 17: What is ArrayList and how does it solve the fixed-size limitation of arrays? List three advantages of ArrayList over arrays.
+Index 18: Explain the following ArrayList methods: size(), isEmpty(), get(i), set(i,e), add(i,e), remove(i)
+Index 19: What are the two main drawbacks of using ArrayList with primitive types? How does generics solve one problem?
+Index 20: Write a complete JavaScript program that accepts 10 integers from the keyboard into an array, searches for a specific value entered by the user, displays whether the value was found and at what index, or 'Element not found' if not present.
+Index 21: Write a complete JavaScript program using an array (simulating ArrayList) that stores names and phone numbers of 5 students using DirectoryEntry objects, allows searching by name, adding new entries, removing entries, and displaying all entries.
+Index 22: What is a linked list and how does it overcome the limitations of arrays? Explain with respect to memory allocation.
+Index 23: Define the following terms with diagrams: node, head, tail, link/reference, null terminator, empty list, length of list.
+Index 24: List three advantages and two disadvantages of linked lists compared to arrays.
+Index 25: With a diagram, show how a typical node is represented in memory. What does the next field contain?
+Index 26: Explain the difference between singly linked list, doubly linked list, circular linked list, and circular doubly linked list. Why focus on singly linked lists?
+Index 27: What is the purpose of the head (first) reference variable in a linked list? Is it part of the linked structure itself?
+Index 28: Explain why linked lists provide efficient insertion and deletion compared to arrays. Why do they consume more memory?
+Index 29: In the context of linked lists, explain: Sequential access vs Random access. Why is binary search inefficient on linked lists?
+Index 30: Write the pseudocode for inserting a node at the beginning of a linked list.
+Index 31: Illustrate with diagrams the process of inserting a node after a given node. Show the 'selected node' concept.
+Index 32: Write the pseudocode for inserting a node at the end of a linked list. What special case must be handled?
+Index 33: Explain with diagrams how to delete the first node from a linked list and an interior node (given a reference to the node before it).
+Index 34: Write a JavaScript method `addAfter(selectedNodeValue, newData)` that inserts a new node after the first occurrence of a node with the given value.
+Index 35: Write a JavaScript method `removeNodeAfter(currentNode)` that removes the node immediately after the given node.
+Index 36: Write a complete JavaScript program that accepts names from keyboard into a linked list, searches for a name, inserts after a specified name, and displays the list.
+Index 37: Write a complete JavaScript program that implements a linked list of student names with operations to add multiple students, search for a student, insert after a student, and display all students.
+Index 38: Define a stack and explain the LIFO principle. Give three real-world analogies.
+Index 39: What are the two fundamental operations of a stack? Explain what happens in each.
+Index 40: Define: push, pop, top/peek, stack overflow, stack underflow, depth of stack.
+Index 41: Why is circular implementation important for array-based queues? Explain the wraparound concept with a diagram.
+Index 42: In a circular queue implementation, why do we need to check for both full and empty conditions carefully? How does the nItems counter help?
+Index 43: List and explain five applications of stacks.
+Index 44: Differentiate between bounded and unbounded stacks. How is each typically implemented?
+Index 45: What is the stack ADT? List its five fundamental methods.
+Index 46: Trace the following stack operations showing the stack contents after each step: push(5), push(3), size(), pop(), isEmpty(), pop(), isEmpty(), push(7), push(9), top(), push(4), pop(), push(6), push(8), pop()
+Index 47: Explain how a stack is used for delimiter matching in a compiler. What are the three types of brackets checked in Java?
+Index 48: Write a complete JavaScript implementation of a stack using: (a) Array (b) Linked list
+Index 49: What is the general traversal pattern for linked lists? Write the for loop pattern used to traverse all nodes.
+Index 50: Write the algorithm for computing the length of a linked list. What is the time complexity?
+Index 51: Write the algorithm for searching an element in a linked list. What does the method return if the element is not found?
+Index 52: Explain the notation `link.data` and `link.link` used in the notes. What does each represent?
+Index 53: Write a complete JavaScript implementation of a singly linked list with: Node class, insertFirst(), deleteFirst(), displayList(), find(key).
+Index 54: Write a JavaScript program that uses a stack to reverse a string character by character.
+Index 55: Write a JavaScript program that reverses the order of words in a sentence using a stack.
+Index 56: Write a JavaScript program to evaluate a postfix expression using a stack.
+Index 57: Write a JavaScript program to check if delimiters in an expression are balanced using a stack.
+Index 58: Define a queue and explain the FIFO principle. How does it differ from a stack?
+Index 59: Define: enqueue, dequeue, front, rear, wraparound, circular queue.
+Index 60: List and explain four applications of queues.
+Index 61: What is the queue ADT? List its five fundamental methods.
+Index 62: Trace queue operations: enqueue(5), enqueue(3), size(), dequeue(), isEmpty(), dequeue(), isEmpty(), dequeue(), enqueue(7), enqueue(9), first(), enqueue(4)
+Index 63: Why is circular implementation important for array-based queues? Explain the wraparound concept with a diagram.
+Index 64: In a circular queue implementation, why do we need to check for both full and empty conditions carefully? How does the nItems counter help?
+Index 65: Write a menu-driven JavaScript program that maintains a list of customers waiting for service.
+Index 66: Define tree terminology with reference to a diagram.
+Index 67: What is a binary tree? How does it differ from a general tree?
+Index 68: Explain the three types of binary trees.
+Index 69: For a Binary Search Tree, explain the search algorithm recursively. Time complexity?
+Index 70: Define and give algorithms for tree traversals.
+Index 71: Given expression tree for (x + y) * ((a + b) / c): (a) Draw the tree (b) Inorder traversal (c) Postorder traversal (d) Preorder traversal
+Index 72: Write a complete JavaScript implementation of a Binary Search Tree.
+Index 73: Scenario: 8,000 student records, several hundred lookups daily, no significant growth. Array or linked list?
+Index 74: Library book arrangement: continuous slots vs distributed tracking. Compare array vs linked list approaches.
+Index 75: Compare arrays and linked lists time complexity for all major operations.
+Index 76: What are the tradeoffs between arrays and linked lists? When would you choose one over the other?
+Index 77: Design a complete phone directory application using array of DirectoryEntry objects with add, search, remove, display, update, and statistics features.
+Index 78: Draw memory representation diagrams for: (a) Contiguous storage of array [9, 8, 1, -1, 4, 2, 6, 15] and (b) Non-contiguous linked list storage for the same values.
+Index 79: Draw step-by-step stack diagrams showing push operations for 11, 22, 33 followed by pop operations until empty.
+Index 80: Circular queue operations.
+Index 81: BST from insertions: 27, 14, 35, 10, 19, 31, 42.
+Index 82: Removing node 42 using link.link technique.
