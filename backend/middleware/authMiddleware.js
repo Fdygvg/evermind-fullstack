@@ -69,17 +69,20 @@ export const protect = async (req, res, next) => {
 };
 
 
+
 export const strictLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  message: 'Too many attempts. Please try again later.'
+  message: 'Too many attempts. Please try again later.',
+  validate: { trustProxy: false }
 });
 
 export const verifyEmailLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
   keyGenerator: (req) => req.userId || req.ip, // Use userId if auth, else IP
-  message: 'Too many attempts. Please try again later.'
+  message: 'Too many attempts. Please try again later.',
+  validate: { trustProxy: false }
 });
 
 // NEW per-user limiters
@@ -89,7 +92,8 @@ export const commonLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
   max: 100,
   keyGenerator: (req) => req.userId || req.ip,
-  message: 'Too many requests. Please slow down.'
+  message: 'Too many requests. Please slow down.',
+  validate: { trustProxy: false }
 });
 
 // Write operations (create/update/delete)
@@ -97,7 +101,8 @@ export const writeLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 30,
   keyGenerator: (req) => req.userId || req.ip,
-  message: 'Too many updates. Please wait a moment.'
+  message: 'Too many updates. Please wait a moment.',
+  validate: { trustProxy: false }
 });
 
 // AI/Heavy operations
@@ -105,14 +110,16 @@ export const heavyOpLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 20,
   keyGenerator: (req) => req.userId || req.ip,
-  message: 'Rate limit exceeded for heavy operations.'
+  message: 'Rate limit exceeded for heavy operations.',
+  validate: { trustProxy: false }
 });
 
 
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
-  message: 'Too many requests from this IP.'
+  message: 'Too many requests from this IP.',
+  validate: { trustProxy: false }
 });
 
 
@@ -121,7 +128,8 @@ export const dangerousOpLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
   keyGenerator: (req) => req.userId || req.ip,
-  message: 'Too many bulk operations. Please wait.'
+  message: 'Too many bulk operations. Please wait.',
+  validate: { trustProxy: false }
 });
 
 
@@ -129,5 +137,6 @@ export const questionLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 100,
   keyGenerator: (req) => req.userId || req.ip,
-  message: 'Too many question operations. Please try again later.'
+  message: 'Too many question operations. Please try again later.',
+  validate: { trustProxy: false }
 });

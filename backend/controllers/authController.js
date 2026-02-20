@@ -15,7 +15,7 @@ const commonPasswords = new Set([
 ]);
 
 const passwordSchema = z.string()
-  .min(12, "Password must be at least 12 characters")
+  .min(8, "Password must be at least 8 characters")
   .regex(/[A-Z]/, "Must contain at least one uppercase letter")
   .regex(/[a-z]/, "Must contain at least one lowercase letter")
   .regex(/[0-9]/, "Must contain at least one number")
@@ -43,9 +43,13 @@ export const register = async (req, res) => {
     const validation = registerSchema.safeParse(req.body);
 
     if (!validation.success) {
-      // Format Zod errors
-      const errors = validation.error.errors.map(err => ({
-        field: err.path[0],
+      console.log("Validation failure:", JSON.stringify(validation.error, null, 2)); // Debug log
+
+      // Safe access to errors array
+      const errorList = validation.error?.errors || [];
+
+      const errors = errorList.map(err => ({
+        field: err.path[0] || 'unknown',
         message: err.message
       }));
 
