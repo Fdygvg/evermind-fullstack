@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL + "/api",
+  baseURL: "https://evermind-backend-vbu8.onrender.com/api",
   withCredentials: true, // Send cookies with every request
 });
 
