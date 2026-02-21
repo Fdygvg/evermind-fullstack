@@ -209,7 +209,7 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     // Find user and select password explicitly
-    const normalizedEmail = email.toLowerCase().trim;
+    const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ normalizedEmail }).select("+password");
 
     if (!user || !(await user.comparePassword(password))) {

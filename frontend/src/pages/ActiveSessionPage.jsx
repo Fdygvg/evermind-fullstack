@@ -347,7 +347,8 @@ const ActiveSession = () => {
           reviewedToday,
           initialQuestionCount,
           SwipeZoneContainer,
-          onSwipeRate
+          onSwipeRate,
+          updateQuestionInSession
         }) => {
           if (isSessionComplete) {
             // Calculate stats from rating history
@@ -423,6 +424,7 @@ const ActiveSession = () => {
                           setShowAnswer={setShowAnswer}
                           submitAnswer={submitAnswer}
                           loading={isLoading}
+                          onQuestionUpdated={updateQuestionInSession}
                         />
                         {/* Smart Review Rating Buttons inside Swipe Container makes sense so they move with card? 
                              Actually, usually buttons stay or move. User asked for "just the question card".
@@ -458,6 +460,7 @@ const ActiveSession = () => {
                       setShowAnswer={setShowAnswer}
                       submitAnswer={submitAnswer}
                       loading={isLoading}
+                      onQuestionUpdated={updateQuestionInSession}
                     />
                   )
                 )}

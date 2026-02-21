@@ -417,6 +417,18 @@ export const SmartReviewProvider = ({ children }) => {
   // Session is complete if:
   // 1. Normal mode: currentIndex >= todaysQuestions.length (and there are questions)
   // 2. Elimination mode: all questions reviewed (todaysQuestions.length === 0 and reviewedToday > 0)
+  // Update a question's data in the in-memory session array (for inline edits)
+  const updateQuestionInSession = useCallback((questionId, updates) => {
+    setState(prev => ({
+      ...prev,
+      todaysQuestions: prev.todaysQuestions.map(q =>
+        (q._id === questionId || q.id === questionId)
+          ? { ...q, ...updates }
+          : q
+      )
+    }));
+  }, []);
+
   const isSessionComplete = (state.todaysQuestions.length > 0 && state.currentIndex >= state.todaysQuestions.length) ||
     (state.todaysQuestions.length === 0 && state.reviewedToday > 0 && state.initialQuestionCount > 0);
 
@@ -444,6 +456,7 @@ export const SmartReviewProvider = ({ children }) => {
     loadSectionProgress,
     endSession,
     pauseSession,
+    updateQuestionInSession,
 
     // Service helpers (optional)
     getPriorityInfo: smartReviewService.getPriorityInfo,

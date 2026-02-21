@@ -250,7 +250,10 @@ const SmartReviewContent = ({
 
         // Components & Handlers for external wrapping
         SwipeZoneContainer: SwipeZoneContainer,
-        onSwipeRate: onSwipeRate
+        onSwipeRate: onSwipeRate,
+
+        // Inline edit support
+        updateQuestionInSession: smartReview.updateQuestionInSession
       })}
 
 

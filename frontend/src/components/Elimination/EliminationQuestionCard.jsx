@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Eye } from "lucide-react";
 import CodeBlock from "../Common/CodeBlock";
 import BookmarkButton from "../Common/BookmarkButton";
 import RatingButtons from "../SmartReview/RatingButtons";
 import "../css/eliminationQuestionCard.css";
 import { useSound } from "../../hooks/useSound";
-import { FaRegCopy, FaCheck } from "react-icons/fa";
+import { FaRegCopy, FaCheck, FaPen } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import { questionService } from "../../services/question";
 
 const EliminationQuestionCard = ({
   question,
@@ -14,17 +15,35 @@ const EliminationQuestionCard = ({
   isRevealed,
   onToggleAnswer,
   rateQuestion,
-  disabled = false
+  disabled = false,
+  onQuestionUpdated,
 }) => {
   const { playSound } = useSound();
   const [isRatingThisQuestion, setIsRatingThisQuestion] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editQuestion, setEditQuestion] = useState('');
+  const [editAnswer, setEditAnswer] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null);
+  const [localQuestion, setLocalQuestion] = useState(null);
+  const questionRef = useRef(null);
+  const answerRef = useRef(null);
+
+  const displayQuestion = localQuestion || question;
+
+  const autoResize = (ref) => {
+    if (ref.current) {
+      ref.current.style.height = 'auto';
+      ref.current.style.height = ref.current.scrollHeight + 'px';
+    }
+  };
 
   const handleCopy = async (e) => {
     e.stopPropagation();
     try {
-      const qText = question.question || '';
-      const aText = question.answer || '';
+      const qText = displayQuestion.question || '';
+      const aText = displayQuestion.answer || '';
       const textToCopy = `Question:\n${qText}\n\nAnswer:\n${aText}`;
       await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
@@ -32,6 +51,54 @@ const EliminationQuestionCard = ({
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleEditStart = (e) => {
+    e.stopPropagation();
+    setEditQuestion(displayQuestion.question || '');
+    setEditAnswer(displayQuestion.answer || '');
+    setIsEditing(true);
+    setSaveStatus(null);
+    if (!isRevealed) onToggleAnswer();
+    setTimeout(() => {
+      autoResize(questionRef);
+      autoResize(answerRef);
+    }, 50);
+  };
+
+  const handleEditCancel = () => {
+    setIsEditing(false);
+    setSaveStatus(null);
+  };
+
+  const handleEditSave = async () => {
+    setIsSaving(true);
+    setSaveStatus(null);
+    try {
+      await questionService.updateQuestion(question._id, {
+        question: editQuestion,
+        answer: editAnswer,
+      });
+      setLocalQuestion({
+        ...displayQuestion,
+        question: editQuestion,
+        answer: editAnswer,
+      });
+      // Update the session array so edits persist when question re-appears
+      if (onQuestionUpdated) {
+        onQuestionUpdated(question._id, { question: editQuestion, answer: editAnswer });
+      }
+      setIsEditing(false);
+      setSaveStatus('saved');
+      playSound('ding');
+      setTimeout(() => setSaveStatus(null), 2000);
+    } catch (err) {
+      console.error('Failed to save:', err);
+      setSaveStatus('error');
+      playSound('error');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -47,7 +114,6 @@ const EliminationQuestionCard = ({
     setIsRatingThisQuestion(true);
 
     try {
-      // Play sound based on rating
       if (rating >= 4) {
         playSound("correct");
       } else if (rating === 3) {
@@ -56,12 +122,9 @@ const EliminationQuestionCard = ({
         playSound("wrong");
       }
 
-      // Submit the rating
       await rateQuestion(rating);
       console.log("[ELIMINATION] Rating submitted successfully");
 
-      // Reset loading state after a short delay to allow for smooth UI transition
-      // The question will be removed from the list, but this ensures the state is clean
       setTimeout(() => {
         setIsRatingThisQuestion(false);
       }, 100);
@@ -75,8 +138,28 @@ const EliminationQuestionCard = ({
 
   return (
     <div className="question-card" style={{ position: 'relative' }}>
-      {/* Copy & Bookmark Buttons */}
+      {/* Edit, Copy & Bookmark Buttons */}
       <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <motion.button
+          onClick={isEditing ? handleEditCancel : handleEditStart}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none',
+            color: isEditing ? 'var(--color-primary, #8B5CF6)' : 'var(--color-text-secondary, #6B7280)',
+            transition: 'color 0.2s ease',
+          }}
+          title={isEditing ? "Cancel edit" : "Edit question"}
+        >
+          <FaPen size={14} />
+        </motion.button>
         <motion.button
           onClick={handleCopy}
           whileHover={{ scale: 1.1 }}
@@ -97,22 +180,11 @@ const EliminationQuestionCard = ({
         >
           <AnimatePresence mode="wait">
             {copied ? (
-              <motion.div
-                key="check"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              >
+              <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
                 <FaCheck size={16} />
               </motion.div>
             ) : (
-              <motion.div
-                key="copy"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-              >
+              <motion.div key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
                 <FaRegCopy size={16} />
               </motion.div>
             )}
@@ -123,11 +195,37 @@ const EliminationQuestionCard = ({
           initialIsBookmarked={question.isBookmarked}
         />
       </div>
+
+      {/* Save Status */}
+      <AnimatePresence>
+        {saveStatus && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'absolute',
+              top: '44px',
+              right: '12px',
+              zIndex: 11,
+              padding: '4px 12px',
+              borderRadius: '8px',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              background: saveStatus === 'saved' ? 'var(--color-success, #10B981)' : '#ef4444',
+              color: '#fff',
+            }}
+          >
+            {saveStatus === 'saved' ? '✓ Saved!' : '✗ Error saving'}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="question-header">
         <span className="question-number">#{index + 1}</span>
-        {question.tags && question.tags.length > 0 && (
+        {displayQuestion.tags && displayQuestion.tags.length > 0 && (
           <div className="question-tags">
-            {(question.tags || []).map((tag) => (
+            {(displayQuestion.tags || []).map((tag) => (
               <span key={tag} className="tag">
                 {tag}
               </span>
@@ -138,52 +236,133 @@ const EliminationQuestionCard = ({
 
       <div className="question-content">
         <div className="question-text">
-          {question.isCode ? (
-            <CodeBlock text={question.question} forceCode={true} />
+          {isEditing ? (
+            <textarea
+              ref={questionRef}
+              value={editQuestion}
+              onChange={(e) => { setEditQuestion(e.target.value); autoResize(questionRef); }}
+              style={{
+                width: '100%',
+                minHeight: '60px',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '2px solid var(--color-primary, #8B5CF6)',
+                background: 'var(--color-surface, rgba(255,255,255,0.05))',
+                color: 'var(--color-text, inherit)',
+                fontSize: '1rem',
+                fontFamily: 'inherit',
+                resize: 'vertical',
+                outline: 'none',
+                lineHeight: '1.6',
+              }}
+            />
+          ) : displayQuestion.isCode ? (
+            <CodeBlock text={displayQuestion.question} forceCode={true} />
           ) : (
-            <p>{question.question}</p>
+            <p>{displayQuestion.question}</p>
           )}
         </div>
 
-        {isRevealed && question?.answer && (
+        {isEditing ? (
+          <div className="answer-section">
+            <div className="answer-label">Answer:</div>
+            <textarea
+              ref={answerRef}
+              value={editAnswer}
+              onChange={(e) => { setEditAnswer(e.target.value); autoResize(answerRef); }}
+              style={{
+                width: '100%',
+                minHeight: '100px',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '2px solid var(--color-primary, #8B5CF6)',
+                background: 'var(--color-surface, rgba(255,255,255,0.05))',
+                color: 'var(--color-text, inherit)',
+                fontSize: '1rem',
+                fontFamily: 'inherit',
+                resize: 'vertical',
+                outline: 'none',
+                lineHeight: '1.6',
+              }}
+            />
+            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+              <button
+                onClick={handleEditSave}
+                disabled={isSaving}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'var(--color-success, #10B981)',
+                  color: '#fff',
+                  fontWeight: 600,
+                  cursor: isSaving ? 'not-allowed' : 'pointer',
+                  opacity: isSaving ? 0.6 : 1,
+                  fontSize: '0.9rem',
+                }}
+              >
+                {isSaving ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                onClick={handleEditCancel}
+                disabled={isSaving}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-text-secondary, #6B7280)',
+                  background: 'transparent',
+                  color: 'var(--color-text-secondary, #6B7280)',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : isRevealed && displayQuestion?.answer ? (
           <div className="answer-section">
             <div className="answer-label">Answer:</div>
             <div className="answer-text">
-              {question.isCode ? (
-                <CodeBlock text={question.answer} forceCode={true} />
+              {displayQuestion.isCode ? (
+                <CodeBlock text={displayQuestion.answer} forceCode={true} />
               ) : (
-                <p>{question.answer}</p>
+                <p>{displayQuestion.answer}</p>
               )}
             </div>
           </div>
-        )}
+        ) : null}
       </div>
 
-      <div className="question-actions">
-        <button
-          className="action-btn reveal-btn"
-          onClick={() => {
-            if (!isRatingThisQuestion && !disabled) {
-              onToggleAnswer();
-              playSound("bubble");
-            }
-          }}
-          title={isRevealed ? "Hide Answer" : "Reveal Answer"}
-          disabled={isRatingThisQuestion || disabled}
-        >
-          <Eye size={18} />
-          <span>{isRevealed ? "Hide Answer" : "Reveal Answer"}</span>
-        </button>
-      </div>
+      {!isEditing && (
+        <>
+          <div className="question-actions">
+            <button
+              className="action-btn reveal-btn"
+              onClick={() => {
+                if (!isRatingThisQuestion && !disabled) {
+                  onToggleAnswer();
+                  playSound("bubble");
+                }
+              }}
+              title={isRevealed ? "Hide Answer" : "Reveal Answer"}
+              disabled={isRatingThisQuestion || disabled}
+            >
+              <Eye size={18} />
+              <span>{isRevealed ? "Hide Answer" : "Reveal Answer"}</span>
+            </button>
+          </div>
 
-      {/* Smart Review Rating Buttons */}
-      <div className="smart-review-rating-section">
-        <RatingButtons
-          onRate={handleRate}
-          disabled={isRatingThisQuestion || disabled}
-          compact={false}
-        />
-      </div>
+          <div className="smart-review-rating-section">
+            <RatingButtons
+              onRate={handleRate}
+              disabled={isRatingThisQuestion || disabled}
+              compact={false}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

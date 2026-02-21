@@ -14,7 +14,7 @@ const AddQuestion = () => {
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  
+
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -50,19 +50,19 @@ const AddQuestion = () => {
     setLoading(true)
     try {
       // Auto-detect if question/answer contains code
-      const isCode = detectCodeInQuestion(formData.question, formData.answer);
-      
+      const detection = detectCodeInQuestion(formData.question, formData.answer);
+
       await questionService.createQuestion({
         sectionId: selectedSection,
         question: formData.question,
         answer: formData.answer,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        isCode: isCode
+        isCode: detection.isCode
       })
 
       setMessage('Question added successfully!')
       setFormData({ question: '', answer: '', tags: '' })
-      
+
       // Clear success message after 2 seconds
       setTimeout(() => setMessage(''), 2000)
     } catch (error) {
@@ -76,7 +76,7 @@ const AddQuestion = () => {
     <div className="add-question-page">
       <div className="page-header">
         <h1>Add New Question</h1>
-        <button 
+        <button
           className="back-button"
           onClick={() => navigate('/dashboard')}
         >
@@ -148,15 +148,15 @@ const AddQuestion = () => {
         </div>
 
         <div className="form-actions">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="submit-button"
             disabled={loading}
           >
             {loading ? 'Adding Question...' : 'Add Question'}
           </button>
-          
-          <button 
+
+          <button
             type="button"
             className="secondary-button"
             onClick={() => navigate('/questions/bulk')}

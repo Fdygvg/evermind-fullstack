@@ -99,8 +99,9 @@ const EditQuestionPage = () => {
         .filter((tag) => tag.length > 0);
 
       // Auto-detect if question/answer contains code
-      const isCode = detectCodeInQuestion(formData.question, formData.answer);
-      
+      const detection = detectCodeInQuestion(formData.question, formData.answer);
+      const isCode = detection.isCode;
+
       const questionData = {
         ...formData,
         tags: tagsArray,

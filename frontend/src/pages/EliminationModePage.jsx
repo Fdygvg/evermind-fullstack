@@ -237,6 +237,7 @@ const EliminationModePage = () => {
           reviewedToday,
           initialQuestionCount,
           SwipeZoneContainer,
+          updateQuestionInSession,
         }) => {
           console.log("[EliminationMode] SmartReviewWrapper props:", {
             todaysQuestions,
@@ -349,6 +350,7 @@ const EliminationModePage = () => {
                                 handleEliminationRate(rating, question._id)
                               }
                               disabled={false}
+                              onQuestionUpdated={updateQuestionInSession}
                             />
                           </SwipeZoneContainer>
                         ) : (
@@ -361,6 +363,7 @@ const EliminationModePage = () => {
                               handleEliminationRate(rating, question._id)
                             }
                             disabled={false}
+                            onQuestionUpdated={updateQuestionInSession}
                           />
                         )}
                       </div>
@@ -408,7 +411,7 @@ const EliminationModePage = () => {
 
       <div className="questions-container">
         {(filteredQuestions?.length ?? 0) === 0 &&
-        (questions?.length ?? 0) > 0 ? (
+          (questions?.length ?? 0) > 0 ? (
           <div className="session-complete">
             <div className="celebration">
               <h2>🎉 ELIMINATION COMPLETE!</h2>
