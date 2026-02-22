@@ -8,6 +8,7 @@ import { sectionService } from "../services/sections";
 import EliminationQuestionCard from "../components/Elimination/EliminationQuestionCard";
 import SmartReviewWrapper from "../components/SmartReview/SmartReviewWrapper";
 import SectionProgressDisplay from "../components/SmartReview/SectionProgressDisplay";
+import RecentRatingsQueue from "../components/SmartReview/RecentRatingsQueue";
 
 const EliminationModePage = () => {
   const navigate = useNavigate();
@@ -308,6 +309,8 @@ const EliminationModePage = () => {
 
               {/* Section Progress Display */}
               <SectionProgressDisplay sectionProgress={sectionProgress} />
+
+              <RecentRatingsQueue ratingHistory={ratingHistory} />
 
               <div className="questions-container">
                 <div className="questions-list">

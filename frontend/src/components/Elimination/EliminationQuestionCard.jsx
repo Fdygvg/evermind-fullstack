@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Eye } from "lucide-react";
 import CodeBlock from "../Common/CodeBlock";
+import MarkdownContent from "../Common/MarkdownContent";
 import BookmarkButton from "../Common/BookmarkButton";
 import RatingButtons from "../SmartReview/RatingButtons";
 import "../css/eliminationQuestionCard.css";
@@ -256,10 +257,8 @@ const EliminationQuestionCard = ({
                 lineHeight: '1.6',
               }}
             />
-          ) : displayQuestion.isCode ? (
-            <CodeBlock text={displayQuestion.question} forceCode={true} />
           ) : (
-            <p>{displayQuestion.question}</p>
+            <MarkdownContent content={displayQuestion.question} />
           )}
         </div>
 
@@ -325,11 +324,7 @@ const EliminationQuestionCard = ({
           <div className="answer-section">
             <div className="answer-label">Answer:</div>
             <div className="answer-text">
-              {displayQuestion.isCode ? (
-                <CodeBlock text={displayQuestion.answer} forceCode={true} />
-              ) : (
-                <p>{displayQuestion.answer}</p>
-              )}
+              <MarkdownContent content={displayQuestion.answer} />
             </div>
           </div>
         ) : null}

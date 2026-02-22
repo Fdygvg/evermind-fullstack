@@ -141,6 +141,16 @@ export const SmartReviewProvider = ({ children }) => {
       // Assume it IS hard if rating is 1 (Optimistic assumption)
       if (rating === 1) {
         const currentPos = questionId ? questionIndex : prev.currentIndex;
+
+        // Remove any existing future duplicates of this question (from previous hard ratings)
+        // to prevent multiple copies accumulating in the array
+        const ratedId = ratedQuestion._id;
+        for (let i = updatedQuestions.length - 1; i > currentPos; i--) {
+          if (updatedQuestions[i]._id === ratedId) {
+            updatedQuestions.splice(i, 1);
+          }
+        }
+
         // Reinsert after 5 questions
         const insertPosition = currentPos + 5;
 
@@ -148,7 +158,6 @@ export const SmartReviewProvider = ({ children }) => {
         console.log(`[SmartReview] Optimistic Hard: Reinserting at ${insertPosition}`);
 
         // Insert copy of question
-        // Note: Ideally we clone it to avoid reference issues if we mutate it later
         const questionClone = { ...ratedQuestion };
 
         if (insertPosition <= updatedQuestions.length) {
@@ -182,9 +191,16 @@ export const SmartReviewProvider = ({ children }) => {
           // currentIndex stays same as array shifts
         };
       } else {
-        // Normal mode: advance index
+        // Normal mode: remove ALL future duplicates of this question (from past hard ratings), then advance
+        const ratedId = ratedQuestion._id;
+        for (let i = updatedQuestions.length - 1; i > prev.currentIndex; i--) {
+          if (updatedQuestions[i]._id === ratedId) {
+            updatedQuestions.splice(i, 1);
+          }
+        }
         return {
           ...prev,
+          todaysQuestions: updatedQuestions,
           reviewedToday: prev.reviewedToday + 1,
           currentIndex: prev.currentIndex + 1,
         };
@@ -538,27 +554,78 @@ export const SmartReviewProvider = ({ children }) => {
       console.log('[SmartReviewContext] Initializing from session data:', sessionData);
 
       const questions = sessionData.remainingQuestions || sessionData.questions || [];
+      const savedState = sessionData.smartReviewState;
 
-      setState(prev => ({
-        ...prev,
-        sectionIds: sessionData.sectionIds || [],
-        todaysQuestions: questions,
-        currentIndex: sessionData.currentIndex || 0,
-        reviewedToday: sessionData.currentIndex || (sessionData.totalQuestions ? (sessionData.totalQuestions - questions.length) : 0),
-        initialQuestionCount: sessionData.totalQuestions || questions.length,
-        dailyLimit: 0,
-        rolledOverCount: 0,
-        trackBreakdown: null, // Not applicable for quick play
-        isLoading: false,
-        error: null,
-        sessionId: sessionData._id || sessionData.id || null
-      }));
+      // If we have saved smartReviewState (from a paused session), use it to restore
+      // the exact session state including hard-question duplicates and correct counters
+      if (savedState && savedState.todaysQuestions && savedState.todaysQuestions.length > 0) {
+        console.log('[SmartReviewContext] Restoring from saved smartReviewState');
 
-      setRatingHistory([]); // Start fresh for this session segment or restore if needed
+        // Build a lookup map from the populated questions
+        const questionMap = {};
+        questions.forEach(q => {
+          if (q && q._id) {
+            questionMap[q._id.toString ? q._id.toString() : q._id] = q;
+          }
+        });
 
-      // If resuming a paused session that had history, we might need to restore it
-      // but typically we just start from where we left off with remaining questions.
+        // Reconstruct the question array from saved IDs (includes hard-duplicates)
+        const reconstructedQuestions = savedState.todaysQuestions
+          .map(id => {
+            const idStr = id.toString ? id.toString() : id;
+            return questionMap[idStr] || null;
+          })
+          .filter(Boolean);
 
+        console.log('[SmartReviewContext] Reconstructed questions:', {
+          savedIds: savedState.todaysQuestions.length,
+          reconstructed: reconstructedQuestions.length,
+          currentIndex: savedState.currentIndex,
+          reviewedToday: savedState.reviewedToday
+        });
+
+        setState(prev => ({
+          ...prev,
+          sectionIds: sessionData.sectionIds || savedState.sectionIds || [],
+          todaysQuestions: reconstructedQuestions,
+          currentIndex: savedState.currentIndex || 0,
+          reviewedToday: savedState.reviewedToday || 0,
+          initialQuestionCount: savedState.initialQuestionCount || sessionData.totalQuestions || questions.length,
+          dailyLimit: 0,
+          rolledOverCount: 0,
+          trackBreakdown: null,
+          isLoading: false,
+          error: null,
+          sessionId: sessionData._id || sessionData.id || null
+        }));
+
+        // Restore rating history if saved
+        if (savedState.ratingHistory && savedState.ratingHistory.length > 0) {
+          setRatingHistory(savedState.ratingHistory);
+        } else {
+          setRatingHistory([]);
+        }
+      } else {
+        // Fresh session (no saved state) — original logic
+        console.log('[SmartReviewContext] Fresh session initialization');
+
+        setState(prev => ({
+          ...prev,
+          sectionIds: sessionData.sectionIds || [],
+          todaysQuestions: questions,
+          currentIndex: sessionData.currentIndex || 0,
+          reviewedToday: sessionData.currentIndex || (sessionData.totalQuestions ? (sessionData.totalQuestions - questions.length) : 0),
+          initialQuestionCount: sessionData.totalQuestions || questions.length,
+          dailyLimit: 0,
+          rolledOverCount: 0,
+          trackBreakdown: null,
+          isLoading: false,
+          error: null,
+          sessionId: sessionData._id || sessionData.id || null
+        }));
+
+        setRatingHistory([]);
+      }
     }, [])
   };
 

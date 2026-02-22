@@ -8,6 +8,7 @@ import FlashCard from "../components/Common/FlashCard";
 import CodeBlock from "../components/Common/CodeBlock";
 import SmartReviewWrapper from "../components/SmartReview/SmartReviewWrapper";
 import RatingButtons from "../components/SmartReview/RatingButtons";
+import RecentRatingsQueue from "../components/SmartReview/RecentRatingsQueue";
 
 const ActiveSession = () => {
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -478,6 +479,7 @@ const ActiveSession = () => {
                       compact={false}
                       isSimplified={isSimplified}
                     />
+                    <RecentRatingsQueue ratingHistory={ratingHistory} />
                   </div>
                 )}
               </div>

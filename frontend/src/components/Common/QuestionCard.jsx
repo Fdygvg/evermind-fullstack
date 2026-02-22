@@ -1,5 +1,6 @@
 import BookmarkButton from './BookmarkButton';
 import CodeBlock from './CodeBlock';
+import MarkdownContent from './MarkdownContent';
 import { useEffect, useState, useRef } from 'react';
 import { useSound } from '../../hooks/useSound';
 import { FaRegCopy, FaCheck, FaPen } from 'react-icons/fa';
@@ -232,7 +233,7 @@ const QuestionCard = ({
             }}
           />
         ) : (
-          <p>{displayQuestion.question}</p>
+          <MarkdownContent content={displayQuestion.question} />
         )}
       </div>
 
@@ -299,11 +300,7 @@ const QuestionCard = ({
       ) : showAnswer && displayQuestion?.answer ? (
         <div className="answer-section">
           <h2>Answer</h2>
-          {displayQuestion.isCode ? (
-            <CodeBlock text={displayQuestion.answer} forceCode={true} />
-          ) : (
-            <p>{displayQuestion.answer}</p>
-          )}
+          <MarkdownContent content={displayQuestion.answer} />
         </div>
       ) : (
         <button

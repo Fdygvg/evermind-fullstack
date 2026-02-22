@@ -693,7 +693,8 @@ export const resumeSimplifiedSession = async (req, res) => {
           currentIndex: session.currentIndex || 0,
           correctCount: session.correctCount,
           wrongCount: session.wrongCount,
-          status: session.status
+          status: session.status,
+          smartReviewState: session.smartReviewState || null // Include saved state for proper resume
         }
       }
     });

@@ -1,0 +1,165 @@
+/* 
+ * @css/markdown-content.css
+ * 
+ * Architectural Intent: "Intentional Minimalism"
+ * 
+ * Strict formatting for Markdown, explicitly resetting generic browser defaults.
+ * Margins, padding, and type scales are geometrically bound.
+ * Focus is placed on high contrast, readability, and subtle micro-interactions 
+ * (like the syntax-highlighted blockquotes and hardware-focused inline code tint).
+ */
+
+.markdown-body {
+  /* Scale typography correctly to inherit from parent cards, ensuring consistency */
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text, inherit);
+  word-wrap: break-word;
+}
+
+/* Base Elements */
+.markdown-body p {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+}
+
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Headings: Strict vertical rhythm */
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.markdown-body h1 {
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  padding-bottom: 0.3em;
+}
+
+.markdown-body h2 {
+  font-size: 1.25em;
+}
+
+.markdown-body h3 {
+  font-size: 1.1em;
+}
+
+/* Lists: Bespoke markers, removing generic browser bullets */
+.markdown-body ul,
+.markdown-body ol {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.markdown-body li {
+  margin-bottom: 0.25rem;
+}
+
+.markdown-body ul > li {
+  list-style-type: none;
+  position: relative;
+}
+
+.markdown-body ul > li::before {
+  content: "•";
+  position: absolute;
+  left: -1rem;
+  color: var(--color-primary, #8B5CF6); /* Branded, subtle marker */
+  font-weight: bold;
+}
+
+/* Blockquotes: Assertive border, muted context */
+.markdown-body blockquote {
+  margin: 1.25rem 0;
+  padding: 0.5rem 1rem;
+  color: var(--color-text-secondary, #9CA3AF);
+  border-left: 4px solid var(--color-primary, #8B5CF6);
+  background-color: var(--color-surface-hover, rgba(139, 92, 246, 0.05));
+  border-radius: 0 4px 4px 0;
+}
+
+.markdown-body blockquote > :first-child {
+  margin-top: 0;
+}
+
+.markdown-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* Inline Code: Hardware accelerated subtle tint */
+.markdown-body code.inline-code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 0.85em;
+  background-color: var(--color-surface, rgba(255, 255, 255, 0.1));
+  border-radius: 6px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+
+/* Table Overflow Trap Prevention */
+.table-responsive-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  border-radius: 8px;
+  /* Thin boundary to separate from background */
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+}
+
+.markdown-body table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  text-align: left;
+}
+
+.markdown-body table th {
+  font-weight: 600;
+  background-color: var(--color-surface, rgba(0, 0, 0, 0.2)); /* Header differentiator */
+}
+
+/* Remove bottom border on last row */
+.markdown-body table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Links */
+.markdown-body a {
+  color: var(--color-primary, #8B5CF6);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease-in-out;
+}
+
+.markdown-body a:hover {
+  text-decoration: underline;
+  color: var(--color-primary-hover, #A78BFA); /* Lighter on hover */
+}
+
+/* Horizontal Rules */
+.markdown-body hr {
+  height: 1px;
+  padding: 0;
+  margin: 1.5rem 0;
+  background-color: var(--color-border, rgba(255, 255, 255, 0.1));
+  border: 0;
+}
