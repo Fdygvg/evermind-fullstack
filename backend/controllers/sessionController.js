@@ -539,6 +539,7 @@ export const updateProgress = async (req, res) => {
     }
     if (smartReviewState !== undefined) {
       session.smartReviewState = smartReviewState;
+      session.markModified('smartReviewState'); // Required for Mongoose Mixed type change detection
       // Also set useSmartReview flag if smartReviewState is provided
       session.useSmartReview = true;
     }
@@ -678,6 +679,8 @@ export const resumeSimplifiedSession = async (req, res) => {
     // Use current index to determine actual remaining questions for frontend
     // const effectiveRemaining = session.remainingQuestions.slice(session.currentIndex || 0);
 
+    console.log('[resumeSimplifiedSession] Resuming with smartReviewState:', session.smartReviewState ? 'present' : 'null');
+
     res.json({
       success: true,
       message: 'Session resumed',
@@ -687,14 +690,15 @@ export const resumeSimplifiedSession = async (req, res) => {
           id: session._id,
           cardMode: session.cardMode,
           isSimplified: true,
+          sectionIds: session.sectionIds,
           totalQuestions: session.allQuestions.length,
-          allQuestions: session.allQuestions, // IDs
-          remainingQuestions: session.remainingQuestions, // Return FULL array for pointer logic
+          allQuestions: session.allQuestions,
+          remainingQuestions: session.remainingQuestions,
           currentIndex: session.currentIndex || 0,
           correctCount: session.correctCount,
           wrongCount: session.wrongCount,
           status: session.status,
-          smartReviewState: session.smartReviewState || null // Include saved state for proper resume
+          smartReviewState: session.smartReviewState || null
         }
       }
     });

@@ -3,8 +3,45 @@ import React, { useState, useCallback } from 'react';
 import SmartReviewContextInstance from './SmartReviewContextInstance';
 import { smartReviewService } from '../services/smartReviewService';
 import { sessionService } from '../services/sessions';
+import { sessionPersistence } from '../services/sessionPersistence';
 
 export const SmartReviewContext = SmartReviewContextInstance;
+
+// === Helper functions for pause/resume correctness ===
+
+// Keep only the LAST (most recent) rating per question
+function deduplicateRatingHistory(history) {
+  const lastRatingMap = new Map();
+  history.forEach(r => {
+    lastRatingMap.set(r.questionId, { questionId: r.questionId, rating: r.rating });
+  });
+  return Array.from(lastRatingMap.values());
+}
+
+// Count unique questions whose last rating was NOT hard (1)
+function computeReviewedCount(ratingHistory) {
+  if (!ratingHistory || ratingHistory.length === 0) return 0;
+  const lastRatingMap = new Map();
+  ratingHistory.forEach(r => lastRatingMap.set(r.questionId, r.rating));
+  let count = 0;
+  lastRatingMap.forEach(rating => {
+    if (rating !== 1) count++;
+  });
+  return count;
+}
+
+// Adjust currentIndex by subtracting consumed hard-duplicate positions
+function computeAdjustedIndex(savedIndex, ratingHistory) {
+  if (!ratingHistory || ratingHistory.length === 0) return savedIndex;
+  const counts = {};
+  ratingHistory.forEach(r => {
+    counts[r.questionId] = (counts[r.questionId] || 0) + 1;
+  });
+  // Each duplicate entry beyond the first represents a consumed hard-duplicate position
+  let duplicateCount = 0;
+  Object.values(counts).forEach(c => { duplicateCount += (c - 1); });
+  return Math.max(0, savedIndex - duplicateCount);
+}
 
 export const SmartReviewProvider = ({ children }) => {
   const [state, setState] = useState({
@@ -207,7 +244,24 @@ export const SmartReviewProvider = ({ children }) => {
       }
     });
 
-    // 2. BACKGROUND API CALL
+    // 2a. SAVE TO LOCALSTORAGE immediately (instant, no network needed)
+    // Use functional setState to read latest state for the snapshot
+    setState(prev => {
+      sessionPersistence.saveToLocal({
+        sessionId: prev.sessionId,
+        sectionIds: prev.sectionIds,
+        currentIndex: prev.currentIndex,
+        reviewedToday: prev.reviewedToday,
+        initialQuestionCount: prev.initialQuestionCount,
+        todaysQuestions: prev.todaysQuestions,
+        ratingHistory: ratingHistory,
+        mode: prev.mode,
+        cardMode: prev.cardMode
+      });
+      return prev; // Don't change state, just read it
+    });
+
+    // 2b. BACKGROUND API CALL
     // We don't await this for the UI update
     smartReviewService.recordRating(ratedQuestionId, rating)
       .then(response => {
@@ -356,6 +410,9 @@ export const SmartReviewProvider = ({ children }) => {
         );
       }
 
+      // Clear localStorage progress
+      sessionPersistence.clearLocal();
+
       // Reset state
       setState({
         sectionIds: [],
@@ -393,16 +450,31 @@ export const SmartReviewProvider = ({ children }) => {
       setState(prev => ({ ...prev, isLoading: true }));
 
       // Build Smart Review state for resume
+      // Deduplicate rating history to prevent inflated currentIndex on resume
+      const dedupedHistory = deduplicateRatingHistory(ratingHistory);
+
       const smartReviewState = {
         currentIndex: state.currentIndex,
         reviewedToday: state.reviewedToday,
         todaysQuestions: state.todaysQuestions.map(q => q._id),
-        ratingHistory: ratingHistory.map(r => ({ questionId: r.questionId, rating: r.rating })),
+        ratingHistory: dedupedHistory,
         sectionIds: state.sectionIds,
         initialQuestionCount: state.initialQuestionCount,
         mode: mode,
         cardMode: cardMode
       };
+
+      console.log('[SmartReview PAUSE] Saving state:', {
+        currentIndex: state.currentIndex,
+        reviewedToday: state.reviewedToday,
+        todaysQuestionsCount: state.todaysQuestions.length,
+        todaysQuestionIds: state.todaysQuestions.map(q => q._id),
+        rawRatingHistoryCount: ratingHistory.length,
+        dedupedHistoryCount: dedupedHistory.length,
+        initialQuestionCount: state.initialQuestionCount,
+        rawHistory: ratingHistory.map(r => ({ qId: r.questionId, rating: r.rating })),
+        dedupedHistory: dedupedHistory
+      });
 
       // Save progress to session
       await sessionService.updateProgress({
@@ -582,6 +654,32 @@ export const SmartReviewProvider = ({ children }) => {
           reconstructed: reconstructedQuestions.length,
           currentIndex: savedState.currentIndex,
           reviewedToday: savedState.reviewedToday
+        });
+
+        // Recompute reviewedToday and currentIndex from saved history
+        // to fix inflation caused by hard-duplicate re-ratings
+        const adjustedReviewedToday = computeReviewedCount(savedState.ratingHistory);
+        const adjustedIndex = computeAdjustedIndex(
+          savedState.currentIndex || 0,
+          savedState.ratingHistory
+        );
+
+        console.log('[SmartReviewContext] RESUME diagnosis:', {
+          // Saved state values
+          savedCurrentIndex: savedState.currentIndex,
+          savedReviewedToday: savedState.reviewedToday,
+          savedTodaysQuestionsCount: savedState.todaysQuestions?.length,
+          savedTodaysQuestionIds: savedState.todaysQuestions,
+          savedRatingHistory: savedState.ratingHistory,
+          savedInitialQuestionCount: savedState.initialQuestionCount,
+          // Reconstructed values
+          reconstructedQuestionsCount: reconstructedQuestions.length,
+          // Adjusted values
+          adjustedIndex,
+          adjustedReviewedToday,
+          // Populated questions from backend
+          populatedQuestionsCount: questions.length,
+          populatedQuestionIds: questions.map(q => q._id),
         });
 
         setState(prev => ({

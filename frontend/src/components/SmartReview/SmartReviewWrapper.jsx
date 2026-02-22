@@ -1,7 +1,9 @@
-import React, { useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSmartReview } from '../../hooks/useSmartReview';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import { sessionService } from '../../services/sessions';
+import { sessionPersistence } from '../../services/sessionPersistence';
 import DailyProgress from './DailyProgress';
 import SessionControls from './SessionControls';
 import { FabSpeedDial, TimerProvider, TimerDisplay, useTimer } from '../action-button';
@@ -39,8 +41,12 @@ const SmartReviewContent = ({
   mode,
   cardMode,
   SwipeZoneContainer, // Received prop
-  onSwipeRate         // Received prop
+  onSwipeRate,        // Received prop
+  isOnline,           // Online status
+  wasOffline          // Just came back online
 }) => {
+
+  const [syncStatus, setSyncStatus] = useState(null); // null | 'syncing' | 'synced'
 
 
   const timer = useTimer();
@@ -52,7 +58,7 @@ const SmartReviewContent = ({
     smartReviewRef.current = smartReview;
   }, [smartReview]);
 
-  // Auto-save progress every 30 seconds
+  // Auto-save progress every 30 seconds (skip backend when offline)
   useEffect(() => {
     const saveInterval = setInterval(async () => {
       const current = smartReviewRef.current;
@@ -62,27 +68,80 @@ const SmartReviewContent = ({
 
       // Only save if initialized
       if (current.initialQuestionCount > 0) {
-        try {
-          await sessionService.updateProgress({
-            currentIndex: current.currentIndex,
-            reviewedToday: current.reviewedToday,
-            smartReviewState: {
-              ...current, // Spreads current context state
-              mode: mode || 'normal',
-              cardMode: cardMode || 'normal'
-            },
-            status: 'active',
-            sessionId: current.sessionId || undefined
-          });
-          console.log('[SmartReviewWrapper] Auto-saved progress');
-        } catch (error) {
-          console.error('[SmartReviewWrapper] Auto-save failed:', error);
+        // Always save to localStorage (instant, no network)
+        sessionPersistence.saveToLocal({
+          sessionId: current.sessionId,
+          sectionIds: current.sectionIds,
+          currentIndex: current.currentIndex,
+          reviewedToday: current.reviewedToday,
+          initialQuestionCount: current.initialQuestionCount,
+          todaysQuestions: current.todaysQuestions,
+          ratingHistory: current.ratingHistory,
+          mode: mode || 'normal',
+          cardMode: cardMode || 'normal'
+        });
+
+        // Only attempt backend save when online
+        if (isOnline) {
+          try {
+            await sessionService.updateProgress({
+              currentIndex: current.currentIndex,
+              reviewedToday: current.reviewedToday,
+              smartReviewState: {
+                currentIndex: current.currentIndex,
+                reviewedToday: current.reviewedToday,
+                todaysQuestions: (current.todaysQuestions || []).map(q => q._id || q),
+                ratingHistory: (current.ratingHistory || []).map(r => ({
+                  questionId: r.questionId,
+                  rating: r.rating
+                })),
+                sectionIds: current.sectionIds,
+                initialQuestionCount: current.initialQuestionCount,
+                mode: mode || 'normal',
+                cardMode: cardMode || 'normal'
+              },
+              status: 'active',
+              sessionId: current.sessionId || undefined
+            });
+            console.log('[SmartReviewWrapper] Auto-saved progress to backend', {
+              currentIndex: current.currentIndex,
+              reviewedToday: current.reviewedToday,
+              todaysQuestionsCount: current.todaysQuestions?.length,
+              ratingHistoryCount: current.ratingHistory?.length,
+              initialQuestionCount: current.initialQuestionCount,
+              todaysQuestionIds: (current.todaysQuestions || []).map(q => q._id || q),
+              ratingHistory: (current.ratingHistory || []).map(r => ({ qId: r.questionId, rating: r.rating }))
+            });
+          } catch (error) {
+            console.error('[SmartReviewWrapper] Auto-save to backend failed:', error);
+          }
+        } else {
+          console.log('[SmartReviewWrapper] Offline — saved to localStorage only');
         }
       }
     }, 30000);
 
     return () => clearInterval(saveInterval);
-  }, [mode, cardMode]);
+  }, [mode, cardMode, isOnline]);
+
+  // Sync to backend when coming back online
+  useEffect(() => {
+    if (wasOffline && isOnline) {
+      setSyncStatus('syncing');
+      sessionPersistence.syncToBackend()
+        .then(synced => {
+          if (synced) {
+            setSyncStatus('synced');
+            console.log('[SmartReviewWrapper] Synced offline progress to backend');
+          } else {
+            setSyncStatus(null);
+          }
+          // Clear synced status after 3 seconds
+          setTimeout(() => setSyncStatus(null), 3000);
+        })
+        .catch(() => setSyncStatus(null));
+    }
+  }, [wasOffline, isOnline]);
 
   // Update timer with current question when it changes (for single-question modes)
   useEffect(() => {
@@ -184,6 +243,25 @@ const SmartReviewContent = ({
   return (
     <div className="smart-review-wrapper">
 
+      {/* Offline / Sync Banner */}
+      {!isOnline && (
+        <div className="offline-banner offline">
+          <span className="offline-icon">📡</span>
+          <span>You're offline — progress is saved locally</span>
+        </div>
+      )}
+      {syncStatus === 'syncing' && (
+        <div className="offline-banner syncing">
+          <span className="offline-icon">🔄</span>
+          <span>Back online — syncing progress...</span>
+        </div>
+      )}
+      {syncStatus === 'synced' && (
+        <div className="offline-banner synced">
+          <span className="offline-icon">✅</span>
+          <span>Progress synced successfully</span>
+        </div>
+      )}
 
       {/* Timer Display - shown when timer is active */}
       {timer.showTimerDisplay && timer.isTimerActive && (
@@ -284,10 +362,11 @@ const SmartReviewWrapper = ({
   showAddMore = true,
   mode = 'default',
   cardMode = 'normal',
-  resumeData = null, // Prop for resuming Smart Review state
-  initialSession = null // New prop for initializing with specific session data (e.g. Quick Play)
+  resumeData = null,
+  initialSession = null
 }) => {
   const smartReview = useSmartReview();
+  const { isOnline, wasOffline } = useOnlineStatus();
 
   // Load questions logic
   useEffect(() => {
@@ -303,7 +382,7 @@ const SmartReviewWrapper = ({
       console.log('[SmartReviewWrapper] STARTING NEW SMART REVIEW SESSION for sections:', sectionIds);
       smartReview.loadTodaysQuestions(sectionIds);
     }
-  }, [sectionIds, enableSmartReview, resumeData, initialSession]); // Dependencies updated
+  }, [sectionIds, enableSmartReview, resumeData, initialSession]);
 
   // If Smart Review is disabled, just render children without wrapper
   if (!enableSmartReview) {
@@ -316,10 +395,9 @@ const SmartReviewWrapper = ({
   }, [smartReview.currentQuestion]);
 
   const getQuestionList = useCallback(() => {
-    // For elimination mode: return list with isRated status
     return (smartReview.todaysQuestions || []).map(q => ({
       _id: q._id,
-      isRated: false // SmartReview removes rated questions, so all visible ones are unrated
+      isRated: false
     }));
   }, [smartReview.todaysQuestions]);
 
@@ -328,13 +406,11 @@ const SmartReviewWrapper = ({
     return smartReview.rateQuestion(rating, questionId);
   }, [smartReview]);
 
-  // Handle rating from SwipeZone
   const handleSwipeRate = useCallback(async (rating) => {
     console.log(`[SmartReviewWrapper] Swipe Rate triggered: ${rating}`);
     return smartReview.rateQuestion(rating);
   }, [smartReview]);
 
-  // Determine if swipe should be enabled
   const enableSwipe = cardMode !== 'tiktok';
 
   return (
@@ -353,6 +429,8 @@ const SmartReviewWrapper = ({
         cardMode={cardMode}
         SwipeZoneContainer={enableSwipe ? SwipeZoneContainer : null}
         onSwipeRate={handleSwipeRate}
+        isOnline={isOnline}
+        wasOffline={wasOffline}
       />
     </TimerProvider>
   );
