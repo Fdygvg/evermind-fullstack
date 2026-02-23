@@ -6,9 +6,10 @@ import BookmarkButton from "../Common/BookmarkButton";
 import RatingButtons from "../SmartReview/RatingButtons";
 import "../css/eliminationQuestionCard.css";
 import { useSound } from "../../hooks/useSound";
-import { FaRegCopy, FaCheck, FaPen } from "react-icons/fa";
+import { FaRegCopy, FaCheck, FaPen, FaCommentDots } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { questionService } from "../../services/question";
+import "../css/annotation-bubble.css";
 
 const EliminationQuestionCard = ({
   question,
@@ -28,6 +29,15 @@ const EliminationQuestionCard = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
   const [localQuestion, setLocalQuestion] = useState(null);
+
+  // --- Annotation State ---
+  const annotationKey = `annotation_${question._id}`;
+  const [annotation, setAnnotation] = useState(() => {
+    return localStorage.getItem(annotationKey) || '';
+  });
+  const [isAnnotating, setIsAnnotating] = useState(false);
+  const [editAnnotation, setEditAnnotation] = useState('');
+
   const questionRef = useRef(null);
   const answerRef = useRef(null);
 
@@ -73,6 +83,36 @@ const EliminationQuestionCard = ({
     setSaveStatus(null);
   };
 
+  const handleAnnotationStart = (e) => {
+    e.stopPropagation();
+    setIsEditing(false); // Close edit mode defensively
+    setEditAnnotation(annotation);
+    setIsAnnotating(true);
+  };
+
+  const handleAnnotationSave = () => {
+    const trimmed = editAnnotation.trim();
+    if (trimmed) {
+      localStorage.setItem(annotationKey, trimmed);
+      setAnnotation(trimmed);
+    } else {
+      localStorage.removeItem(annotationKey);
+      setAnnotation('');
+    }
+    setIsAnnotating(false);
+  };
+
+  const handleAnnotationDelete = () => {
+    localStorage.removeItem(annotationKey);
+    setAnnotation('');
+    setEditAnnotation('');
+    setIsAnnotating(false);
+  };
+
+  const handleAnnotationCancel = () => {
+    setIsAnnotating(false);
+  };
+
   const handleEditSave = async () => {
     setIsSaving(true);
     setSaveStatus(null);
@@ -116,11 +156,14 @@ const EliminationQuestionCard = ({
 
     try {
       if (rating >= 4) {
-        playSound("correct");
+        playSound("ding");
+        // DECAY LOGIC: User has mastered or found it easy. Wipe the annotation immediately.
+        localStorage.removeItem(annotationKey);
+        setAnnotation('');
       } else if (rating === 3) {
         playSound("ding");
       } else {
-        playSound("wrong");
+        playSound("bong");
       }
 
       await rateQuestion(rating);
@@ -141,6 +184,26 @@ const EliminationQuestionCard = ({
     <div className="question-card" style={{ position: 'relative' }}>
       {/* Edit, Copy & Bookmark Buttons */}
       <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <motion.button
+          onClick={isAnnotating ? handleAnnotationCancel : handleAnnotationStart}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none',
+            color: annotation || isAnnotating ? 'var(--color-primary, #8B5CF6)' : 'var(--color-text-secondary, #6B7280)',
+            transition: 'color 0.2s ease',
+          }}
+          title={isAnnotating ? "Cancel annotation" : "Add/Edit annotation"}
+        >
+          <FaCommentDots size={14} />
+        </motion.button>
         <motion.button
           onClick={isEditing ? handleEditCancel : handleEditStart}
           whileHover={{ scale: 1.1 }}
@@ -261,6 +324,43 @@ const EliminationQuestionCard = ({
             <MarkdownContent content={displayQuestion.question} />
           )}
         </div>
+
+        {/* --- Annotation Bubble / Editor --- */}
+        {isAnnotating ? (
+          <div className="annotation-editor-wrapper">
+            <textarea
+              className="annotation-textarea"
+              value={editAnnotation}
+              onChange={(e) => setEditAnnotation(e.target.value)}
+              placeholder="Add a note to remember for next time..."
+              autoFocus
+            />
+            <div className="annotation-actions">
+              {annotation && (
+                <button className="annotation-btn delete" onClick={handleAnnotationDelete}>
+                  Delete Note
+                </button>
+              )}
+              <button className="annotation-btn cancel" onClick={handleAnnotationCancel}>
+                Cancel
+              </button>
+              <button className="annotation-btn save" onClick={handleAnnotationSave}>
+                Save Note
+              </button>
+            </div>
+          </div>
+        ) : annotation && !isEditing ? (
+          <div className="annotation-container">
+            <div className="annotation-connector">
+              <div className="annotation-line" />
+              <div className="annotation-dot">N</div>
+            </div>
+            <div className="annotation-bubble">
+              <pre className="annotation-text">{annotation}</pre>
+            </div>
+          </div>
+        ) : null}
+        {/* ---------------------------------- */}
 
         {isEditing ? (
           <div className="answer-section">

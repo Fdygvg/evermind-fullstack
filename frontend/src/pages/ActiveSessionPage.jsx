@@ -384,6 +384,11 @@ const ActiveSession = () => {
 
           // Helper to reset answer state when rating
           const handleSmartRate = async (rating, questionId) => {
+            // DECAY LOGIC: User has mastered or found it easy. Wipe the annotation.
+            if (rating >= 4) {
+              localStorage.removeItem(`annotation_${questionId}`);
+            }
+
             await rateQuestion(rating, questionId);
             setShowAnswer(false); // Force reset answer state
           };

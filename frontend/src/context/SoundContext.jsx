@@ -57,6 +57,12 @@ export const SoundProvider = ({ children }) => {
         setTimeout(() => createTone(context, 659.25, 0.1, "triangle"), 50);
         break;
 
+      case "bong":
+        // Low, resonant bong sound (e.g. for rating "Hard")
+        createTone(context, 164.81, 0.8, "sine"); // E3
+        setTimeout(() => createTone(context, 164.81, 0.6, "triangle"), 50);
+        break;
+
       case "bell":
         // Clear notification bell
         createTone(context, 784.0, 0.5, "sine"); // G5

@@ -1,0 +1,148 @@
+/* 
+ * @css/annotation-bubble.css
+ * 
+ * Architectural Intent: "Intentional Minimalism"
+ * 
+ * Defines the styling for the inline annotation dot, connector, and text bubble.
+ */
+
+.annotation-container {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 1rem;
+  padding-left: 0.5rem;
+}
+
+/* The Connector Dot & Line */
+.annotation-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  position: relative;
+  height: 24px; /* Align with first line of text */
+}
+
+.annotation-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--color-background-elevated, #1F2937); /* Darker backdrop to pop the letter */
+  color: var(--color-text, #ffffff);
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-border, rgba(255,255,255,0.1));
+  z-index: 2;
+}
+
+.annotation-line {
+  position: absolute;
+  top: 50%;
+  left: -20px; /* Stretch backward toward the theoretical margin */
+  width: 20px;
+  height: 2px;
+  background-color: var(--color-border, rgba(255,255,255,0.2));
+  z-index: 1;
+}
+
+/* The Bubble Layout */
+.annotation-bubble {
+  background-color: var(--color-surface, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  padding: 12px 16px;
+  flex: 1;
+  position: relative;
+  /* Soft, ambient glow indicating a note rather than structural text */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.annotation-bubble::before {
+  /* The small triangle pointing to the dot */
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: -5px;
+  width: 10px;
+  height: 10px;
+  background-color: var(--color-surface, rgba(255, 255, 255, 0.05));
+  border-left: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  transform: rotate(45deg);
+}
+
+.annotation-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary, #9CA3AF);
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Editor Specific Styling */
+.annotation-editor-wrapper {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background-color: var(--color-surface-hover, rgba(255, 255, 255, 0.02));
+  border-radius: 8px;
+  border: 1px dashed var(--color-border, rgba(255,255,255,0.2));
+}
+
+.annotation-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-primary, #8B5CF6);
+  background: var(--color-background, #111827);
+  color: var(--color-text, inherit);
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  line-height: 1.5;
+}
+
+.annotation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.annotation-btn {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s;
+}
+
+.annotation-btn:hover {
+  opacity: 0.8;
+}
+
+.annotation-btn.save {
+  background-color: var(--color-primary, #8B5CF6);
+  color: #fff;
+}
+
+.annotation-btn.cancel {
+  background-color: transparent;
+  border: 1px solid var(--color-text-secondary, #6B7280);
+  color: var(--color-text-secondary, #6B7280);
+}
+
+.annotation-btn.delete {
+  background-color: transparent;
+  color: var(--color-danger, #ef4444);
+  margin-right: auto; /* Push to far left */
+}

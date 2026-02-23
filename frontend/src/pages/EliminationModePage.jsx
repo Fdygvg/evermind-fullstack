@@ -317,6 +317,12 @@ const EliminationModePage = () => {
                   {todaysQuestions.map((question, index) => {
                     const handleEliminationRate = (rating, qId) => {
                       console.log(`[Elimination] Rate on ${qId}: ${rating}`);
+
+                      // DECAY LOGIC: User has mastered or found it easy. Wipe the annotation.
+                      if (rating >= 4) {
+                        localStorage.removeItem(`annotation_${qId}`);
+                      }
+
                       rateQuestion(rating, qId);
                       // Close the card so it resets if recycled
                       setRevealedAnswers((prev) => {

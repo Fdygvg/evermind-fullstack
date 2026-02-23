@@ -3,9 +3,10 @@ import CodeBlock from './CodeBlock';
 import MarkdownContent from './MarkdownContent';
 import { useEffect, useState, useRef } from 'react';
 import { useSound } from '../../hooks/useSound';
-import { FaRegCopy, FaCheck, FaPen } from 'react-icons/fa';
+import { FaRegCopy, FaCheck, FaPen, FaCommentDots } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { questionService } from '../../services/question';
+import '../css/annotation-bubble.css';
 
 const QuestionCard = ({
   currentQuestion,
@@ -23,6 +24,15 @@ const QuestionCard = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null); // 'saved' | 'error' | null
   const [localQuestion, setLocalQuestion] = useState(null);
+
+  // --- Annotation State ---
+  const annotationKey = `annotation_${currentQuestion._id}`;
+  const [annotation, setAnnotation] = useState(() => {
+    return localStorage.getItem(annotationKey) || '';
+  });
+  const [isAnnotating, setIsAnnotating] = useState(false);
+  const [editAnnotation, setEditAnnotation] = useState('');
+
   const questionRef = useRef(null);
   const answerRef = useRef(null);
 
@@ -40,6 +50,12 @@ const QuestionCard = ({
     setIsEditing(false);
     setSaveStatus(null);
     setLocalQuestion(null);
+
+    // Reset Annotation on question flip
+    const key = `annotation_${currentQuestion?._id}`;
+    setAnnotation(localStorage.getItem(key) || '');
+    setIsAnnotating(false);
+    setEditAnnotation('');
   }, [currentQuestion?._id]);
 
   // Auto-resize textareas
@@ -85,6 +101,36 @@ const QuestionCard = ({
     setSaveStatus(null);
   };
 
+  const handleAnnotationStart = (e) => {
+    e.stopPropagation();
+    setIsEditing(false); // Close edit mode defensively
+    setEditAnnotation(annotation);
+    setIsAnnotating(true);
+  };
+
+  const handleAnnotationSave = () => {
+    const trimmed = editAnnotation.trim();
+    if (trimmed) {
+      localStorage.setItem(annotationKey, trimmed);
+      setAnnotation(trimmed);
+    } else {
+      localStorage.removeItem(annotationKey);
+      setAnnotation('');
+    }
+    setIsAnnotating(false);
+  };
+
+  const handleAnnotationDelete = () => {
+    localStorage.removeItem(annotationKey);
+    setAnnotation('');
+    setEditAnnotation('');
+    setIsAnnotating(false);
+  };
+
+  const handleAnnotationCancel = () => {
+    setIsAnnotating(false);
+  };
+
   const handleEditSave = async () => {
     setIsSaving(true);
     setSaveStatus(null);
@@ -124,6 +170,28 @@ const QuestionCard = ({
     >
       {/* Edit, Copy & Bookmark Buttons */}
       <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
+        {/* Comment/Annotation Button */}
+        <motion.button
+          onClick={isAnnotating ? handleAnnotationCancel : handleAnnotationStart}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none',
+            color: annotation || isAnnotating ? 'var(--color-primary, #8B5CF6)' : 'var(--color-text-secondary, #6B7280)',
+            transition: 'color 0.2s ease',
+          }}
+          title={isAnnotating ? "Cancel annotation" : "Add/Edit annotation"}
+        >
+          <FaCommentDots size={16} />
+        </motion.button>
+
         {/* Edit Button */}
         <motion.button
           onClick={isEditing ? handleEditCancel : handleEditStart}
@@ -235,6 +303,44 @@ const QuestionCard = ({
         ) : (
           <MarkdownContent content={displayQuestion.question} />
         )}
+
+        {/* --- Annotation Bubble / Editor --- */}
+        {isAnnotating ? (
+          <div className="annotation-editor-wrapper">
+            <textarea
+              className="annotation-textarea"
+              value={editAnnotation}
+              onChange={(e) => setEditAnnotation(e.target.value)}
+              placeholder="Add a note to remember for next time..."
+              autoFocus
+            />
+            <div className="annotation-actions">
+              {annotation && (
+                <button className="annotation-btn delete" onClick={handleAnnotationDelete}>
+                  Delete Note
+                </button>
+              )}
+              <button className="annotation-btn cancel" onClick={handleAnnotationCancel}>
+                Cancel
+              </button>
+              <button className="annotation-btn save" onClick={handleAnnotationSave}>
+                Save Note
+              </button>
+            </div>
+          </div>
+        ) : annotation && !isEditing ? (
+          <div className="annotation-container">
+            <div className="annotation-connector">
+              <div className="annotation-line" />
+              <div className="annotation-dot">N</div>
+            </div>
+            <div className="annotation-bubble">
+              <pre className="annotation-text">{annotation}</pre>
+            </div>
+          </div>
+        ) : null}
+        {/* ---------------------------------- */}
+
       </div>
 
       {/* Answer Section */}
@@ -301,6 +407,17 @@ const QuestionCard = ({
         <div className="answer-section">
           <h2>Answer</h2>
           <MarkdownContent content={displayQuestion.answer} />
+          <button
+            className="show-answer-btn"
+            style={{ marginTop: '16px', background: 'transparent', color: 'var(--color-primary, #8B5CF6)', border: '2px solid var(--color-primary, #8B5CF6)' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowAnswer(false);
+              playSound("flip");
+            }}
+          >
+            Hide Answer
+          </button>
         </div>
       ) : (
         <button
