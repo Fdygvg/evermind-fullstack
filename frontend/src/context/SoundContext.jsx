@@ -159,6 +159,37 @@ export const SoundProvider = ({ children }) => {
         createTone(context, 440, 0.05, "sine"); // A4
         break;
 
+      // --- New Rating Sounds (Calm & Generic) ---
+      case "rate_1":
+        // Low, calm tone (Deep C)
+        createTone(context, 261.63, 0.4, "sine"); // C4
+        setTimeout(() => createTone(context, 261.63, 0.2, "triangle"), 50);
+        break;
+      
+      case "rate_2":
+        // Slightly higher tone (D)
+        createTone(context, 293.66, 0.35, "sine"); // D4
+        setTimeout(() => createTone(context, 293.66, 0.15, "triangle"), 50);
+        break;
+      
+      case "rate_3":
+        // Mid-range clear tone (E)
+        createTone(context, 329.63, 0.3, "sine"); // E4
+        setTimeout(() => createTone(context, 329.63, 0.1, "triangle"), 50);
+        break;
+      
+      case "rate_4":
+        // Higher, pleasant tone (G)
+        createTone(context, 392.00, 0.25, "sine"); // G4
+        setTimeout(() => createTone(context, 392.00, 0.1, "triangle"), 50);
+        break;
+      
+      case "rate_5":
+        // Soft, high, resolving tone (C5)
+        createTone(context, 523.25, 0.2, "sine"); // C5
+        setTimeout(() => createTone(context, 523.25, 0.05, "triangle"), 50);
+        break;
+
       default:
         // Default fallback
         createTone(context, 440, 0.2, "sine");

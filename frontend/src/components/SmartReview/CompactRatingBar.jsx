@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../css/compactRatingBar.css';
+import { useSound } from '../../hooks/useSound';
 
 const CompactRatingBar = ({ onRate, disabled = false, showLabels = false, isSimplified = false }) => {
   const [selectedRating, setSelectedRating] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const timeoutRef = useRef(null);
   const isMountedRef = useRef(true);
+  const { playSound } = useSound();
 
   // Cleanup on unmount
   useEffect(() => {
@@ -67,6 +69,7 @@ const CompactRatingBar = ({ onRate, disabled = false, showLabels = false, isSimp
 
     setSelectedRating(rating);
     setIsAnimating(true);
+    playSound(`rate_${rating}`);
 
     try {
       await onRate(rating);

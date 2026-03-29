@@ -5,7 +5,10 @@ import {
   createSection, 
   updateSection, 
   deleteSection,
-  getSectionStats 
+  getSectionStats,
+  archiveSection,
+  restoreSection,
+  resetAllProgress
 } from '../controllers/sectionController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -18,4 +21,7 @@ router.post('/', createSection);
 router.put('/:id', updateSection);
 router.delete('/:id', deleteSection);
 router.get('/:sectionId/stats', getSectionStats);
-export default router;
+router.patch('/:id/archive', archiveSection);
+router.patch('/:id/restore', restoreSection);
+router.post('/reset-progress', resetAllProgress);
+export default router;

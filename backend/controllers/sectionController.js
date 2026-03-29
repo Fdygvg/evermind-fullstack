@@ -4,7 +4,11 @@ import Question from "../models/Question.js";
 
 export const getSections = async (req, res) => {
   try {
-    const sections = await Section.find({ userId: req.userId });
+    // By default return only active sections; pass ?archived=true for archived ones
+    const showArchived = req.query.archived === 'true';
+    const filter = { userId: req.userId, isActive: !showArchived };
+
+    const sections = await Section.find(filter);
     
     // Get question counts for each section
     const sectionsWithCounts = await Promise.all(
@@ -32,6 +36,48 @@ export const getSections = async (req, res) => {
       success: false,
       message: 'Error fetching sections'
     });
+  }
+};
+
+export const archiveSection = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const section = await Section.findOneAndUpdate(
+      { _id: id, userId: req.userId },
+      { isActive: false },
+      { new: true }
+    );
+
+    if (!section) {
+      return res.status(404).json({ success: false, message: 'Section not found' });
+    }
+
+    res.json({ success: true, message: 'Section archived', data: { section } });
+  } catch (error) {
+    console.error('Archive section error:', error);
+    res.status(500).json({ success: false, message: 'Error archiving section' });
+  }
+};
+
+export const restoreSection = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const section = await Section.findOneAndUpdate(
+      { _id: id, userId: req.userId },
+      { isActive: true },
+      { new: true }
+    );
+
+    if (!section) {
+      return res.status(404).json({ success: false, message: 'Section not found' });
+    }
+
+    res.json({ success: true, message: 'Section restored', data: { section } });
+  } catch (error) {
+    console.error('Restore section error:', error);
+    res.status(500).json({ success: false, message: 'Error restoring section' });
   }
 };
 
@@ -204,3 +250,41 @@ export const getSectionStats = async (req, res) => {
     });
   }
 };
+
+export const resetAllProgress = async (req, res) => {
+  try {
+    // Reset all questions for this user
+    await Question.updateMany(
+      { userId: req.userId },
+      {
+        $set: {
+          totalCorrect: 0,
+          totalWrong: 0,
+          lastReviewed: null,
+          nextReviewDate: new Date(),
+          priority: 0,
+          lastRating: null,
+          dueDate: 0,
+          timesReviewed: 0,
+          wasRolledOver: false,
+          priorityBoosts: 0,
+          consecutiveMisses: 0,
+          lastReviewedAt: null,
+          easeFactor: 2.5,
+          currentInterval: 0,
+          isPending: false,
+          pendingSessionId: null
+        }
+      }
+    );
+
+    // Also delete any existing review sessions for this user so they don't resume old states
+    const mongoose = (await import('mongoose')).default;
+    await mongoose.model('ReviewSession').deleteMany({ userId: req.userId });
+
+    res.json({ success: true, message: 'All progress reset to Day 1' });
+  } catch (error) {
+    console.error('Reset all progress error:', error);
+    res.status(500).json({ success: false, message: 'Failed to reset progress' });
+  }
+};

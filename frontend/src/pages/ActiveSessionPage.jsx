@@ -334,10 +334,10 @@ const ActiveSession = () => {
         showAddMore={!isSimplified} // Hide add more for simplified
         mode={mode === 'tiktok' ? 'tiktok' : (isSimplified ? 'simplified' : 'normal')}
         cardMode={cardMode}
-        // For Smart Review, resumeData is used if resuming.
-        // For Simplified, we ALWAYS have sessionData with questions to initialize from.
-        resumeData={!isSimplified && resumeSession ? sessionData : null}
-        initialSession={isSimplified ? sessionData : null}
+        isSimplified={isSimplified}
+        // Both Simplified and Smart Review modes now use initialSession for precise resume
+        // so they reconstruct the exact same session array and question counts.
+        initialSession={resumeSession ? sessionData : null}
       >
         {({
           currentQuestion: smartQuestion,
@@ -476,7 +476,7 @@ const ActiveSession = () => {
                     Structure above has them separate in original code.
                     Let's put them below the swipe container for stability, or check logic.
                 */}
-                {cardMode !== "flashcard" && (showAnswer || isSimplified) && (
+                {cardMode !== "flashcard" && (
                   <div style={{ marginTop: '1rem' }}>
                     <RatingButtons
                       onRate={handleSmartRate}

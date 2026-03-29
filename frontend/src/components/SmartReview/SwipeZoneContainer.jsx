@@ -69,11 +69,7 @@ const SwipeZoneContainer = ({
         }
 
         if (onRate) {
-            if (rating >= 3) {
-                playSound('ding');
-            } else {
-                playSound('bong');
-            }
+            playSound(`rate_${rating}`);
             onRate(rating);
         }
     };

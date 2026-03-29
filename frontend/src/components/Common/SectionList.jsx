@@ -12,12 +12,14 @@ import {
   FaInfoCircle,
   FaPlay,
   FaPause,
-  FaStop
+  FaStop,
+  FaArchive
 } from "react-icons/fa";
+import { sectionService } from "../../services/sections";
 import { sessionService } from "../../services/sessions";
 import "../../components/css/sectionList.css";
 
-const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
+const SectionList = ({ sections, onDeleteSection, searchQuery, onSectionArchived }) => {
   const navigate = useNavigate();
   const [simplifiedSessions, setSimplifiedSessions] = useState({});
   const [loadingAction, setLoadingAction] = useState(null); // track which section is loading
@@ -55,6 +57,21 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
   const handleInfoClick = (sectionId, e) => {
     e.stopPropagation();
     navigate(`/sections/${sectionId}/stats`);
+  };
+
+  const handleArchiveClick = async (sectionId, e) => {
+    e.stopPropagation();
+    if (!window.confirm('Archive this section? It will be hidden but not deleted. You can restore it later.')) return;
+    setLoadingAction(sectionId);
+    try {
+      await sectionService.archiveSection(sectionId);
+      if (onSectionArchived) onSectionArchived(sectionId);
+    } catch (error) {
+      console.error('Failed to archive section:', error);
+      alert('Failed to archive section.');
+    } finally {
+      setLoadingAction(null);
+    }
   };
 
   // Quick Play: Start a new simplified session
@@ -305,6 +322,15 @@ const SectionList = ({ sections, onDeleteSection, searchQuery }) => {
                       title="Edit Section"
                     >
                       <FaEdit />
+                    </button>
+                    <button
+                      className="action-btn archive"
+                      onClick={(e) => handleArchiveClick(section._id, e)}
+                      title="Archive Section"
+                      disabled={isLoading}
+                      style={{ color: 'var(--color-warning, #F59E0B)' }}
+                    >
+                      <FaArchive />
                     </button>
                     <button
                       className="action-btn delete"

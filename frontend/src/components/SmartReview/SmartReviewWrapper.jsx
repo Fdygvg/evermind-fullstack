@@ -6,6 +6,7 @@ import { sessionService } from '../../services/sessions';
 import { sessionPersistence } from '../../services/sessionPersistence';
 import DailyProgress from './DailyProgress';
 import SessionControls from './SessionControls';
+import AIChatPanel from './AIChatPanel';
 import { FabSpeedDial, TimerProvider, TimerDisplay, useTimer } from '../action-button';
 import '../css/smartReviewWrapper.css';
 import SwipeZoneContainer from './SwipeZoneContainer';
@@ -43,10 +44,12 @@ const SmartReviewContent = ({
   SwipeZoneContainer, // Received prop
   onSwipeRate,        // Received prop
   isOnline,           // Online status
-  wasOffline          // Just came back online
+  wasOffline,         // Just came back online
+  isSimplified = false // Single-section Quick Play mode
 }) => {
 
   const [syncStatus, setSyncStatus] = useState(null); // null | 'syncing' | 'synced'
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
 
   const timer = useTimer();
@@ -178,7 +181,7 @@ const SmartReviewContent = ({
     return smartReview.rateQuestion(rating, questionId);
   }, [smartReview, timer]);
 
-  // Handle pause: save progress and navigate to dashboard
+  // Handle pause: save progress and navigate appropriately
   const handlePause = useCallback(async () => {
     try {
       await smartReview.pauseSession(mode, cardMode);
@@ -188,11 +191,17 @@ const SmartReviewContent = ({
         timer.stopTimer();
       }
 
-      navigate('/dashboard');
+      // Single-section Quick Play → go back to Sections page
+      // Multi-section Smart Review → go to Dashboard
+      if (isSimplified) {
+        navigate('/sections');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       console.error('[SmartReviewWrapper] Failed to pause session:', error);
     }
-  }, [smartReview, mode, cardMode, timer, navigate]);
+  }, [smartReview, mode, cardMode, timer, navigate, isSimplified]);
 
   // Handle end session: confirm, end, navigate to results
   const handleEndSession = useCallback(async () => {
@@ -241,7 +250,10 @@ const SmartReviewContent = ({
   }, [smartReview]);
 
   return (
-    <div className="smart-review-wrapper">
+    <div className={`smart-review-wrapper ${showAIPanel ? 'ai-split-active' : ''}`}>
+
+      {/* Main content area */}
+      <div className="sr-main-content">
 
       {/* Offline / Sync Banner */}
       {!isOnline && (
@@ -335,11 +347,13 @@ const SmartReviewContent = ({
       })}
 
 
-      {/* Action Button (FAB) */}
+      {/* Action Button (FAB) — with AI toggle */}
       <FabSpeedDial
         mode={mode}
         currentQuestionId={smartReview.currentQuestion?._id}
         questionText={smartReview.currentQuestion?.question}
+        onToggleAI={() => setShowAIPanel(prev => !prev)}
+        showAIPanel={showAIPanel}
       />
 
       {/* Error Display */}
@@ -349,6 +363,20 @@ const SmartReviewContent = ({
           <span className="error-message">{smartReview.error}</span>
         </div>
       )}
+
+      </div>{/* end sr-main-content */}
+
+      {/* AI Chat Side Panel */}
+      {showAIPanel && smartReview.currentQuestion && (
+        <AIChatPanel
+          question={smartReview.currentQuestion}
+          onClose={() => setShowAIPanel(false)}
+          onAnswerSaved={(questionId, updates) => {
+            smartReview.updateQuestionInSession(questionId, updates);
+          }}
+        />
+      )}
+
     </div>
   );
 };
@@ -362,8 +390,8 @@ const SmartReviewWrapper = ({
   showAddMore = true,
   mode = 'default',
   cardMode = 'normal',
-  resumeData = null,
-  initialSession = null
+  initialSession = null,
+  isSimplified = false
 }) => {
   const smartReview = useSmartReview();
   const { isOnline, wasOffline } = useOnlineStatus();
@@ -375,14 +403,11 @@ const SmartReviewWrapper = ({
     if (initialSession) {
       console.log('[SmartReviewWrapper] INITIALIZING FROM SESSION:', initialSession);
       smartReview.initializeFromSession(initialSession);
-    } else if (resumeData) {
-      console.log('[SmartReviewWrapper] RESUMING SMART REVIEW STATE:', resumeData);
-      smartReview.resumeSessionState(resumeData);
     } else if (sectionIds?.length > 0) {
       console.log('[SmartReviewWrapper] STARTING NEW SMART REVIEW SESSION for sections:', sectionIds);
       smartReview.loadTodaysQuestions(sectionIds);
     }
-  }, [sectionIds, enableSmartReview, resumeData, initialSession]);
+  }, [sectionIds, enableSmartReview, initialSession]);
 
   // If Smart Review is disabled, just render children without wrapper
   if (!enableSmartReview) {
@@ -431,6 +456,7 @@ const SmartReviewWrapper = ({
         onSwipeRate={handleSwipeRate}
         isOnline={isOnline}
         wasOffline={wasOffline}
+        isSimplified={isSimplified}
       />
     </TimerProvider>
   );

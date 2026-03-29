@@ -1,6 +1,6 @@
 // src/components/action-button/components/FabSpeedDial.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { FaPlus, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaTimes, FaRobot } from 'react-icons/fa';
 import FabItem from './FabItem';
 import TimerSetupModal from './TimerSetupModal';
 import NotesModal from './NotesModal';
@@ -10,7 +10,7 @@ import useFabAnimation from '../hooks/useFabAnimation';
 import { useTimer } from '../contexts/TimerContext';
 import '../styles/FabSpeedDial.css';
 
-const FabSpeedDial = ({ mode = 'normal' }) => {
+const FabSpeedDial = ({ mode = 'normal', onToggleAI, showAIPanel = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showTimerModal, setShowTimerModal] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
@@ -46,6 +46,13 @@ const FabSpeedDial = ({ mode = 'normal' }) => {
       onClick: () => toggleFocusMode(),
       active: isFocusMode,
     },
+    ...(onToggleAI ? [{
+      id: 'ai',
+      label: showAIPanel ? 'Close Code Sage' : 'Ask Code Sage',
+      icon: () => <FaRobot style={{ color: showAIPanel ? '#a855f7' : undefined }} />,
+      onClick: () => onToggleAI(),
+      active: showAIPanel,
+    }] : []),
   ];
 
   // Manage Focus Mode Effect and Cleanup

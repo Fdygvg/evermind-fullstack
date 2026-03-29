@@ -168,7 +168,8 @@
 }
 
 .answer-container.show {
-  max-height: 500px;
+  max-height: none;
+  overflow-y: auto;
   opacity: 1;
   margin-bottom: 1rem;
 }

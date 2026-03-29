@@ -2,10 +2,12 @@
 import React, { useState } from 'react';
 import '../css/ratingButtons.css';
 import CompactRatingBar from './CompactRatingBar';
+import { useSound } from '../../hooks/useSound';
 
 const RatingButtons = ({ onRate, disabled = false, compact = false, useCompactBar = true, showLabels = false, isSimplified = false }) => {
   const [selectedRating, setSelectedRating] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const { playSound } = useSound();
 
   // Use new compact rating bar by default
   if (useCompactBar) {
@@ -29,6 +31,7 @@ const RatingButtons = ({ onRate, disabled = false, compact = false, useCompactBa
 
     setSelectedRating(rating);
     setIsAnimating(true);
+    playSound(`rate_${rating}`);
 
     try {
       // PROMISE will resolve immediately now, but we still handle it

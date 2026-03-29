@@ -370,7 +370,8 @@ export const getCurrentSession = async (req, res) => {
     // Find sessions with status 'active' or 'paused'
     const session = await ReviewSession.findOne({
       userId: req.userId,
-      status: { $in: ['active', 'paused'] }
+      status: { $in: ['active', 'paused'] },
+      isSimplified: { $ne: true }  // Dashboard only shows multi-section Smart Review sessions
     })
       .populate('sectionIds', 'name color')
       .populate('remainingQuestions')
@@ -396,6 +397,7 @@ export const getCurrentSession = async (req, res) => {
           sections: session.sectionIds,
           sectionIds: session.sectionIds.map(s => s._id),
           allQuestions: session.allQuestions,
+          remainingQuestions: session.remainingQuestions, // Full populated array for resuming state queue
           progress: {
             total: session.allQuestions.length,
             remaining: session.remainingQuestions.length,

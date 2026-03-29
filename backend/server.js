@@ -12,6 +12,7 @@ import sessionRoutes from "./routes/sessionRoutes.js";
 import statsRoutes from "./routes/statsRoutes.js";
 import presetRoutes from "./routes/presetRoutes.js";
 import smartReviewRoutes from './routes/smartReviewRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 import { apiLimiter } from "./middleware/authMiddleware.js";
 dotenv.config();
 // app config
@@ -64,6 +65,7 @@ app.use("/api/sessions", sessionRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/presets", presetRoutes);
 app.use('/api/smart-review', smartReviewRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Test route
 app.get("/", (req, res) => {
