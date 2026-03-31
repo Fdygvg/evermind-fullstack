@@ -30,18 +30,26 @@ const MarkdownContent = memo(({ content }) => {
                 remarkPlugins={[remarkGfm]}
                 components={{
                     // Intercept code nodes. 
-                    // `inline` evaluates if it's `code` (inline) or ```code``` (block)
-                    code({ node, inline, className, children, ...props }) {
+                    // (Note: `react-markdown` v10+ removed the `inline` prop. We evaluate via `match` and text shape)
+                    pre({ children }) {
+                        // Strip default `<pre>` wrappers to prevent semantic explosion since CodeBlock/SyntaxHighlighter brings its own
+                        return <>{children}</>;
+                    },
+                    code({ node, className, children, ...props }) {
                         const match = /language-(\w+)/.exec(className || '');
-                        const language = match ? match[1] : 'javascript';
+                        const language = match ? match[1] : null;
                         const textContent = String(children).replace(/\n$/, '');
 
-                        if (!inline) {
+                        // Determine if it's block-level code. Definitive if it has a language tag,
+                        // or if it physically spans multiple lines. Single backticks will evaluate false.
+                        const isBlock = match || textContent.includes('\n');
+
+                        if (isBlock) {
                             // Block-level code: Delegate to our robust CodeBlock engine
                             return (
                                 <CodeBlock
                                     text={textContent}
-                                    language={language}
+                                    language={language || 'javascript'}
                                     forceCode={true} // Bypass heuristic detection, Markdown AST confirms it's a block
                                 />
                             );

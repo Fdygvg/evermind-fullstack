@@ -24,25 +24,33 @@ const Dashboard = () => {
         setLoading(true);
         setError("");
 
-        const [profileResponse, statsResponse, sectionResponse] =
-          await Promise.all([
+        // Fire ALL requests in parallel — don't wait for profile/stats before session
+        const [profileResult, statsResult, sectionResult, sessionResult] =
+          await Promise.allSettled([
             authService.getProfile(),
             statsService.getOverview(),
             sectionService.getSections(),
+            sessionService.getCurrentSession(),
           ]);
 
-        setProfile(profileResponse.data.data.user);
-        setStats(statsResponse.data.data.stats);
-        setSections(sectionResponse.data.data.sections || []);
-
-        try {
-          const sessionResponse = await sessionService.getCurrentSession();
-          setActiveSession(sessionResponse.data.data.session);
-        } catch (sessionError) {
-          if (sessionError.response?.status !== 404) {
-            console.error(sessionError);
-          }
+        if (profileResult.status === 'fulfilled') {
+          setProfile(profileResult.value.data.data.user);
+        }
+        if (statsResult.status === 'fulfilled') {
+          setStats(statsResult.value.data.data.stats);
+        }
+        if (sectionResult.status === 'fulfilled') {
+          setSections(sectionResult.value.data.data.sections || []);
+        }
+        if (sessionResult.status === 'fulfilled') {
+          setActiveSession(sessionResult.value.data.data.session);
+        } else {
           setActiveSession(null);
+        }
+
+        // Check if critical data failed
+        if (profileResult.status === 'rejected' && statsResult.status === 'rejected') {
+          throw new Error('Failed to load dashboard data');
         }
       } catch (dashboardError) {
         console.error("Dashboard load error:", dashboardError);

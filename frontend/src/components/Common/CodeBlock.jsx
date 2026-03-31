@@ -1,49 +1,48 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { atomDark as syntaxTheme } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { shouldUsePrism } from '../../utils/validationUtils';
 import { detectCode } from '../../utils/codeDetector';
 
 /**
  * Component to render code with syntax highlighting
- * Automatically detects code blocks and highlights them
- * If no code blocks found but text contains code patterns, treats entire text as code
- * Now uses stricter code detection to prevent false positives
+ * Powered by ReactMarkdown for standard text mixed with code.
+ * Restored `forceCode` and enhanced syntax colors via atomDark for dynamic bracket metrics.
  */
 const CodeBlock = ({ text, language = 'javascript', forceCode = false }) => {
   if (!text) return null;
 
-  // Stricter code detection gate - only use Prism if text is really code
   const codeDetection = detectCode(text);
   const shouldHighlight = forceCode || shouldUsePrism(text);
-  // Check if text contains code blocks (```code```)
-  const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
-  const inlineCodeRegex = /`([^`]+)`/g;
+  const hasExplicitCodeBlocks = /```/.test(text);
 
-  // Reset regex before use (they have global flag which maintains state)
-  codeBlockRegex.lastIndex = 0;
-  inlineCodeRegex.lastIndex = 0;
-
-  // If text has explicit code blocks, always render them
-  const hasExplicitCodeBlocks = codeBlockRegex.test(text);
-  codeBlockRegex.lastIndex = 0;
-
-  // If forceCode is true OR shouldHighlight is true and no explicit code blocks, treat entire text as code
+  // When forceCode is detected (or it mathematically scores as pure code without explicit backticks)
+  // We bypass Markdown parsing and render the entire text as a single syntax highlighted block.
   if ((forceCode || shouldHighlight) && !hasExplicitCodeBlocks) {
-    // Use detected language from codeDetection if available
     const detectedLang = codeDetection?.language || language;
     return (
-      <div className="code-block-container">
+      <div style={{ width: '100%' }}>
         <SyntaxHighlighter
           language={detectedLang}
-          style={vscDarkPlus}
+          style={syntaxTheme}
+          wrapLines={true}
+          wrapLongLines={true}
           customStyle={{
-            borderRadius: '8px',
-            padding: '16px',
-            margin: '12px 0',
+            borderRadius: '14px',
+            padding: '20px',
+            margin: '16px 0',
             fontSize: '14px',
-            lineHeight: '1.5'
+            lineHeight: '1.6',
+            background: '#0d0d12',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            overflowX: 'hidden'
           }}
+          codeTagProps={{ style: { whiteSpace: 'pre-wrap', wordBreak: 'break-word' } }}
         >
           {text}
         </SyntaxHighlighter>
@@ -51,131 +50,67 @@ const CodeBlock = ({ text, language = 'javascript', forceCode = false }) => {
     );
   }
 
-  // Reset regex again (in case we didn't take the early return)
-  codeBlockRegex.lastIndex = 0;
-
-  // Split text into parts (code and non-code)
-  const parts = [];
-  let lastIndex = 0;
-  let match;
-
-  // Find all code blocks
-  const codeBlocks = [];
-  while ((match = codeBlockRegex.exec(text)) !== null) {
-    codeBlocks.push({
-      start: match.index,
-      end: match.index + match[0].length,
-      language: match[1] || language,
-      code: match[2].trim(),
-      fullMatch: match[0]
-    });
-  }
-
-  // Build parts array
-  if (codeBlocks.length === 0) {
-    // No code blocks, check for inline code
-    const inlineParts = [];
-    let inlineLastIndex = 0;
-    let inlineMatch;
-
-    // Reset inline code regex before use
-    inlineCodeRegex.lastIndex = 0;
-
-    while ((inlineMatch = inlineCodeRegex.exec(text)) !== null) {
-      // Add text before inline code
-      if (inlineMatch.index > inlineLastIndex) {
-        inlineParts.push({
-          type: 'text',
-          content: text.substring(inlineLastIndex, inlineMatch.index)
-        });
-      }
-      // Add inline code
-      inlineParts.push({
-        type: 'inline-code',
-        content: inlineMatch[1]
-      });
-      inlineLastIndex = inlineMatch.index + inlineMatch[0].length;
-    }
-    // Add remaining text
-    if (inlineLastIndex < text.length) {
-      inlineParts.push({
-        type: 'text',
-        content: text.substring(inlineLastIndex)
-      });
-    }
-
-    return (
-      <div className="code-block-container">
-        {inlineParts.map((part, idx) => {
-          if (part.type === 'inline-code') {
-            return (
-              <code key={idx} className="inline-code">
-                {part.content}
-              </code>
-            );
-          }
-          return <span key={idx}>{part.content}</span>;
-        })}
-      </div>
-    );
-  }
-
-  // Process code blocks
-  codeBlocks.forEach((block) => {
-    // Add text before code block
-    if (block.start > lastIndex) {
-      parts.push({
-        type: 'text',
-        content: text.substring(lastIndex, block.start)
-      });
-    }
-    // Add code block
-    parts.push({
-      type: 'code',
-      language: block.language,
-      code: block.code
-    });
-    lastIndex = block.end;
-  });
-
-  // Add remaining text after last code block
-  if (lastIndex < text.length) {
-    parts.push({
-      type: 'text',
-      content: text.substring(lastIndex)
-    });
-  }
-
+  // Mixed Markdown + Code Rendering
   return (
-    <div className="code-block-container">
-      {parts.map((part, idx) => {
-        if (part.type === 'code') {
-          return (
-            <SyntaxHighlighter
-              key={idx}
-              language={part.language || language}
-              style={vscDarkPlus}
-              customStyle={{
-                borderRadius: '8px',
-                padding: '16px',
-                margin: '12px 0',
-                fontSize: '14px',
-                lineHeight: '1.5'
-              }}
-            >
-              {part.code}
-            </SyntaxHighlighter>
-          );
-        }
-        return (
-          <div key={idx} className="text-content" style={{ whiteSpace: 'pre-wrap' }}>
-            {part.content}
-          </div>
-        );
-      })}
+    <div style={{ textAlign: 'left', width: '100%', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+      <ReactMarkdown 
+        remarkPlugins={[remarkGfm]}
+        components={{
+          pre: ({children}) => <>{children}</>,
+          code({node, inline, className, children, ...props}) {
+            const match = /language-(\w+)/.exec(className || '')
+            return !inline && match ? (
+              <SyntaxHighlighter
+                style={syntaxTheme}
+                language={match[1]}
+                PreTag="div"
+                wrapLines={true}
+                wrapLongLines={true}
+                customStyle={{
+                  borderRadius: '12px',
+                  padding: '16px',
+                  margin: '12px 0',
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  background: '#0a0a0f',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.4)',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  overflowX: 'hidden'
+                }}
+                codeTagProps={{ style: { whiteSpace: 'pre-wrap', wordBreak: 'break-word' } }}
+                {...props}
+              >
+                {String(children).replace(/\n$/, '')}
+              </SyntaxHighlighter>
+            ) : (
+              <span className={className} style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                padding: '3px 8px',
+                margin: '0 2px',
+                borderRadius: '6px',
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                color: '#e9d5ff',
+                fontSize: '0.88em',
+                whiteSpace: 'pre-wrap',
+                border: '1px solid rgba(255,255,255,0.05)',
+                display: 'inline-block',
+                verticalAlign: 'middle'
+              }} {...props}>
+                {children}
+              </span>
+            )
+          },
+          p: ({children}) => <p style={{ margin: '0 0 12px 0', lineHeight: '1.7' }}>{children}</p>,
+          ul: ({children}) => <ul style={{ paddingLeft: '22px', margin: '0 0 12px 0' }}>{children}</ul>,
+          li: ({children}) => <li style={{ marginBottom: '6px' }}>{children}</li>
+        }}
+      >
+        {text}
+      </ReactMarkdown>
     </div>
   );
 };
 
 export default CodeBlock;
-

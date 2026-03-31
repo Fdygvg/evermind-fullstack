@@ -18,6 +18,11 @@ const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  // Background ping to wake up free Render instances before the user hits submit
+  React.useEffect(() => {
+    fetch(import.meta.env.VITE_API_URL + '/health').catch(() => {});
+  }, []);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,

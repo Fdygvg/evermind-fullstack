@@ -3,8 +3,17 @@ import { authService } from '../services/auth';
 import { AuthContext } from './AuthContextInstance';
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Initialize from localStorage cache immediately — no loading spinner on return visits
+  const [user, setUser] = useState(() => {
+    try {
+      const cached = localStorage.getItem('evermind_user');
+      return cached ? JSON.parse(cached) : null;
+    } catch { return null; }
+  });
+  const [loading, setLoading] = useState(() => {
+    // Only show loading if there's no cached user (first visit / logged out)
+    return !localStorage.getItem('evermind_user');
+  });
 
   useEffect(() => {
     checkAuth();
@@ -14,13 +23,19 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('evermind_token');
       if (token) {
+        // Background verify — user is already set from cache, this just confirms token is still valid
         const response = await authService.getProfile();
         setUser(response.data.data.user);
+        // Update cache with fresh data
+        localStorage.setItem('evermind_user', JSON.stringify(response.data.data.user));
+      } else {
+        setUser(null);
       }
     } catch (error) {
-          console.error(error); 
+      console.error(error); 
       localStorage.removeItem('evermind_token');
       localStorage.removeItem('evermind_user');
+      setUser(null);
     } finally {
       setLoading(false);
     }

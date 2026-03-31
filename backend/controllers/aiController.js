@@ -30,6 +30,121 @@ IMPORTANT: Output ONLY your final response. DO NOT include any internal thoughts
 const stripThinking = (text) => (text || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
 /**
+ * POST /api/ai/chat
+ * Unified chat endpoint — handles free-form messages and shortcut commands
+ */
+export const chatWithSage = async (req, res) => {
+  try {
+    const { message, questionContext, conversationHistory } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ success: false, message: 'message is required' });
+    }
+
+    // Build the system prompt with the current question context
+    let systemPrompt = CODE_SAGE_SYSTEM_PROMPT;
+    if (questionContext && questionContext.question) {
+      systemPrompt += `\n\nThe student is currently reviewing this flashcard:\n**Question:** ${questionContext.question}\n**Answer:** ${questionContext.answer || '(no answer provided)'}`;
+    }
+
+    const isRewrite = message === '__REWRITE__';
+
+    // Determine user message based on shortcut commands
+    let userMessage = message;
+    if (message === '__EXPLAIN__') {
+      userMessage = `Break down this question and answer for me like I'm a junior developer seeing this concept for the first time. Explain the core concept, why it matters, and give me a practical example I can relate to.`;
+    } else if (isRewrite) {
+      userMessage = `I need you to rewrite the answer to this flashcard question in two different styles. Use the question for context and rewrite the answer only.
+
+**Version A (Short)** — A brief, to-the-point answer. 2-4 sentences max. Easy to scan during quick review.
+
+**Version B (Concise)** — A tightly written answer that covers all key points without fluff. Uses bullet points or numbered steps where helpful. No unnecessary words.
+
+Return your response in this EXACT format (including the markers):
+---VERSION_A---
+(your short version here)
+---VERSION_B---
+(your concise version here)
+---END---`;
+    }
+
+    // Build messages array: system + last 5 conversation messages + new user message
+    const messages = [{ role: 'system', content: systemPrompt }];
+
+    // Add conversation history (last 5 messages for context)
+    if (conversationHistory && Array.isArray(conversationHistory)) {
+      const recentHistory = conversationHistory.slice(-5);
+      recentHistory.forEach(msg => {
+        if (msg.role === 'user' || msg.role === 'assistant') {
+          messages.push({ role: msg.role, content: msg.content });
+        }
+      });
+    }
+
+    // Add the current user message
+    messages.push({ role: 'user', content: userMessage });
+
+    const chatCompletion = await getGroq().chat.completions.create({
+      messages,
+      model: 'qwen/qwen3-32b',
+      temperature: isRewrite ? 0.7 : 0.6,
+      max_completion_tokens: isRewrite ? 3072 : 2048,
+      top_p: 0.95,
+      stream: false
+    });
+
+    let rawReply = chatCompletion.choices[0]?.message?.content || 'No response generated.';
+    rawReply = stripThinking(rawReply);
+
+    // If rewrite, parse structured versions
+    if (isRewrite) {
+      let versionA = '';
+      let versionB = '';
+
+      const matchA = rawReply.match(/---VERSION_A---\s*([\s\S]*?)\s*---VERSION_B---/);
+      const matchB = rawReply.match(/---VERSION_B---\s*([\s\S]*?)\s*(?:---END---|$)/);
+
+      if (matchA) versionA = matchA[1].trim();
+      if (matchB) versionB = matchB[1].trim();
+
+      // Fallback if parsing failed
+      if (!versionA && !versionB) {
+        const parts = rawReply.split(/version\s*b/i);
+        if (parts.length >= 2) {
+          versionA = parts[0].replace(/version\s*a/i, '').trim();
+          versionB = parts[1].trim();
+        } else {
+          versionA = rawReply;
+          versionB = questionContext?.answer || rawReply;
+        }
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          type: 'rewrite',
+          reply: 'Here are two rewritten versions of the answer:',
+          versionA,
+          versionB,
+          original: questionContext?.answer || ''
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { type: 'chat', reply: rawReply }
+    });
+  } catch (error) {
+    console.error('AI Chat error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get response: ' + (error.message || 'Unknown error')
+    });
+  }
+};
+
+/**
  * POST /api/ai/explain
  * Explains the current question + answer to the user like they're a junior dev
  */

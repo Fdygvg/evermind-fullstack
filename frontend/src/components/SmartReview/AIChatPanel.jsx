@@ -1,102 +1,316 @@
 // frontend/src/components/SmartReview/AIChatPanel.jsx
-import React, { useState } from 'react';
-import { FaRobot, FaTimes, FaLightbulb, FaPen, FaCheck, FaSpinner, FaArrowLeft } from 'react-icons/fa';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  FaRobot, FaTimes, FaLightbulb, FaPen, FaPaperPlane,
+  FaSpinner, FaCopy, FaCheck, FaSave
+} from 'react-icons/fa';
 import { aiService } from '../../services/aiService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import './AIChatPanel.css';
-const AIChatPanel = ({
-  question,        // current question object { _id, question, answer }
-  onClose,         // close the panel
-  onAnswerSaved,   // callback after saving a rewritten answer (updates session state)
-}) => {
-  const [activeTab, setActiveTab] = useState(null);  // null | 'explain' | 'rewrite'
-  const [loading, setLoading] = useState(false);
-  const [explanation, setExplanation] = useState('');
-  const [rewriteData, setRewriteData] = useState(null);  // { versionA, versionB, original }
-  const [selectedVersion, setSelectedVersion] = useState(null);  // 'A' | 'B'
+
+// ─── Code block with language label + copy button ───
+const CodeBlockRenderer = ({ node, inline, className, children, ...props }) => {
+  const [copied, setCopied] = useState(false);
+  const match = /language-(\w+)/.exec(className || '');
+  const language = match ? match[1] : '';
+  const codeText = String(children).replace(/\n$/, '');
+
+  // Fix react-markdown v10 inline bug (inline is undefined)
+  const isBlock = match || String(children).includes('\n');
+
+  if (!isBlock) {
+    return <code className={className} {...props}>{children}</code>;
+  }
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(codeText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* fallback ignored */ }
+  };
+
+  return (
+    <div className="ai-code-block-wrapper">
+      <div className="ai-code-block-header">
+        {language && <span className="ai-code-lang">{language}</span>}
+        <button className="ai-code-copy-btn" onClick={handleCopy} title="Copy code">
+          {copied ? <><FaCheck /> Copied</> : <><FaCopy /> Copy</>}
+        </button>
+      </div>
+      <pre className={className} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowX: 'hidden' }} {...props}>
+        <code style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{children}</code>
+      </pre>
+    </div>
+  );
+};
+
+// ─── Rewrite cards (Single Tabbed Box) ───
+const RewriteCards = ({ msg, onSave }) => {
+  const [activeTab, setActiveTab] = useState('A'); // A = Short, B = Concise
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState('');
+  const [savedVersion, setSavedVersion] = useState(null);
 
-  const handleExplain = async () => {
-    setActiveTab('explain');
-    setLoading(true);
-    setError('');
-    setExplanation('');
-    try {
-      const response = await aiService.explain(question.question, question.answer);
-      setExplanation(response.data.data.explanation);
-    } catch (err) {
-      console.error('AI Explain error:', err);
-      setError('Failed to get explanation. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRewrite = async () => {
-    setActiveTab('rewrite');
-    setLoading(true);
-    setError('');
-    setRewriteData(null);
-    setSelectedVersion(null);
-    setSaved(false);
-    try {
-      const response = await aiService.rewrite(question.question, question.answer);
-      setRewriteData(response.data.data);
-    } catch (err) {
-      console.error('AI Rewrite error:', err);
-      setError('Failed to generate rewrites. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveRewrite = async () => {
-    if (!selectedVersion || !rewriteData) return;
-
-    const newAnswer = selectedVersion === 'A' ? rewriteData.versionA : rewriteData.versionB;
+  const handleSave = async () => {
+    if (saving || savedVersion === activeTab) return;
+    const newAnswer = activeTab === 'A' ? msg.versionA : msg.versionB;
     setSaving(true);
     try {
-      await aiService.saveAnswer(question._id, newAnswer);
-      setSaved(true);
-      // Update the question in the current session so the UI reflects it immediately
-      if (onAnswerSaved) {
-        onAnswerSaved(question._id, { answer: newAnswer });
-      }
+      await onSave(newAnswer);
+      setSavedVersion(activeTab);
     } catch (err) {
-      console.error('Save rewrite error:', err);
-      setError('Failed to save the new answer.');
+      console.error('Save error:', err);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleBack = () => {
-    setActiveTab(null);
-    setExplanation('');
-    setRewriteData(null);
-    setSelectedVersion(null);
-    setSaved(false);
-    setError('');
+  const currentContent = activeTab === 'A' ? msg.versionA : msg.versionB;
+  const isCurrentlySaved = savedVersion === activeTab;
+
+  return (
+    <div className="ai-chat-message assistant">
+      <FaRobot className="ai-msg-avatar" />
+      <div className="ai-msg-bubble ai-rewrite-bubble">
+        <div className="ai-msg-text" style={{ marginBottom: '12px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
+          Here is a rewritten suggestion. Choose a style below:
+        </div>
+        <div className={`ai-rewrite-card ${isCurrentlySaved ? 'saved' : ''}`}>
+          <div className="ai-rewrite-card-body ai-markdown-content">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlockRenderer }}>
+              {currentContent}
+            </ReactMarkdown>
+          </div>
+          <div className="ai-rewrite-footer">
+            <div className="ai-rewrite-tabs">
+              <button 
+                className={`ai-tab-btn ${activeTab === 'A' ? 'active' : ''}`}
+                onClick={() => setActiveTab('A')}
+                title="Short"
+              >
+                Short
+              </button>
+              <button 
+                className={`ai-tab-btn ${activeTab === 'B' ? 'active' : ''}`}
+                onClick={() => setActiveTab('B')}
+                title="Concise"
+              >
+                Concise
+              </button>
+            </div>
+            <button 
+              className="ai-rewrite-save-btn" 
+              onClick={handleSave} 
+              disabled={saving || isCurrentlySaved}
+            >
+              {saving ? <FaSpinner className="ai-spinner" /> : 
+               isCurrentlySaved ? <><FaCheck /> Saved</> : 
+               <><FaSave /> Save</>}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Single chat message bubble ───
+const ChatMessage = ({ msg }) => {
+  const [copied, setCopied] = useState(false);
+  const isUser = msg.role === 'user';
+  const isDivider = msg.role === 'divider';
+
+  if (isDivider) {
+    return (
+      <div className="ai-chat-divider">
+        <span>{msg.content}</span>
+      </div>
+    );
+  }
+
+  const handleCopyMessage = async () => {
+    try {
+      await navigator.clipboard.writeText(msg.content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* fallback ignored */ }
   };
 
   return (
+    <div className={`ai-chat-message ${isUser ? 'user' : 'assistant'}`}>
+      {!isUser && <FaRobot className="ai-msg-avatar" />}
+      <div className="ai-msg-bubble">
+        {isUser ? (
+          <div className="ai-msg-text">{msg.displayText || msg.content}</div>
+        ) : (
+          <div className="ai-msg-text ai-markdown-content">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{ code: CodeBlockRenderer }}
+            >
+              {msg.content}
+            </ReactMarkdown>
+          </div>
+        )}
+        <button
+          className={`ai-msg-copy-btn ${copied ? 'copied' : ''}`}
+          onClick={handleCopyMessage}
+          title="Copy message"
+        >
+          {copied ? <FaCheck /> : <FaCopy />}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Main AIChatPanel component ───
+const AIChatPanel = ({
+  question,        // current question object { _id, question, answer }
+  onClose,         // close the panel
+  onAnswerSaved,   // callback after saving a rewritten answer
+}) => {
+  const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
+  const currentQuestionIdRef = useRef(null);
+
+  // Scroll to bottom when messages change
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  // Track question changes — insert divider when question switches
+  useEffect(() => {
+    if (!question?._id) return;
+
+    if (currentQuestionIdRef.current && currentQuestionIdRef.current !== question._id) {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `divider-${Date.now()}`,
+          role: 'divider',
+          content: '📋 Context switched to new question'
+        }
+      ]);
+    }
+    currentQuestionIdRef.current = question._id;
+  }, [question?._id]);
+
+  // Build conversation history from messages (last 5, excluding dividers/rewrite)
+  const getConversationHistory = useCallback(() => {
+    return messages
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .slice(-5)
+      .map(m => ({ role: m.role, content: m.content }));
+  }, [messages]);
+
+  // Save a rewritten answer
+  const handleSaveRewrite = useCallback(async (newAnswer) => {
+    if (!question?._id) return;
+    await aiService.saveAnswer(question._id, newAnswer);
+    if (onAnswerSaved) {
+      onAnswerSaved(question._id, { answer: newAnswer });
+    }
+  }, [question, onAnswerSaved]);
+
+  // Send a message to the AI
+  const sendMessage = useCallback(async (rawMessage, displayText = null) => {
+    if (!rawMessage.trim() || loading) return;
+
+    const userMsg = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: rawMessage,
+      displayText: displayText || rawMessage,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, userMsg]);
+    setInputText('');
+    setLoading(true);
+
+    try {
+      const questionContext = question
+        ? { question: question.question, answer: question.answer }
+        : null;
+
+      const history = getConversationHistory();
+      const response = await aiService.chat(rawMessage, questionContext, history);
+      const data = response.data.data;
+
+      if (data.type === 'rewrite') {
+        // Rewrite response — add as a special message with version cards
+        const rewriteMsg = {
+          id: `rewrite-${Date.now()}`,
+          role: 'rewrite',
+          content: data.reply,
+          versionA: data.versionA,
+          versionB: data.versionB,
+          original: data.original,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, rewriteMsg]);
+      } else {
+        // Normal chat response
+        const aiMsg = {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: data.reply,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiMsg]);
+      }
+    } catch (err) {
+      console.error('AI Chat error:', err);
+      const errorMsg = {
+        id: `assistant-err-${Date.now()}`,
+        role: 'assistant',
+        content: '⚠️ Sorry, I couldn\'t process that request. Please try again.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setLoading(false);
+    }
+  }, [loading, question, getConversationHistory]);
+
+  // Shortcut handlers
+  const handleExplain = () => sendMessage('__EXPLAIN__', '💡 Explain this question');
+  const handleRewrite = () => sendMessage('__REWRITE__', '✏️ Rewrite the answer');
+
+  // Handle Enter key (send), Shift+Enter (newline)
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(inputText);
+    }
+  };
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+    }
+  }, [inputText]);
+
+  return (
     <div className="ai-chat-panel">
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="ai-panel-header">
         <div className="ai-header-left">
-          {activeTab && (
-            <button className="ai-back-btn" onClick={handleBack} title="Back">
-              <FaArrowLeft />
-            </button>
-          )}
           <FaRobot className="ai-avatar" />
           <div>
             <span className="ai-title">Code Sage</span>
             <span className="ai-subtitle">
-              {activeTab === 'explain' ? 'Explaining...' : activeTab === 'rewrite' ? 'Rewriting...' : 'Your AI Study Buddy'}
+              {loading ? 'Thinking...' : 'Your AI Study Buddy'}
             </span>
           </div>
         </div>
@@ -105,113 +319,82 @@ const AIChatPanel = ({
         </button>
       </div>
 
-      {/* Content Area */}
+      {/* ── Messages Area ── */}
       <div className="ai-panel-content">
-        {/* Menu (no tab selected) */}
-        {!activeTab && (
-          <div className="ai-menu">
-            <p className="ai-menu-prompt">What would you like me to do with this question?</p>
-            <button className="ai-action-card" onClick={handleExplain}>
-              <FaLightbulb className="ai-action-icon explain-icon" />
-              <div>
-                <strong>Explain This</strong>
-                <span>Break it down like I'm a junior dev</span>
-              </div>
-            </button>
-            <button className="ai-action-card" onClick={handleRewrite}>
-              <FaPen className="ai-action-icon rewrite-icon" />
-              <div>
-                <strong>Rewrite Answer</strong>
-                <span>Generate 2 improved versions to choose from</span>
-              </div>
-            </button>
+        {messages.length === 0 && (
+          <div className="ai-empty-state">
+            <FaRobot className="ai-empty-icon" />
+            <p>Hey! I'm <strong>Code Sage</strong>.</p>
+            <p className="ai-empty-hint">
+              Ask me anything about this question, or use the shortcuts below.
+            </p>
           </div>
         )}
 
-        {/* Loading */}
+        {messages.map(msg => {
+          if (msg.role === 'rewrite') {
+            return <RewriteCards key={msg.id} msg={msg} onSave={handleSaveRewrite} />;
+          }
+          return <ChatMessage key={msg.id} msg={msg} />;
+        })}
+
         {loading && (
-          <div className="ai-loading">
-            <FaSpinner className="ai-spinner" />
-            <span>{activeTab === 'explain' ? 'Code Sage is thinking...' : 'Generating rewrites...'}</span>
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="ai-error">
-            <span>⚠️ {error}</span>
-            <button onClick={activeTab === 'explain' ? handleExplain : handleRewrite}>Retry</button>
-          </div>
-        )}
-
-        {/* Explain result */}
-        {activeTab === 'explain' && explanation && !loading && (
-          <div className="ai-explanation">
-            <div className="ai-markdown-content">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {explanation}
-              </ReactMarkdown>
-            </div>
-          </div>
-        )}
-
-        {/* Rewrite result */}
-        {activeTab === 'rewrite' && rewriteData && !loading && (
-          <div className="ai-rewrite-results">
-            {/* Version A */}
-            <div
-              className={`ai-version-card ${selectedVersion === 'A' ? 'selected' : ''}`}
-              onClick={() => !saved && setSelectedVersion('A')}
-            >
-              <div className="ai-version-header">
-                <span className="ai-version-badge a">Version A</span>
-                <span className="ai-version-label">Concise</span>
-              </div>
-              <div className="ai-version-body ai-markdown-content">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {rewriteData.versionA}
-                </ReactMarkdown>
+          <div className="ai-chat-message assistant">
+            <FaRobot className="ai-msg-avatar" />
+            <div className="ai-msg-bubble ai-typing-bubble">
+              <div className="ai-typing-indicator">
+                <span></span><span></span><span></span>
               </div>
             </div>
-
-            {/* Version B */}
-            <div
-              className={`ai-version-card ${selectedVersion === 'B' ? 'selected' : ''}`}
-              onClick={() => !saved && setSelectedVersion('B')}
-            >
-              <div className="ai-version-header">
-                <span className="ai-version-badge b">Version B</span>
-                <span className="ai-version-label">Detailed</span>
-              </div>
-              <div className="ai-version-body ai-markdown-content">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {rewriteData.versionB}
-                </ReactMarkdown>
-              </div>
-            </div>
-
-            {/* Save button */}
-            {selectedVersion && !saved && (
-              <button
-                className="ai-save-btn"
-                onClick={handleSaveRewrite}
-                disabled={saving}
-              >
-                {saving ? (
-                  <><FaSpinner className="ai-spinner" /> Saving...</>
-                ) : (
-                  <><FaCheck /> Save Version {selectedVersion} as New Answer</>
-                )}
-              </button>
-            )}
-
-            {saved && (
-              <div className="ai-saved-banner">
-                <FaCheck /> Answer updated successfully!
-              </div>
-            )}
           </div>
         )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* ── Input Area ── */}
+      <div className="ai-input-area">
+        {/* Text input + send */}
+        <div className="ai-input-row">
+          <textarea
+            ref={textareaRef}
+            className="ai-text-input"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask Code Sage anything..."
+            rows={1}
+            disabled={loading}
+          />
+          <button
+            className="ai-send-btn"
+            onClick={() => sendMessage(inputText)}
+            disabled={loading || !inputText.trim()}
+            title="Send message"
+          >
+            {loading ? <FaSpinner className="ai-spinner" /> : <FaPaperPlane />}
+          </button>
+        </div>
+
+        {/* Shortcut buttons — below input, side by side */}
+        <div className="ai-shortcuts">
+          <button
+            className="ai-shortcut-btn explain-shortcut"
+            onClick={handleExplain}
+            disabled={loading}
+            title="Explain this question"
+          >
+            <FaLightbulb /> Explain
+          </button>
+          <button
+            className="ai-shortcut-btn rewrite-shortcut"
+            onClick={handleRewrite}
+            disabled={loading}
+            title="Rewrite the answer"
+          >
+            <FaPen /> Rewrite
+          </button>
+        </div>
       </div>
     </div>
   );

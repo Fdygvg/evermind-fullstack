@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import CodeBlock from "./CodeBlock";
+import MarkdownContent from "./MarkdownContent";
 import "../css/questionList.css";
 import { getRandomFlipEffect } from "../../utils/flipStyles";
 import {
@@ -134,10 +135,11 @@ const QuestionList = ({
           style={{ borderTopColor: sectionColor }}
         >
           <div className="question-header">
-            <div className="question-text-container">
-              <h3 className="question-text">
-                Q: {question.question}
-              </h3>
+            <div className="question-text-container" style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+              <div className="question-text" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontWeight: 700, opacity: 0.8, fontSize: '0.9em' }}>Question:</span>
+                <MarkdownContent content={question.question} />
+              </div>
               {question.tags && question.tags.length > 0 && (
                 <div className="question-tags">
                   {question.tags.slice(0, 2).map((tag, index) => (
@@ -189,15 +191,9 @@ const QuestionList = ({
             {showAnswer && (
               <div className="answer-content">
                 <div className="answer-label">Answer:</div>
-                {question.isCode ? (
-                  <CodeBlock
-                    text={question.answer}
-                    language={question.language || "javascript"}
-                    showLineNumbers={true}
-                  />
-                ) : (
-                  <div className="answer-text">{question.answer}</div>
-                )}
+                <div className="answer-text" style={{ width: '100%', overflowX: 'hidden' }}>
+                  <MarkdownContent content={question.answer} />
+                </div>
               </div>
             )}
           </div>

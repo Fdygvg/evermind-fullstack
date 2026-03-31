@@ -138,3 +138,22 @@ body.focus-mode .session-stats,
 body.focus-mode .session-header-info {
   display: none !important;
 }
+
+/* ==============================
+   GLOBAL SCROLLBARS (Dark & Avant-Garde)
+   Overrides ugly 1990s Windows/macOS native trails
+   ============================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}

@@ -4,6 +4,46 @@ import User from "../models/User.js";
 import TokenBlacklist from "../models/TokenBlacklist.js";
 import rateLimit from 'express-rate-limit'
 
+// ─── In-memory caches to avoid hitting MongoDB on every request ───
+const blacklistCache = new Set();
+let blacklistLoaded = false;
+
+// Load blacklisted tokens into memory once on first request
+async function isTokenBlacklisted(token) {
+  if (!blacklistLoaded) {
+    try {
+      const entries = await TokenBlacklist.find({}, { token: 1 }).lean();
+      entries.forEach(e => blacklistCache.add(e.token));
+      blacklistLoaded = true;
+    } catch (err) {
+      console.error('Blacklist cache load error:', err);
+      // Fall through to per-request check below
+    }
+  }
+  return blacklistCache.has(token);
+}
+
+// Export so logout can add to cache
+export function addToBlacklistCache(token) {
+  blacklistCache.add(token);
+}
+
+// Simple user cache: userId → { user, expiry }
+const userCache = new Map();
+const USER_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getCachedUser(userId) {
+  const cached = userCache.get(userId.toString());
+  if (cached && cached.expiry > Date.now()) {
+    return cached.user;
+  }
+  const user = await User.findById(userId).select("_id isActive").lean();
+  if (user) {
+    userCache.set(userId.toString(), { user, expiry: Date.now() + USER_CACHE_TTL });
+  }
+  return user;
+}
+
 export const protect = async (req, res, next) => {
   try {
     let token;
@@ -31,9 +71,8 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid token" });
     }
 
-    // Check if token is blacklisted
-    const isBlacklisted = await TokenBlacklist.findOne({ token });
-    if (isBlacklisted) {
+    // Check blacklist (in-memory, fast)
+    if (await isTokenBlacklisted(token)) {
       return res.status(401).json({
         success: false,
         message: "Token revoked. Please login again.",
@@ -44,7 +83,8 @@ export const protect = async (req, res, next) => {
       algorithms: ["HS256"],
     });
 
-    const user = await User.findById(decoded.userId).select("_id isActive");
+    // Use cached user lookup
+    const user = await getCachedUser(decoded.userId);
 
     if (!user) {
       return res.status(401).json({

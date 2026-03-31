@@ -37,12 +37,23 @@ const SwipeZoneContainer = ({
 
     const handlePan = (_, info) => {
         if (!disabled) {
+            const selection = window.getSelection();
+            if (selection && selection.toString().length > 0) {
+                return; // User is trying to copy text, don't drag
+            }
             x.set(info.offset.x);
         }
     };
 
     const handlePanEnd = (_, info) => {
         if (disabled) return;
+
+        const selection = window.getSelection();
+        if (selection && selection.toString().length > 0) {
+            // User is selecting text to copy. Reset visually and don't rate.
+            animate(x, 0, { type: "spring", stiffness: 400, damping: 25 });
+            return;
+        }
 
         const dragDistance = Math.abs(x.get());
         const pct = dragDistance / swipeThreshold;
