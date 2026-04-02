@@ -185,6 +185,33 @@ const EliminationQuestionCard = ({
       {/* Edit, Copy & Bookmark Buttons */}
       <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
         <motion.button
+          onClick={(e) => {
+            e.stopPropagation();
+            window.dispatchEvent(new CustomEvent('open-ai-panel', { detail: { action: 'framework' } }));
+          }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={{
+            background: 'var(--color-surface, rgba(255, 255, 255, 0.05))',
+            border: '1px solid var(--color-border, rgba(255, 255, 255, 0.1))',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            padding: '4px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none',
+            color: 'var(--color-primary, #8B5CF6)',
+            transition: 'all 0.2s ease',
+            fontWeight: 800,
+            fontSize: '12px',
+            marginRight: '4px'
+          }}
+          title="Apply O(1) Mastery Framework"
+        >
+          F
+        </motion.button>
+        <motion.button
           onClick={isAnnotating ? handleAnnotationCancel : handleAnnotationStart}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}

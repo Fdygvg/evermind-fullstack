@@ -50,6 +50,22 @@ const SmartReviewContent = ({
 
   const [syncStatus, setSyncStatus] = useState(null); // null | 'syncing' | 'synced'
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [aiInitialAction, setAiInitialAction] = useState(null);
+
+  useEffect(() => {
+    const handleOpenAIPanel = (e) => {
+      const action = e.detail?.action || null;
+      if (showAIPanel && action) {
+        // Panel is already open — dispatch directly to the chat panel
+        window.dispatchEvent(new CustomEvent('ai-panel-command', { detail: { action } }));
+      } else {
+        setAiInitialAction(action);
+        setShowAIPanel(true);
+      }
+    };
+    window.addEventListener('open-ai-panel', handleOpenAIPanel);
+    return () => window.removeEventListener('open-ai-panel', handleOpenAIPanel);
+  }, [showAIPanel]);
 
 
   const timer = useTimer();
@@ -223,6 +239,15 @@ const SmartReviewContent = ({
         }
       });
 
+      // Clear session checkboxes from localStorage
+      if (smartReview.sessionId) {
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith(`session_checkboxes_${smartReview.sessionId}`)) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
+
       await smartReview.endSession();
 
       navigate('/session/results', {
@@ -352,7 +377,10 @@ const SmartReviewContent = ({
         mode={mode}
         currentQuestionId={smartReview.currentQuestion?._id}
         questionText={smartReview.currentQuestion?.question}
-        onToggleAI={() => setShowAIPanel(prev => !prev)}
+        onToggleAI={() => {
+          setAiInitialAction(null);
+          setShowAIPanel(prev => !prev);
+        }}
         showAIPanel={showAIPanel}
       />
 
@@ -374,6 +402,7 @@ const SmartReviewContent = ({
           onAnswerSaved={(questionId, updates) => {
             smartReview.updateQuestionInSession(questionId, updates);
           }}
+          initialAction={aiInitialAction}
         />
       )}
 

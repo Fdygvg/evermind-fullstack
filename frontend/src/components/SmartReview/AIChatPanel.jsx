@@ -2,11 +2,14 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   FaRobot, FaTimes, FaLightbulb, FaPen, FaPaperPlane,
-  FaSpinner, FaCopy, FaCheck, FaSave
+  FaSpinner, FaCopy, FaCheck, FaSave, FaTrash, FaStop
 } from 'react-icons/fa';
 import { aiService } from '../../services/aiService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import './AIChatPanel.css';
 
 // ─── Code block with language label + copy button ───
@@ -34,30 +37,37 @@ const CodeBlockRenderer = ({ node, inline, className, children, ...props }) => {
   return (
     <div className="ai-code-block-wrapper">
       <div className="ai-code-block-header">
-        {language && <span className="ai-code-lang">{language}</span>}
         <button className="ai-code-copy-btn" onClick={handleCopy} title="Copy code">
           {copied ? <><FaCheck /> Copied</> : <><FaCopy /> Copy</>}
         </button>
+        {language && <span className="ai-code-lang">{language}</span>}
       </div>
-      <pre className={className} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowX: 'hidden' }} {...props}>
-        <code style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{children}</code>
-      </pre>
+      <SyntaxHighlighter
+        language={language || 'text'}
+        style={vscDarkPlus}
+        customStyle={{ margin: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: '#1e1e1e' }}
+        wrapLongLines={true}
+        {...props}
+      >
+        {codeText}
+      </SyntaxHighlighter>
     </div>
   );
 };
 
-// ─── Rewrite cards (Single Tabbed Box) ───
+// ─── Rewrite cards (Single Tabbed Box — Medium / Concise) ───
 const RewriteCards = ({ msg, onSave }) => {
-  const [activeTab, setActiveTab] = useState('A'); // A = Short, B = Concise
+  const [activeTab, setActiveTab] = useState('A'); // A = Medium, B = Concise
   const [saving, setSaving] = useState(false);
   const [savedVersion, setSavedVersion] = useState(null);
 
   const handleSave = async () => {
     if (saving || savedVersion === activeTab) return;
-    const newAnswer = activeTab === 'A' ? msg.versionA : msg.versionB;
+    const newAnswer = activeTab === 'A' ? msg.versionAAnswer : msg.versionBAnswer;
+    const newQuestion = activeTab === 'A' ? msg.versionAQuestion : msg.versionBQuestion;
     setSaving(true);
     try {
-      await onSave(newAnswer);
+      await onSave(newAnswer, newQuestion);
       setSavedVersion(activeTab);
     } catch (err) {
       console.error('Save error:', err);
@@ -66,30 +76,42 @@ const RewriteCards = ({ msg, onSave }) => {
     }
   };
 
-  const currentContent = activeTab === 'A' ? msg.versionA : msg.versionB;
+  const currentQuestion = activeTab === 'A' ? msg.versionAQuestion : msg.versionBQuestion;
+  const currentAnswer = activeTab === 'A' ? msg.versionAAnswer : msg.versionBAnswer;
   const isCurrentlySaved = savedVersion === activeTab;
 
   return (
     <div className="ai-chat-message assistant">
       <FaRobot className="ai-msg-avatar" />
       <div className="ai-msg-bubble ai-rewrite-bubble">
-        <div className="ai-msg-text" style={{ marginBottom: '12px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
-          Here is a rewritten suggestion. Choose a style below:
+        <div className="ai-msg-text" style={{ marginBottom: '12px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+          Here is a rewritten flashcard. Choose a style below:
         </div>
         <div className={`ai-rewrite-card ${isCurrentlySaved ? 'saved' : ''}`}>
           <div className="ai-rewrite-card-body ai-markdown-content">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlockRenderer }}>
-              {currentContent}
-            </ReactMarkdown>
+            {currentQuestion && (
+              <div style={{ marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid var(--color-border)' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', display: 'block', marginBottom: '4px' }}>Question</span>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlockRenderer }}>
+                  {currentQuestion}
+                </ReactMarkdown>
+              </div>
+            )}
+            <div>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-success)', display: 'block', marginBottom: '4px' }}>Answer</span>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlockRenderer }}>
+                {currentAnswer}
+              </ReactMarkdown>
+            </div>
           </div>
           <div className="ai-rewrite-footer">
             <div className="ai-rewrite-tabs">
               <button 
                 className={`ai-tab-btn ${activeTab === 'A' ? 'active' : ''}`}
                 onClick={() => setActiveTab('A')}
-                title="Short"
+                title="Medium"
               >
-                Short
+                Medium
               </button>
               <button 
                 className={`ai-tab-btn ${activeTab === 'B' ? 'active' : ''}`}
@@ -110,6 +132,62 @@ const RewriteCards = ({ msg, onSave }) => {
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Framework message with Save button ───
+const FrameworkMessage = ({ msg, onSave }) => {
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    if (saving || saved) return;
+    setSaving(true);
+    try {
+      await onSave(msg.content, msg.newQuestion);
+      setSaved(true);
+    } catch (err) {
+      console.error('Save error:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="ai-chat-message assistant">
+      <FaRobot className="ai-msg-avatar" />
+      <div className="ai-msg-bubble">
+        {msg.newQuestion && (
+          <div style={{ marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid var(--color-border)' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', display: 'block', marginBottom: '4px' }}>New Question</span>
+            <div className="ai-msg-text ai-markdown-content">
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlockRenderer }}>
+                {msg.newQuestion}
+              </ReactMarkdown>
+            </div>
+          </div>
+        )}
+        <div className="ai-msg-text ai-markdown-content">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw]}
+            components={{ code: CodeBlockRenderer }}
+          >
+            {msg.content}
+          </ReactMarkdown>
+        </div>
+        <button
+          className="ai-rewrite-save-btn"
+          style={{ marginTop: '12px' }}
+          onClick={handleSave}
+          disabled={saving || saved}
+        >
+          {saving ? <FaSpinner className="ai-spinner" /> :
+           saved ? <><FaCheck /> Saved</> :
+           <><FaSave /> Save as Answer</>}
+        </button>
       </div>
     </div>
   );
@@ -147,6 +225,7 @@ const ChatMessage = ({ msg }) => {
           <div className="ai-msg-text ai-markdown-content">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
               components={{ code: CodeBlockRenderer }}
             >
               {msg.content}
@@ -170,6 +249,7 @@ const AIChatPanel = ({
   question,        // current question object { _id, question, answer }
   onClose,         // close the panel
   onAnswerSaved,   // callback after saving a rewritten answer
+  initialAction,   // optional command to run on mount
 }) => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -177,11 +257,134 @@ const AIChatPanel = ({
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const currentQuestionIdRef = useRef(null);
+  const hasFiredInitialAction = useRef(false);
+  const abortControllerRef = useRef(null);
+
+  // Send a message to the AI (hoisted so initialAction can use it)
+  const sendMessage = useCallback(async (rawMessage, displayText = null) => {
+    if (!rawMessage.trim() || loading) return;
+
+    const isFrameworkCmd = rawMessage === '__FRAMEWORK__';
+
+    const userMsg = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: rawMessage,
+      displayText: displayText || rawMessage,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, userMsg]);
+    setInputText('');
+    setLoading(true);
+
+    // Create a new AbortController for this request
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      const questionContext = question
+        ? { question: question.question, answer: question.answer }
+        : null;
+
+      // get conversation history inline
+      const history = messages
+        .filter(m => m.role === 'user' || m.role === 'assistant' || m.role === 'framework')
+        .slice(-5)
+        .map(m => ({ role: m.role === 'framework' ? 'assistant' : m.role, content: m.content }));
+
+      const response = await aiService.chat(rawMessage, questionContext, history, controller.signal);
+      const data = response.data.data;
+
+      if (data.type === 'rewrite') {
+        const rewriteMsg = {
+          id: `rewrite-${Date.now()}`,
+          role: 'rewrite',
+          content: data.reply,
+          versionAQuestion: data.versionAQuestion,
+          versionAAnswer: data.versionAAnswer,
+          versionBQuestion: data.versionBQuestion,
+          versionBAnswer: data.versionBAnswer,
+          original: data.original,
+          originalQuestion: data.originalQuestion,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, rewriteMsg]);
+      } else if (data.type === 'framework') {
+        const fwMsg = {
+          id: `framework-${Date.now()}`,
+          role: 'framework',
+          content: data.reply,
+          newQuestion: data.newQuestion,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, fwMsg]);
+      } else {
+        const aiMsg = {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: data.reply,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiMsg]);
+      }
+    } catch (err) {
+      if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
+        // User cancelled — add a note
+        setMessages(prev => [...prev, {
+          id: `assistant-stop-${Date.now()}`,
+          role: 'assistant',
+          content: '⏹️ Request stopped.',
+          timestamp: new Date()
+        }]);
+      } else {
+        console.error('AI Chat error:', err);
+        setMessages(prev => [...prev, {
+          id: `assistant-err-${Date.now()}`,
+          role: 'assistant',
+          content: '⚠️ Sorry, I couldn\'t process that request. Please try again.',
+          timestamp: new Date()
+        }]);
+      }
+    } finally {
+      abortControllerRef.current = null;
+      setLoading(false);
+    }
+  }, [loading, question, messages]);
+
+  // Initial Action Hook & Global Command Listener
+  useEffect(() => {
+    if (initialAction && !hasFiredInitialAction.current && !loading) {
+      hasFiredInitialAction.current = true;
+      if (initialAction === 'framework') {
+        sendMessage('__FRAMEWORK__', '🚀 Master this concept');
+      }
+    }
+
+    const handlePanelCommand = (e) => {
+      const action = e.detail?.action;
+      if (action === 'framework') {
+        sendMessage('__FRAMEWORK__', '🚀 Master this concept');
+      }
+    };
+    window.addEventListener('ai-panel-command', handlePanelCommand);
+    return () => window.removeEventListener('ai-panel-command', handlePanelCommand);
+  }, [initialAction, sendMessage, loading]);
 
   // Scroll to bottom when messages change
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
+    if (messagesEndRef.current) {
+      const scrollParent = messagesEndRef.current.parentElement;
+      if (scrollParent) {
+        // Is user scrolled up?
+        const isNearBottom = scrollParent.scrollHeight - scrollParent.scrollTop - scrollParent.clientHeight < 150;
+        if (isNearBottom || messages.length <= 2) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, [messages.length]);
 
   useEffect(() => {
     scrollToBottom();
@@ -204,82 +407,16 @@ const AIChatPanel = ({
     currentQuestionIdRef.current = question._id;
   }, [question?._id]);
 
-  // Build conversation history from messages (last 5, excluding dividers/rewrite)
-  const getConversationHistory = useCallback(() => {
-    return messages
-      .filter(m => m.role === 'user' || m.role === 'assistant')
-      .slice(-5)
-      .map(m => ({ role: m.role, content: m.content }));
-  }, [messages]);
-
   // Save a rewritten answer
-  const handleSaveRewrite = useCallback(async (newAnswer) => {
+  const handleSaveRewrite = useCallback(async (newAnswer, newQuestion) => {
     if (!question?._id) return;
-    await aiService.saveAnswer(question._id, newAnswer);
+    await aiService.saveAnswer(question._id, newAnswer, newQuestion);
     if (onAnswerSaved) {
-      onAnswerSaved(question._id, { answer: newAnswer });
+      const updates = { answer: newAnswer };
+      if (newQuestion) updates.question = newQuestion;
+      onAnswerSaved(question._id, updates);
     }
   }, [question, onAnswerSaved]);
-
-  // Send a message to the AI
-  const sendMessage = useCallback(async (rawMessage, displayText = null) => {
-    if (!rawMessage.trim() || loading) return;
-
-    const userMsg = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: rawMessage,
-      displayText: displayText || rawMessage,
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, userMsg]);
-    setInputText('');
-    setLoading(true);
-
-    try {
-      const questionContext = question
-        ? { question: question.question, answer: question.answer }
-        : null;
-
-      const history = getConversationHistory();
-      const response = await aiService.chat(rawMessage, questionContext, history);
-      const data = response.data.data;
-
-      if (data.type === 'rewrite') {
-        // Rewrite response — add as a special message with version cards
-        const rewriteMsg = {
-          id: `rewrite-${Date.now()}`,
-          role: 'rewrite',
-          content: data.reply,
-          versionA: data.versionA,
-          versionB: data.versionB,
-          original: data.original,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, rewriteMsg]);
-      } else {
-        // Normal chat response
-        const aiMsg = {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: data.reply,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, aiMsg]);
-      }
-    } catch (err) {
-      console.error('AI Chat error:', err);
-      const errorMsg = {
-        id: `assistant-err-${Date.now()}`,
-        role: 'assistant',
-        content: '⚠️ Sorry, I couldn\'t process that request. Please try again.',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMsg]);
-    } finally {
-      setLoading(false);
-    }
-  }, [loading, question, getConversationHistory]);
 
   // Shortcut handlers
   const handleExplain = () => sendMessage('__EXPLAIN__', '💡 Explain this question');
@@ -287,9 +424,19 @@ const AIChatPanel = ({
 
   // Handle Enter key (send), Shift+Enter (newline)
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage(inputText);
+    const isMobile = window.innerWidth < 768; // basic mobile check
+
+    if (e.key === 'Enter') {
+      if (isMobile) {
+        // Mobile: Allow default (newline). User must click send button.
+        return;
+      }
+      
+      // Desktop: Enter sends, Shift+Enter newline
+      if (!e.shiftKey) {
+        e.preventDefault();
+        sendMessage(inputText);
+      }
     }
   };
 
@@ -314,9 +461,20 @@ const AIChatPanel = ({
             </span>
           </div>
         </div>
-        <button className="ai-close-btn" onClick={onClose} title="Close AI Panel">
-          <FaTimes />
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button 
+            className="ai-close-btn" 
+            onClick={() => setMessages([])} 
+            title="Clear Chat"
+            disabled={loading || messages.length === 0}
+            style={{ opacity: messages.length === 0 ? 0.3 : 1 }}
+          >
+            <FaTrash />
+          </button>
+          <button className="ai-close-btn" onClick={onClose} title="Close AI Panel">
+            <FaTimes />
+          </button>
+        </div>
       </div>
 
       {/* ── Messages Area ── */}
@@ -334,6 +492,9 @@ const AIChatPanel = ({
         {messages.map(msg => {
           if (msg.role === 'rewrite') {
             return <RewriteCards key={msg.id} msg={msg} onSave={handleSaveRewrite} />;
+          }
+          if (msg.role === 'framework') {
+            return <FrameworkMessage key={msg.id} msg={msg} onSave={handleSaveRewrite} />;
           }
           return <ChatMessage key={msg.id} msg={msg} />;
         })}
@@ -363,17 +524,27 @@ const AIChatPanel = ({
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask Code Sage anything..."
-            rows={1}
+            rows={2}
             disabled={loading}
           />
-          <button
-            className="ai-send-btn"
-            onClick={() => sendMessage(inputText)}
-            disabled={loading || !inputText.trim()}
-            title="Send message"
-          >
-            {loading ? <FaSpinner className="ai-spinner" /> : <FaPaperPlane />}
-          </button>
+          {loading ? (
+            <button
+              className="ai-send-btn ai-stop-btn"
+              onClick={() => { if (abortControllerRef.current) abortControllerRef.current.abort(); }}
+              title="Stop generating"
+            >
+              <FaStop />
+            </button>
+          ) : (
+            <button
+              className="ai-send-btn"
+              onClick={() => sendMessage(inputText)}
+              disabled={!inputText.trim()}
+              title="Send message"
+            >
+              <FaPaperPlane />
+            </button>
+          )}
         </div>
 
         {/* Shortcut buttons — below input, side by side */}
@@ -386,14 +557,24 @@ const AIChatPanel = ({
           >
             <FaLightbulb /> Explain
           </button>
-          <button
-            className="ai-shortcut-btn rewrite-shortcut"
-            onClick={handleRewrite}
-            disabled={loading}
-            title="Rewrite the answer"
-          >
-            <FaPen /> Rewrite
-          </button>
+          <div className="ai-shortcut-split-btn">
+            <button
+              className="ai-shortcut-main"
+              onClick={handleRewrite}
+              disabled={loading}
+              title="Rewrite the answer"
+            >
+              <FaPen /> Rewrite
+            </button>
+            <button
+              className="ai-shortcut-side"
+              onClick={() => sendMessage('__FRAMEWORK__', '🚀 Master this concept')}
+              disabled={loading}
+              title="Apply O(1) Mastery Framework"
+            >
+              F
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,8 +1,53 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import CodeBlock from './CodeBlock'; // Wrapping our intelligent Prism/Detection engine
 import '../css/markdown-content.css';
+import { useSession } from '../../hooks/useSession';
+
+// Intercept disabled GFM checkboxes and make them interactive, persisting to localStorage
+const SessionCheckbox = ({ checked, questionId, lineIndex }) => {
+    const { activeSession } = useSession();
+    const sessionId = activeSession?._id || 'orphan';
+    const storageKey = `session_checkboxes_${sessionId}_${questionId}`;
+    const [isChecked, setIsChecked] = useState(checked);
+
+    useEffect(() => {
+        if (!questionId) return;
+        try {
+            const savedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+            if (savedData[lineIndex] !== undefined) {
+                setIsChecked(savedData[lineIndex]);
+            }
+        } catch (e) {
+            console.error("Failed to load checkbox state", e);
+        }
+    }, [questionId, lineIndex, storageKey]);
+
+    const handleChange = (e) => {
+        const val = e.target.checked;
+        setIsChecked(val);
+        if (!questionId) return;
+        try {
+            const savedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+            savedData[lineIndex] = val;
+            localStorage.setItem(storageKey, JSON.stringify(savedData));
+        } catch (e) {
+            console.error("Failed to save checkbox state", e);
+        }
+    };
+
+    return (
+        <input 
+            type="checkbox" 
+            checked={isChecked} 
+            onChange={handleChange} 
+            className="ai-interactive-checkbox"
+            style={{ cursor: 'pointer', accentColor: 'var(--color-primary)', width: '16px', height: '16px' }}
+        />
+    );
+};
 
 /**
  * @components/Common/MarkdownContent
@@ -21,13 +66,14 @@ import '../css/markdown-content.css';
  * - Spacing: Binds to custom `.markdown-body` class for specific line-heights 
  *   and marginal mathematics, rejecting generic browser defaults.
  */
-const MarkdownContent = memo(({ content }) => {
+const MarkdownContent = memo(({ content, questionId }) => {
     if (!content) return null;
 
     return (
         <div className="markdown-body">
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
                 components={{
                     // Intercept code nodes. 
                     // (Note: `react-markdown` v10+ removed the `inline` prop. We evaluate via `match` and text shape)
@@ -85,6 +131,20 @@ const MarkdownContent = memo(({ content }) => {
                                 {children}
                             </a>
                         );
+                    },
+                    // Intercept inputs (specifically checkboxes rendered by remarkGfm)
+                    input({ node, checked, type, ...props }) {
+                        if (type === 'checkbox') {
+                            const lineIndex = node?.position?.start?.line || Math.random().toString(36).substring(7);
+                            return (
+                                <SessionCheckbox
+                                    checked={checked}
+                                    questionId={questionId}
+                                    lineIndex={lineIndex}
+                                />
+                            );
+                        }
+                        return <input type={type} checked={checked} {...props} />;
                     }
                 }}
             >

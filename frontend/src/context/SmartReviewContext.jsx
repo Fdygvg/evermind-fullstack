@@ -384,6 +384,13 @@ export const SmartReviewProvider = ({ children }) => {
         await smartReviewService.markUnratedAsPending(currentSectionIds, ratedIds);
       }
 
+      // Clear all generated AI interactive checkboxes tied to this session
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('session_checkboxes_')) {
+          localStorage.removeItem(key);
+        }
+      });
+
       sessionPersistence.clearLocal();
 
       setState({

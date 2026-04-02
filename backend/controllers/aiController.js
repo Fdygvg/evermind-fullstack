@@ -19,7 +19,7 @@ Your personality:
 - You break complex ideas into digestible steps
 - You occasionally drop coding jokes or references
 - You use markdown formatting for readability (headers, bold, code blocks, bullet points)
-- Keep explanations concise but thorough — aim for 200-400 words
+- For standard chat messages, keep responses STRICTLY concise (max 3 sentences) unless the user explicitly asks for a long explanation.
 - Always include a practical example or code snippet when relevant
 
 IMPORTANT: Output ONLY your final response. DO NOT include any internal thoughts, reasoning processes, or <think> tags. Deliver the direct answer formatted in Markdown.`;
@@ -48,23 +48,61 @@ export const chatWithSage = async (req, res) => {
     }
 
     const isRewrite = message === '__REWRITE__';
+    const isFramework = message === '__FRAMEWORK__';
 
     // Determine user message based on shortcut commands
     let userMessage = message;
     if (message === '__EXPLAIN__') {
       userMessage = `Break down this question and answer for me like I'm a junior developer seeing this concept for the first time. Explain the core concept, why it matters, and give me a practical example I can relate to.`;
-    } else if (isRewrite) {
-      userMessage = `I need you to rewrite the answer to this flashcard question in two different styles. Use the question for context and rewrite the answer only.
+    } else if (isFramework) {
+      userMessage = `I need you to rewrite this flashcard using the EVERMIND Mastery Framework.
 
-**Version A (Short)** — A brief, to-the-point answer. 2-4 sentences max. Easy to scan during quick review.
+First, write a new question that tests the same concept but is worded differently from the original. 
+Format the new question exactly as checkboxes with bold text, like this example:
+- [ ] **What is <term> and how does it work?**
+- [ ] **What problem does it solve?**
+- [ ] **Provide an example of its syntax.**
+- [ ] **Describe two practical applications.**
+- [ ] **Give a mental analogy.**
+- [ ] **List 5 key concepts.**
+
+Then, write the answer strictly using this exact format:
+
+Return your response in this EXACT format (including the markers):
+---QUESTION---
+(your rewritten question here — test the same concept, different wording)
+---ANSWER---
+**What it is:** (1 concise sentence)
+**Why it exists:** (What specific problem in programming did it solve?)
+**Syntax:** (A small code block showing basic usage)
+**Use Cases:** (Provide exactly 2 very practical use cases. Format EACH as an HTML details block exactly like this: <details><summary>👉 Use Case Title</summary>\n\n\`\`\`javascript\ncode example here\n\`\`\`\n</details>)
+**Mental Analogy:** (A real-world comparison starting with "It's like...")
+**Key Concepts:**
+• **Term** - Short description
+• **Term** - Short description
+• **Term** - Short description
+• **Term** - Short description
+• **Term** - Short description
+(List exactly 5 key concepts as bullet points. Each one must be a bold term followed by a dash and a brief description. Do NOT write full sentences.)
+---END---`;
+    } else if (isRewrite) {
+      userMessage = `I need you to rewrite this flashcard (both the question AND the answer) in two different styles.
+
+Read the current question and answer. For each version, write a NEW question that tests the same concept but is worded differently, and a NEW answer.
+
+**Version A (Medium)** — A well-rounded answer with enough context to understand the concept. 4-8 sentences. Includes a brief explanation and a practical example if helpful.
 
 **Version B (Concise)** — A tightly written answer that covers all key points without fluff. Uses bullet points or numbered steps where helpful. No unnecessary words.
 
 Return your response in this EXACT format (including the markers):
----VERSION_A---
-(your short version here)
----VERSION_B---
-(your concise version here)
+---VERSION_A_QUESTION---
+(your rewritten question for medium version)
+---VERSION_A_ANSWER---
+(your medium answer here)
+---VERSION_B_QUESTION---
+(your rewritten question for concise version)
+---VERSION_B_ANSWER---
+(your concise answer here)
 ---END---`;
     }
 
@@ -87,46 +125,77 @@ Return your response in this EXACT format (including the markers):
     const chatCompletion = await getGroq().chat.completions.create({
       messages,
       model: 'qwen/qwen3-32b',
-      temperature: isRewrite ? 0.7 : 0.6,
-      max_completion_tokens: isRewrite ? 3072 : 2048,
+      temperature: isRewrite || isFramework ? 0.7 : 0.6,
+      max_completion_tokens: isRewrite || isFramework ? 3072 : 2048,
       top_p: 0.95,
       stream: false
     });
 
     let rawReply = chatCompletion.choices[0]?.message?.content || 'No response generated.';
     rawReply = stripThinking(rawReply);
+    
+    // Fix markdown parser bug where HTML blocks swallow markdown formatting
+    // by ensuring blank lines exist around all details tags.
+    rawReply = rawReply.replace(/<details>\s*/gi, "\n\n<details>\n");
+    rawReply = rawReply.replace(/<\/summary>\s*/gi, "</summary>\n\n");
+    rawReply = rawReply.replace(/\s*<\/details>\s*/gi, "\n\n</details>\n\n");
 
-    // If rewrite, parse structured versions
+    // If framework, parse question + answer
+    if (isFramework) {
+      let newQuestion = '';
+      let newAnswer = rawReply;
+
+      const fwQuestionMatch = rawReply.match(/---QUESTION---\s*([\s\S]*?)\s*---ANSWER---/);
+      const fwAnswerMatch = rawReply.match(/---ANSWER---\s*([\s\S]*?)\s*(?:---END---|$)/);
+
+      if (fwQuestionMatch) newQuestion = fwQuestionMatch[1].trim();
+      if (fwAnswerMatch) newAnswer = fwAnswerMatch[1].trim();
+
+      return res.json({
+        success: true,
+        data: {
+          type: 'framework',
+          reply: newAnswer,
+          newQuestion,
+          original: questionContext?.answer || ''
+        }
+      });
+    }
+
+    // If rewrite, parse structured versions (question + answer for each)
     if (isRewrite) {
-      let versionA = '';
-      let versionB = '';
+      let versionAQuestion = '';
+      let versionAAnswer = '';
+      let versionBQuestion = '';
+      let versionBAnswer = '';
 
-      const matchA = rawReply.match(/---VERSION_A---\s*([\s\S]*?)\s*---VERSION_B---/);
-      const matchB = rawReply.match(/---VERSION_B---\s*([\s\S]*?)\s*(?:---END---|$)/);
+      const matchAQ = rawReply.match(/---VERSION_A_QUESTION---\s*([\s\S]*?)\s*---VERSION_A_ANSWER---/);
+      const matchAA = rawReply.match(/---VERSION_A_ANSWER---\s*([\s\S]*?)\s*---VERSION_B_QUESTION---/);
+      const matchBQ = rawReply.match(/---VERSION_B_QUESTION---\s*([\s\S]*?)\s*---VERSION_B_ANSWER---/);
+      const matchBA = rawReply.match(/---VERSION_B_ANSWER---\s*([\s\S]*?)\s*(?:---END---|$)/);
 
-      if (matchA) versionA = matchA[1].trim();
-      if (matchB) versionB = matchB[1].trim();
+      if (matchAQ) versionAQuestion = matchAQ[1].trim();
+      if (matchAA) versionAAnswer = matchAA[1].trim();
+      if (matchBQ) versionBQuestion = matchBQ[1].trim();
+      if (matchBA) versionBAnswer = matchBA[1].trim();
 
       // Fallback if parsing failed
-      if (!versionA && !versionB) {
-        const parts = rawReply.split(/version\s*b/i);
-        if (parts.length >= 2) {
-          versionA = parts[0].replace(/version\s*a/i, '').trim();
-          versionB = parts[1].trim();
-        } else {
-          versionA = rawReply;
-          versionB = questionContext?.answer || rawReply;
-        }
+      if (!versionAAnswer && !versionBAnswer) {
+        versionAAnswer = rawReply;
+        versionBAnswer = questionContext?.answer || rawReply;
       }
 
       return res.json({
         success: true,
         data: {
           type: 'rewrite',
-          reply: 'Here are two rewritten versions of the answer:',
-          versionA,
-          versionB,
-          original: questionContext?.answer || ''
+          reply: 'Here are two rewritten versions:',
+          versionAQuestion,
+          versionAAnswer,
+          versionBQuestion,
+          versionBAnswer,
+          original: questionContext?.answer || '',
+          originalQuestion: questionContext?.question || ''
         }
       });
     }
@@ -178,6 +247,11 @@ Explain the core concept, why it matters, and give me a practical example I can 
 
     let explanation = chatCompletion.choices[0]?.message?.content || 'No response generated.';
     explanation = stripThinking(explanation);
+    
+    // Fix markdown parser HTML bug
+    explanation = explanation.replace(/<details>\s*/gi, "\n\n<details>\n");
+    explanation = explanation.replace(/<\/summary>\s*/gi, "</summary>\n\n");
+    explanation = explanation.replace(/\s*<\/details>\s*/gi, "\n\n</details>\n\n");
 
     res.json({
       success: true,
@@ -284,15 +358,20 @@ Return your response in this exact format (including the markers):
 export const saveRewrittenAnswer = async (req, res) => {
   try {
     const { questionId } = req.params;
-    const { newAnswer } = req.body;
+    const { newAnswer, newQuestion } = req.body;
 
     if (!newAnswer) {
       return res.status(400).json({ success: false, message: 'newAnswer is required' });
     }
 
+    const updateFields = { answer: newAnswer };
+    if (newQuestion) {
+      updateFields.question = newQuestion;
+    }
+
     const question = await Question.findOneAndUpdate(
       { _id: questionId, userId: req.userId },
-      { answer: newAnswer },
+      updateFields,
       { new: true }
     );
 
@@ -302,7 +381,7 @@ export const saveRewrittenAnswer = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Answer updated successfully',
+      message: 'Question updated successfully',
       data: { question }
     });
   } catch (error) {

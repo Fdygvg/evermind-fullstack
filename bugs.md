@@ -1,4 +1,86 @@
-1. the ai styling add border-radius so the edges are rounded and add margin so its not directly touching the Qestion/Answer Field
-2. I want to convert the AI into a chat bot- user click and user can send message or click the shortcut(explain & rewrite), if user clicks any of that then the current question is then feeded and then the ai does the job, now the ai can for the chat to function properly the ai can read last 5 messages to have some context on the conversation, and if i ask ai to explain a question and then i go the next question and then request to explain the next question, i should be able ot feed the new question to the ai and not the onld question, add copy btn to the messages and individual copy btn to any codeblock that may be in the message and in the top left of the code block a msg specfying the language(css,html,javascript)
-3. i want to fix the markdown formatting we currently have that if a text is in backticks even if just a word `john` it autmatically enters a new line , so for simple definitions like `rotate`, `rotateX` they jsut start creating new lines breaking the flow of the text and making it long, now i was thinking we remove the codeBlock function we have and leave the formatting fotr the md formatting we added , like in the ai , idk how you did it but its own is so organized , text wrapped in `` doesnt get created in new lines , and normal code also gets put in a codeblock so yeah 
-4. if i try to copy question or answer in the process of sliding my mouse to highlight the , wrong/correct gets highlighted so i was suggesting that if any text is highlighted then the wrong/correct slider should be disabled or we add a cancellation mechnism so basically once the slider is on and active i can swip up to an x in the top to cancel it and the sliding gets cancellled , or 
+**Question:**
+- What is term(e.g async/await)?[]
+- Why does it exist?[]
+- What is the syntax?[]
+- Give two use cases.[]
+- Mental Analogy[]
+- List 5 key concepts.[]
+
+when the ai rewrites i want it to put checkboxes in the front of each one , this is specifically for the F rewrite so the ai put checkboxes like this and i can check each one 
+
+- What is term(e.g async/await)?[x]
+- Why does it exist?[x]
+- What is the syntax?[]
+- Give two use cases.[]
+- Mental Analogy[]
+- List 5 key concepts.[]
+
+it should save to localstorage and when i refresh the page it should still be there and it  should be gets cleared when the session ends
+---
+
+**What it is:**
+A way to write asynchronous code that reads exactly like synchronous code — top to bottom, clean, with no messy callback chains or `.then()` blocks.
+
+**Why it exists:**
+JavaScript runs on a single thread. If you fetch data from an API and wait for it the normal way, the entire page freezes until it responds. Async/Await lets JavaScript say: "Go fetch this data, I'll go render other UI elements while I wait, and I'll come back to this exact line when the data is ready."
+
+**Syntax:**
+```javascript
+// Basic syntax
+async function fetchUserData() {
+    try {
+        const response = await fetch('/api/user');
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Failed to fetch!", error);
+    }
+}
+
+// Arrow function syntax
+const fetchUserData = async () => {
+    const data = await somePromise();
+    return data;
+}
+```
+
+**Use Cases:**
+
+<details>
+  <summary> 👉 Fetching data from an External API</summary>
+
+  ```javascript
+  // When interacting with third-party services like Stripe or weather APIs
+  const getWeather = async (city) => {
+      const res = await fetch(`https://api.weather.com/v1/${city}`);
+      const weatherData = await res.json();
+      updateUI(weatherData); // Doesn't run until data is here
+  }
+  ```
+</details>
+
+<details>
+  <summary> 👉 Reading/writing to a Database</summary>
+
+  ```javascript
+  // Node.js backend example (Mongoose)
+  const saveNewPost = async (req, res) => {
+      const newPost = new Post(req.body);
+      await newPost.save(); // Pauses execution until saved
+      res.status(200).send("Saved successfully!");
+  }
+  ```
+</details>
+
+
+**Mental Analogy:**
+It's like placing an order at a busy coffee shop. You (sync code) tell the barista what you want (`await` the coffee). You step aside so the next customer can order (the single thread isn't blocked). When your name is called (the Promise resolves), you step back up, take the coffee, and continue your day.
+
+**Key Concepts:**
+1. `async` - Declares an asynchronous function and forces it to always return a Promise.
+2. `await` - Pauses the execution of the function until the Promise resolves or rejects.
+3. **Non-blocking** - While `await` pauses that specific function, the rest of the application (like UI rendering) continues to run.
+4. **Error Handling** - You wrap `await` calls in standard `try/catch` blocks, making error handling identical to synchronous code.
+5. **Only in Async** - You can only use the `await` keyword inside functions labeled with `async`.
+
+

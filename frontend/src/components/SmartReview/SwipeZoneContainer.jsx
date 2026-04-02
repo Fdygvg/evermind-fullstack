@@ -35,8 +35,16 @@ const SwipeZoneContainer = ({
         return Math.min(Math.abs(currentX) / swipeThreshold, 1.1);
     });
 
-    const handlePan = (_, info) => {
+    const handlePan = (e, info) => {
         if (!disabled) {
+            // Ignore if panning inside an input or textarea (e.g., during edit mode)
+            if (e.target.tagName?.toLowerCase() === 'textarea' || e.target.tagName?.toLowerCase() === 'input') {
+                return;
+            }
+            if (e.target.closest && e.target.closest('textarea, input')) {
+                return;
+            }
+
             const selection = window.getSelection();
             if (selection && selection.toString().length > 0) {
                 return; // User is trying to copy text, don't drag
@@ -45,8 +53,12 @@ const SwipeZoneContainer = ({
         }
     };
 
-    const handlePanEnd = (_, info) => {
+    const handlePanEnd = (e, info) => {
         if (disabled) return;
+
+        // Same check for edit mode elements
+        if (e.target.tagName?.toLowerCase() === 'textarea' || e.target.tagName?.toLowerCase() === 'input') return;
+        if (e.target.closest && e.target.closest('textarea, input')) return;
 
         const selection = window.getSelection();
         if (selection && selection.toString().length > 0) {
