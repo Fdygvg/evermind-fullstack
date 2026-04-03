@@ -49,6 +49,7 @@ export const chatWithSage = async (req, res) => {
 
     const isRewrite = message === '__REWRITE__';
     const isFramework = message === '__FRAMEWORK__';
+    const isQuestionRewrite = message === '__REWRITE_QUESTION__';
 
     // Determine user message based on shortcut commands
     let userMessage = message;
@@ -84,6 +85,33 @@ Return your response in this EXACT format (including the markers):
 • **Term** - Short description
 • **Term** - Short description
 (List exactly 5 key concepts as bullet points. Each one must be a bold term followed by a dash and a brief description. Do NOT write full sentences.)
+---END---`;
+    } else if (isQuestionRewrite) {
+      userMessage = `I need you to rewrite ONLY the question for this flashcard. Do NOT touch the answer.
+
+Your task:
+1. Read the ANSWER carefully and identify ALL distinct concepts, elements, and key points it covers.
+2. The current question may only ask about one or two of these elements. Your job is to rewrite the question so it comprehensively covers EVERYTHING in the answer.
+3. Format the question as a checklist of bold sub-questions using markdown checkboxes.
+4. Generate TWO different versions.
+
+Rules:
+- Each checkbox item should be a clear, specific sub-question
+- Use this exact format: - [ ] **Sub-question here**
+- Cover every concept mentioned in the answer
+- Keep sub-questions concise but specific
+- Aim for 4-7 checkbox items per version
+- V1 and V2 should ask about the same concepts but with different wording
+
+Return your response in this EXACT format:
+---V1---
+- [ ] **first sub-question**
+- [ ] **second sub-question**
+(etc.)
+---V2---
+- [ ] **first sub-question**
+- [ ] **second sub-question**
+(etc.)
 ---END---`;
     } else if (isRewrite) {
       userMessage = `I need you to rewrite this flashcard (both the question AND the answer) in two different styles.
@@ -125,8 +153,8 @@ Return your response in this EXACT format (including the markers):
     const chatCompletion = await getGroq().chat.completions.create({
       messages,
       model: 'qwen/qwen3-32b',
-      temperature: isRewrite || isFramework ? 0.7 : 0.6,
-      max_completion_tokens: isRewrite || isFramework ? 3072 : 2048,
+      temperature: isRewrite || isFramework || isQuestionRewrite ? 0.7 : 0.6,
+      max_completion_tokens: isRewrite || isFramework ? 3072 : (isQuestionRewrite ? 2048 : 2048),
       top_p: 0.95,
       stream: false
     });
@@ -139,6 +167,35 @@ Return your response in this EXACT format (including the markers):
     rawReply = rawReply.replace(/<details>\s*/gi, "\n\n<details>\n");
     rawReply = rawReply.replace(/<\/summary>\s*/gi, "</summary>\n\n");
     rawReply = rawReply.replace(/\s*<\/details>\s*/gi, "\n\n</details>\n\n");
+
+    // If question rewrite, parse V1 and V2
+    if (isQuestionRewrite) {
+      let v1Question = '';
+      let v2Question = '';
+
+      const matchV1 = rawReply.match(/---V1---\s*([\s\S]*?)\s*---V2---/);
+      const matchV2 = rawReply.match(/---V2---\s*([\s\S]*?)\s*(?:---END---|$)/);
+
+      if (matchV1) v1Question = matchV1[1].trim();
+      if (matchV2) v2Question = matchV2[1].trim();
+
+      // Fallback if parsing failed
+      if (!v1Question && !v2Question) {
+        v1Question = rawReply;
+        v2Question = rawReply;
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          type: 'question_rewrite',
+          reply: 'Here are two rewritten versions of your question:',
+          v1Question,
+          v2Question,
+          originalQuestion: questionContext?.question || ''
+        }
+      });
+    }
 
     // If framework, parse question + answer
     if (isFramework) {
@@ -360,14 +417,13 @@ export const saveRewrittenAnswer = async (req, res) => {
     const { questionId } = req.params;
     const { newAnswer, newQuestion } = req.body;
 
-    if (!newAnswer) {
-      return res.status(400).json({ success: false, message: 'newAnswer is required' });
+    if (!newAnswer && !newQuestion) {
+      return res.status(400).json({ success: false, message: 'Either newAnswer or newQuestion is required' });
     }
 
-    const updateFields = { answer: newAnswer };
-    if (newQuestion) {
-      updateFields.question = newQuestion;
-    }
+    const updateFields = {};
+    if (newAnswer) updateFields.answer = newAnswer;
+    if (newQuestion) updateFields.question = newQuestion;
 
     const question = await Question.findOneAndUpdate(
       { _id: questionId, userId: req.userId },

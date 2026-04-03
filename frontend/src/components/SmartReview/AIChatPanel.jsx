@@ -191,6 +191,78 @@ const FrameworkMessage = ({ msg, onSave }) => {
   );
 };
 
+// ─── Question Rewrite cards (V1 / V2 — question only) ───
+const QuestionRewriteCards = ({ msg, onSave }) => {
+  const [activeTab, setActiveTab] = useState('V1');
+  const [saving, setSaving] = useState(false);
+  const [savedVersion, setSavedVersion] = useState(null);
+
+  const handleSave = async () => {
+    if (saving || savedVersion === activeTab) return;
+    const newQuestion = activeTab === 'V1' ? msg.v1Question : msg.v2Question;
+    setSaving(true);
+    try {
+      // Save question only (pass null for answer so it doesn't change)
+      await onSave(null, newQuestion);
+      setSavedVersion(activeTab);
+    } catch (err) {
+      console.error('Save error:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const currentQuestion = activeTab === 'V1' ? msg.v1Question : msg.v2Question;
+  const isCurrentlySaved = savedVersion === activeTab;
+
+  return (
+    <div className="ai-chat-message assistant">
+      <div className="ai-msg-bubble ai-rewrite-bubble">
+        <div className="ai-msg-text" style={{ marginBottom: '12px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+          📝 Here are two rewritten versions of your question:
+        </div>
+        <div className={`ai-rewrite-card ${isCurrentlySaved ? 'saved' : ''}`}>
+          <div className="ai-rewrite-card-body ai-markdown-content">
+            <div>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', display: 'block', marginBottom: '4px' }}>Rewritten Question</span>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlockRenderer }}>
+                {currentQuestion}
+              </ReactMarkdown>
+            </div>
+          </div>
+          <div className="ai-rewrite-footer">
+            <div className="ai-rewrite-tabs">
+              <button
+                className={`ai-tab-btn ${activeTab === 'V1' ? 'active' : ''}`}
+                onClick={() => setActiveTab('V1')}
+                title="Version 1"
+              >
+                V1
+              </button>
+              <button
+                className={`ai-tab-btn ${activeTab === 'V2' ? 'active' : ''}`}
+                onClick={() => setActiveTab('V2')}
+                title="Version 2"
+              >
+                V2
+              </button>
+            </div>
+            <button
+              className="ai-rewrite-save-btn"
+              onClick={handleSave}
+              disabled={saving || isCurrentlySaved}
+            >
+              {saving ? <FaSpinner className="ai-spinner" /> :
+                isCurrentlySaved ? <><FaCheck /> Saved</> :
+                  <><FaSave /> Use This Question</>}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Single chat message bubble ───
 const ChatMessage = ({ msg }) => {
   const [copied, setCopied] = useState(false);
@@ -345,6 +417,17 @@ const AIChatPanel = ({
           timestamp: new Date()
         };
         setMessages(prev => [...prev, rewriteMsg]);
+      } else if (data.type === 'question_rewrite') {
+        const qrMsg = {
+          id: `question-rewrite-${Date.now()}`,
+          role: 'question_rewrite',
+          content: data.reply,
+          v1Question: data.v1Question,
+          v2Question: data.v2Question,
+          originalQuestion: data.originalQuestion,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, qrMsg]);
       } else if (data.type === 'framework') {
         const fwMsg = {
           id: `framework-${Date.now()}`,
@@ -395,6 +478,8 @@ const AIChatPanel = ({
       const actionText = initialAction.text;
       if (actionType === 'framework') {
         sendMessage('__FRAMEWORK__', '🚀 Master this concept');
+      } else if (actionType === 'rewrite_question') {
+        sendMessage('__REWRITE_QUESTION__', '📝 Rewrite question from answer');
       } else if (actionType === 'ask_highlight' && actionText) {
         sendMessage(`What does this mean:\n\n"${actionText}"\n\n(Context: Please explain this within the context of the current question/answer)`, `🤔 What does "${actionText}" mean?`);
       }
@@ -405,6 +490,8 @@ const AIChatPanel = ({
       const text = e.detail?.text;
       if (action === 'framework') {
         sendMessage('__FRAMEWORK__', '🚀 Master this concept');
+      } else if (action === 'rewrite_question') {
+        sendMessage('__REWRITE_QUESTION__', '📝 Rewrite question from answer');
       } else if (action === 'ask_highlight' && text) {
         sendMessage(`What does this mean:\n\n"${text}"\n\n(Context: Please explain this within the context of the current question/answer)`, `🤔 What does "${text}" mean?`);
       }
@@ -413,9 +500,14 @@ const AIChatPanel = ({
     return () => window.removeEventListener('ai-panel-command', handlePanelCommand);
   }, [initialAction, sendMessage, loading]);
 
-  // Scroll to bottom when messages change
-  const scrollToBottom = useCallback(() => {
+  // Scroll to bottom when messages change or button is clicked
+  const scrollToBottom = useCallback((force = false) => {
     if (messagesEndRef.current) {
+      if (force === true) {
+         messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+         return;
+      }
+      
       const scrollParent = messagesEndRef.current.parentElement;
       if (scrollParent) {
         // Is user scrolled up?
@@ -458,12 +550,13 @@ const AIChatPanel = ({
     currentQuestionIdRef.current = question._id;
   }, [question?._id]);
 
-  // Save a rewritten answer
+  // Save a rewritten answer (or question-only rewrite when newAnswer is null)
   const handleSaveRewrite = useCallback(async (newAnswer, newQuestion) => {
     if (!question?._id) return;
     await aiService.saveAnswer(question._id, newAnswer, newQuestion);
     if (onAnswerSaved) {
-      const updates = { answer: newAnswer };
+      const updates = {};
+      if (newAnswer) updates.answer = newAnswer;
       if (newQuestion) updates.question = newQuestion;
       onAnswerSaved(question._id, updates);
     }
@@ -589,6 +682,9 @@ const AIChatPanel = ({
           if (msg.role === 'rewrite') {
             return <RewriteCards key={msg.id} msg={msg} onSave={handleSaveRewrite} />;
           }
+          if (msg.role === 'question_rewrite') {
+            return <QuestionRewriteCards key={msg.id} msg={msg} onSave={handleSaveRewrite} />;
+          }
           if (msg.role === 'framework') {
             return <FrameworkMessage key={msg.id} msg={msg} onSave={handleSaveRewrite} />;
           }
@@ -613,7 +709,7 @@ const AIChatPanel = ({
         {showScrollBtn && (
           <button
             className="ai-scroll-bottom-btn"
-            onClick={scrollToBottom}
+            onClick={() => scrollToBottom(true)}
             title="Scroll to bottom"
           >
             <FaArrowDown />

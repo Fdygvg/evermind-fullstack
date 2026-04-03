@@ -398,7 +398,22 @@ const QuestionCard = ({
 
       {/* Question Section */}
       <div className="question-section">
-        <h2><strong>Question</strong></h2>
+        <h2
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!isEditing) {
+              window.dispatchEvent(new CustomEvent('open-ai-panel', { detail: { action: 'rewrite_question' } }));
+            }
+          }}
+          style={{
+            cursor: isEditing ? 'default' : 'pointer',
+            transition: 'color 0.2s ease',
+            display: 'inline-block',
+          }}
+          onMouseEnter={(e) => { if (!isEditing) e.target.style.color = 'var(--color-primary, #8B5CF6)'; }}
+          onMouseLeave={(e) => { e.target.style.color = ''; }}
+          title={isEditing ? undefined : "Click to rewrite question with AI"}
+        ><strong>Question</strong></h2>
         {isEditing ? (
           <textarea
             ref={questionRef}
