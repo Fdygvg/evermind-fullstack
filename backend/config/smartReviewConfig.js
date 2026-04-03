@@ -15,8 +15,8 @@ export const SMART_REVIEW_CONFIG = {
     1: 0,   // Hard - Stays in current session (reinserts after 5 questions)
     2: 1,   // Medium - Next session
     3: 3,   // Good - 3 sessions later
-    4: 7,   // Easy - 7 sessions later (1 week worth)
-    5: 14   // Perfect - 14 sessions later (2 weeks worth)
+    4: 5,   // Easy - 5 sessions later
+    5: 7    // Perfect - 7 sessions later (1 week worth)
   },
   
   // ============ SCHEDULING ============

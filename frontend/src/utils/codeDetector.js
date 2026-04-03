@@ -246,7 +246,9 @@ export function detectCode(text) {
   let maxScore = 0;
   
   Object.entries(languageHints).forEach(([lang, pattern]) => {
-    const matches = (text.match(pattern) || []).length;
+    // Create a global version of the pattern to count all occurrences
+    const globalPattern = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g');
+    const matches = (text.match(globalPattern) || []).length;
     if (matches > maxScore) {
       maxScore = matches;
       detectedLanguage = lang;

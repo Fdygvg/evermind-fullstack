@@ -55,11 +55,12 @@ const SmartReviewContent = ({
   useEffect(() => {
     const handleOpenAIPanel = (e) => {
       const action = e.detail?.action || null;
+      const text = e.detail?.text || null;
       if (showAIPanel && action) {
         // Panel is already open — dispatch directly to the chat panel
-        window.dispatchEvent(new CustomEvent('ai-panel-command', { detail: { action } }));
+        window.dispatchEvent(new CustomEvent('ai-panel-command', { detail: { action, text } }));
       } else {
-        setAiInitialAction(action);
+        setAiInitialAction({ action, text });
         setShowAIPanel(true);
       }
     };

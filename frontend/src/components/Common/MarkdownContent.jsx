@@ -95,7 +95,7 @@ const MarkdownContent = memo(({ content, questionId }) => {
                             return (
                                 <CodeBlock
                                     text={textContent}
-                                    language={language || 'javascript'}
+                                    language={language}
                                     forceCode={true} // Bypass heuristic detection, Markdown AST confirms it's a block
                                 />
                             );

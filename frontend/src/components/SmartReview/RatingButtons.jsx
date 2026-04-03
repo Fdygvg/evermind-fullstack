@@ -18,8 +18,8 @@ const RatingButtons = ({ onRate, disabled = false, compact = false, useCompactBa
     { value: 1, label: 'Hard', emoji: '😫', color: '#dc2626', interval: 'Today' },
     { value: 2, label: 'Medium', emoji: '😕', color: '#f59e0b', interval: '1 day' },
     { value: 3, label: 'Good', emoji: '😐', color: '#3b82f6', interval: '3 days' },
-    { value: 4, label: 'Easy', emoji: '🙂', color: '#10b981', interval: '7 days' },
-    { value: 5, label: 'Perfect', emoji: '😄', color: '#06b6d4', interval: '14 days' }
+    { value: 4, label: 'Easy', emoji: '🙂', color: '#10b981', interval: '5 days' },
+    { value: 5, label: 'Perfect', emoji: '😄', color: '#06b6d4', interval: '7 days' }
   ];
 
   const ratings = isSimplified

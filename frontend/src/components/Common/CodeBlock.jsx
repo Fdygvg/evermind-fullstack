@@ -2,7 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomDark as syntaxTheme } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { vscDarkPlus as syntaxTheme } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { shouldUsePrism } from '../../utils/validationUtils';
 import { detectCode } from '../../utils/codeDetector';
 
@@ -11,7 +11,7 @@ import { detectCode } from '../../utils/codeDetector';
  * Powered by ReactMarkdown for standard text mixed with code.
  * Restored `forceCode` and enhanced syntax colors via atomDark for dynamic bracket metrics.
  */
-const CodeBlock = ({ text, language = 'javascript', forceCode = false }) => {
+const CodeBlock = ({ text, language, forceCode = false }) => {
   if (!text) return null;
 
   const codeDetection = detectCode(text);
@@ -21,13 +21,13 @@ const CodeBlock = ({ text, language = 'javascript', forceCode = false }) => {
   // When forceCode is detected (or it mathematically scores as pure code without explicit backticks)
   // We bypass Markdown parsing and render the entire text as a single syntax highlighted block.
   if ((forceCode || shouldHighlight) && !hasExplicitCodeBlocks) {
-    const detectedLang = codeDetection?.language || language;
+    // Prefer explicitly passed language from markdown, then detector, then javascript
+    const detectedLang = language || codeDetection?.language || 'javascript';
     return (
       <div style={{ width: '100%' }}>
         <SyntaxHighlighter
           language={detectedLang}
           style={syntaxTheme}
-          wrapLines={true}
           wrapLongLines={true}
           customStyle={{
             borderRadius: '14px',
@@ -64,7 +64,6 @@ const CodeBlock = ({ text, language = 'javascript', forceCode = false }) => {
                 style={syntaxTheme}
                 language={match[1]}
                 PreTag="div"
-                wrapLines={true}
                 wrapLongLines={true}
                 customStyle={{
                   borderRadius: '12px',

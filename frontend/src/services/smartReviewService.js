@@ -105,8 +105,8 @@ export const smartReviewService = {
             1: { label: 'Hard', color: '#ef4444', emoji: '😫', interval: 'Today' },
             2: { label: 'Medium', color: '#f97316', emoji: '😕', interval: '1 day' },
             3: { label: 'Good', color: '#eab308', emoji: '😐', interval: '3 days' },
-            4: { label: 'Easy', color: '#22c55e', emoji: '🙂', interval: '7 days' },
-            5: { label: 'Perfect', color: '#3b82f6', emoji: '😄', interval: '14 days' }
+            4: { label: 'Easy', color: '#22c55e', emoji: '🙂', interval: '5 days' },
+            5: { label: 'Perfect', color: '#3b82f6', emoji: '😄', interval: '7 days' }
         };
 
         return ratingMap[rating] || {

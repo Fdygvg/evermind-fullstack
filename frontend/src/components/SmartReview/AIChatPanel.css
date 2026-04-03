@@ -36,11 +36,6 @@
   gap: 12px;
 }
 
-.ai-avatar {
-  font-size: 1.3rem;
-  color: var(--color-primary);
-}
-
 .ai-title {
   display: block;
   font-weight: 600;
@@ -76,7 +71,7 @@
 .ai-panel-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 16px 0;
   scroll-behavior: smooth;
   display: flex;
   flex-direction: column;
@@ -93,13 +88,6 @@
   padding: 40px 20px;
   gap: 8px;
   flex: 1;
-}
-
-.ai-empty-icon {
-  font-size: 2.5rem;
-  color: var(--color-primary);
-  opacity: 0.6;
-  margin-bottom: 8px;
 }
 
 .ai-empty-state p {
@@ -132,13 +120,6 @@
   flex-direction: row-reverse;
 }
 
-.ai-msg-avatar {
-  font-size: 1rem;
-  color: var(--color-primary);
-  margin-top: 8px;
-  flex-shrink: 0;
-}
-
 .ai-msg-bubble {
   max-width: 85%;
   padding: 10px 14px;
@@ -146,9 +127,12 @@
   position: relative;
   line-height: 1.55;
   font-size: 0.88rem;
+  margin-left: 10px;
 }
 
 .ai-chat-message.user .ai-msg-bubble {
+  margin-left: auto;
+  margin-right: 10px;
   background: var(--color-primary);
   border: 1px solid var(--color-primary);
   border-radius: 14px 14px 4px 14px;
@@ -251,6 +235,33 @@
 }
 
 /* Shortcut buttons row — below input per doodle layout */
+.ai-scroll-bottom-btn {
+  position: absolute;
+  top: -45px;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 10;
+  transition: all 0.2s;
+  animation: ai-msgFadeIn 0.2s ease-out;
+}
+
+.ai-scroll-bottom-btn:hover {
+  background: var(--color-background);
+  color: var(--color-text);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
 .ai-shortcuts {
   display: flex;
   gap: 10px;
@@ -534,7 +545,9 @@
   border: none !important;
   margin: 0 !important;
   padding: 14px 16px !important;
-  overflow-x: auto;
+  overflow-x: hidden !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
 }
 
 .ai-code-block-wrapper pre code {
@@ -544,6 +557,8 @@
   color: var(--color-accent);
   border: none !important;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
 }
 
 /* Inline code */

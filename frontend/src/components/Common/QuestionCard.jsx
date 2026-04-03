@@ -35,6 +35,45 @@ const QuestionCard = ({
 
   const questionRef = useRef(null);
   const answerRef = useRef(null);
+  const cardRef = useRef(null);
+
+  const [highlightData, setHighlightData] = useState(null);
+
+  useEffect(() => {
+    let timeoutId;
+    const checkSelection = () => {
+      const selection = window.getSelection();
+      if (selection && !selection.isCollapsed && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (cardRef.current && cardRef.current.contains(range.commonAncestorContainer)) {
+          const text = selection.toString().trim();
+          if (text.length > 0) {
+            const rect = range.getBoundingClientRect();
+            const cardRect = cardRef.current.getBoundingClientRect();
+            // Calculate relative positioning
+            setHighlightData({
+              text,
+              top: rect.top - cardRect.top - 40,
+              left: rect.left - cardRect.left + (rect.width / 2)
+            });
+            return;
+          }
+        }
+      }
+      setHighlightData(null);
+    };
+
+    const handleSelectionChange = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkSelection, 200);
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   // Track the displayed question (local overrides for edits)
   const displayQuestion = localQuestion || currentQuestion;
@@ -56,6 +95,9 @@ const QuestionCard = ({
     setAnnotation(localStorage.getItem(key) || '');
     setIsAnnotating(false);
     setEditAnnotation('');
+
+    // Reset highlight
+    setHighlightData(null);
   }, [currentQuestion?._id]);
 
   // Auto-resize textareas
@@ -165,9 +207,58 @@ const QuestionCard = ({
   return (
     <div
       id="questionCard"
+      ref={cardRef}
       className={`question-card ${loading ? 'loading' : ''}`}
       style={{ position: 'relative' }}
     >
+      {/* Ask AI Floating Button */}
+      <AnimatePresence>
+        {highlightData && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'absolute',
+              top: `${highlightData.top}px`,
+              left: `${highlightData.left}px`,
+              transform: 'translateX(-50%)',
+              zIndex: 50,
+            }}
+          >
+            <button
+              onMouseDown={(e) => {
+                e.preventDefault(); // Prevents text selection from clearing
+                e.stopPropagation();
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                window.dispatchEvent(new CustomEvent('open-ai-panel', { detail: { action: 'ask_highlight', text: highlightData.text } }));
+                setHighlightData(null);
+                window.getSelection()?.removeAllRanges();
+              }}
+              style={{
+                background: 'var(--color-primary, #8B5CF6)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              Ask AI❓
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Edit, Copy & Bookmark Buttons */}
       <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
         {/* Framework Button */}
@@ -307,7 +398,7 @@ const QuestionCard = ({
 
       {/* Question Section */}
       <div className="question-section">
-        <h2>Question</h2>
+        <h2><strong>Question</strong></h2>
         {isEditing ? (
           <textarea
             ref={questionRef}
@@ -374,7 +465,7 @@ const QuestionCard = ({
       {/* Answer Section */}
       {isEditing ? (
         <div className="answer-section">
-          <h2>Answer</h2>
+          <h2><strong>Answer</strong></h2>
           <textarea
             ref={answerRef}
             value={editAnswer}
@@ -433,7 +524,7 @@ const QuestionCard = ({
         </div>
       ) : showAnswer && displayQuestion?.answer ? (
         <div className="answer-section">
-          <h2>Answer</h2>
+          <h2><strong>Answer</strong></h2>
           <MarkdownContent content={displayQuestion.answer} />
           <button
             className="show-answer-btn"

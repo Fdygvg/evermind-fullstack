@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   FaRobot, FaTimes, FaLightbulb, FaPen, FaPaperPlane,
-  FaSpinner, FaCopy, FaCheck, FaSave, FaTrash, FaStop
+  FaSpinner, FaCopy, FaCheck, FaSave, FaTrash, FaStop, FaArrowDown
 } from 'react-icons/fa';
 import { aiService } from '../../services/aiService';
 import ReactMarkdown from 'react-markdown';
@@ -82,7 +82,6 @@ const RewriteCards = ({ msg, onSave }) => {
 
   return (
     <div className="ai-chat-message assistant">
-      <FaRobot className="ai-msg-avatar" />
       <div className="ai-msg-bubble ai-rewrite-bubble">
         <div className="ai-msg-text" style={{ marginBottom: '12px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
           Here is a rewritten flashcard. Choose a style below:
@@ -106,14 +105,14 @@ const RewriteCards = ({ msg, onSave }) => {
           </div>
           <div className="ai-rewrite-footer">
             <div className="ai-rewrite-tabs">
-              <button 
+              <button
                 className={`ai-tab-btn ${activeTab === 'A' ? 'active' : ''}`}
                 onClick={() => setActiveTab('A')}
                 title="Medium"
               >
                 Medium
               </button>
-              <button 
+              <button
                 className={`ai-tab-btn ${activeTab === 'B' ? 'active' : ''}`}
                 onClick={() => setActiveTab('B')}
                 title="Concise"
@@ -121,14 +120,14 @@ const RewriteCards = ({ msg, onSave }) => {
                 Concise
               </button>
             </div>
-            <button 
-              className="ai-rewrite-save-btn" 
-              onClick={handleSave} 
+            <button
+              className="ai-rewrite-save-btn"
+              onClick={handleSave}
               disabled={saving || isCurrentlySaved}
             >
-              {saving ? <FaSpinner className="ai-spinner" /> : 
-               isCurrentlySaved ? <><FaCheck /> Saved</> : 
-               <><FaSave /> Save</>}
+              {saving ? <FaSpinner className="ai-spinner" /> :
+                isCurrentlySaved ? <><FaCheck /> Saved</> :
+                  <><FaSave /> Save</>}
             </button>
           </div>
         </div>
@@ -157,7 +156,6 @@ const FrameworkMessage = ({ msg, onSave }) => {
 
   return (
     <div className="ai-chat-message assistant">
-      <FaRobot className="ai-msg-avatar" />
       <div className="ai-msg-bubble">
         {msg.newQuestion && (
           <div style={{ marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid var(--color-border)' }}>
@@ -185,8 +183,8 @@ const FrameworkMessage = ({ msg, onSave }) => {
           disabled={saving || saved}
         >
           {saving ? <FaSpinner className="ai-spinner" /> :
-           saved ? <><FaCheck /> Saved</> :
-           <><FaSave /> Save as Answer</>}
+            saved ? <><FaCheck /> Saved</> :
+              <><FaSave /> Save as Answer</>}
         </button>
       </div>
     </div>
@@ -217,7 +215,6 @@ const ChatMessage = ({ msg }) => {
 
   return (
     <div className={`ai-chat-message ${isUser ? 'user' : 'assistant'}`}>
-      {!isUser && <FaRobot className="ai-msg-avatar" />}
       <div className="ai-msg-bubble">
         {isUser ? (
           <div className="ai-msg-text">{msg.displayText || msg.content}</div>
@@ -254,11 +251,50 @@ const AIChatPanel = ({
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [highlightData, setHighlightData] = useState(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const panelContentRef = useRef(null);
   const currentQuestionIdRef = useRef(null);
   const hasFiredInitialAction = useRef(false);
   const abortControllerRef = useRef(null);
+
+  // Text selection detection inside chat messages
+  useEffect(() => {
+    let timeoutId;
+    const checkSelection = () => {
+      const selection = window.getSelection();
+      if (selection && !selection.isCollapsed && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (panelContentRef.current && panelContentRef.current.contains(range.commonAncestorContainer)) {
+          const text = selection.toString().trim();
+          if (text.length > 0) {
+            const rect = range.getBoundingClientRect();
+            const panelRect = panelContentRef.current.getBoundingClientRect();
+            setHighlightData({
+              text,
+              top: rect.top - panelRect.top + panelContentRef.current.scrollTop - 40,
+              left: rect.left - panelRect.left + (rect.width / 2)
+            });
+            return;
+          }
+        }
+      }
+      setHighlightData(null);
+    };
+
+    const handleSelectionChange = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkSelection, 200);
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   // Send a message to the AI (hoisted so initialAction can use it)
   const sendMessage = useCallback(async (rawMessage, displayText = null) => {
@@ -355,15 +391,22 @@ const AIChatPanel = ({
   useEffect(() => {
     if (initialAction && !hasFiredInitialAction.current && !loading) {
       hasFiredInitialAction.current = true;
-      if (initialAction === 'framework') {
+      const actionType = typeof initialAction === 'string' ? initialAction : initialAction.action;
+      const actionText = initialAction.text;
+      if (actionType === 'framework') {
         sendMessage('__FRAMEWORK__', '🚀 Master this concept');
+      } else if (actionType === 'ask_highlight' && actionText) {
+        sendMessage(`What does this mean:\n\n"${actionText}"\n\n(Context: Please explain this within the context of the current question/answer)`, `🤔 What does "${actionText}" mean?`);
       }
     }
 
     const handlePanelCommand = (e) => {
       const action = e.detail?.action;
+      const text = e.detail?.text;
       if (action === 'framework') {
         sendMessage('__FRAMEWORK__', '🚀 Master this concept');
+      } else if (action === 'ask_highlight' && text) {
+        sendMessage(`What does this mean:\n\n"${text}"\n\n(Context: Please explain this within the context of the current question/answer)`, `🤔 What does "${text}" mean?`);
       }
     };
     window.addEventListener('ai-panel-command', handlePanelCommand);
@@ -389,6 +432,14 @@ const AIChatPanel = ({
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  // Track scroll position to toggle scroll-to-bottom button
+  const handleScroll = useCallback((e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    // Show if we are scrolled up more than 150px
+    const isUp = scrollHeight - scrollTop - clientHeight > 150;
+    setShowScrollBtn(isUp);
+  }, []);
 
   // Track question changes — insert divider when question switches
   useEffect(() => {
@@ -431,7 +482,7 @@ const AIChatPanel = ({
         // Mobile: Allow default (newline). User must click send button.
         return;
       }
-      
+
       // Desktop: Enter sends, Shift+Enter newline
       if (!e.shiftKey) {
         e.preventDefault();
@@ -453,7 +504,6 @@ const AIChatPanel = ({
       {/* ── Header ── */}
       <div className="ai-panel-header">
         <div className="ai-header-left">
-          <FaRobot className="ai-avatar" />
           <div>
             <span className="ai-title">Code Sage</span>
             <span className="ai-subtitle">
@@ -462,9 +512,9 @@ const AIChatPanel = ({
           </div>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button 
-            className="ai-close-btn" 
-            onClick={() => setMessages([])} 
+          <button
+            className="ai-close-btn"
+            onClick={() => setMessages([])}
             title="Clear Chat"
             disabled={loading || messages.length === 0}
             style={{ opacity: messages.length === 0 ? 0.3 : 1 }}
@@ -478,10 +528,56 @@ const AIChatPanel = ({
       </div>
 
       {/* ── Messages Area ── */}
-      <div className="ai-panel-content">
+      <div className="ai-panel-content" ref={panelContentRef} style={{ position: 'relative' }} onScroll={handleScroll}>
+        {/* Ask AI floating button for highlighted text */}
+        {highlightData && (
+          <div
+            style={{
+              position: 'absolute',
+              top: `${highlightData.top}px`,
+              left: `${Math.min(Math.max(highlightData.left, 50), 250)}px`,
+              transform: 'translateX(-50%)',
+              zIndex: 50,
+              animation: 'fadeIn 0.15s ease'
+            }}
+          >
+            <button
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                const selectedText = highlightData.text;
+                setHighlightData(null);
+                window.getSelection()?.removeAllRanges();
+                sendMessage(
+                  `What does this mean:\n\n"${selectedText}"\n\n(Context: Please explain this within the context of the current question/answer)`,
+                  `🤔 What does "${selectedText}" mean?`
+                );
+              }}
+              style={{
+                background: 'var(--color-primary, #8B5CF6)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                fontWeight: 600,
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <strong>Ask AI🤔</strong>
+            </button>
+          </div>
+        )}
         {messages.length === 0 && (
           <div className="ai-empty-state">
-            <FaRobot className="ai-empty-icon" />
             <p>Hey! I'm <strong>Code Sage</strong>.</p>
             <p className="ai-empty-hint">
               Ask me anything about this question, or use the shortcuts below.
@@ -501,7 +597,6 @@ const AIChatPanel = ({
 
         {loading && (
           <div className="ai-chat-message assistant">
-            <FaRobot className="ai-msg-avatar" />
             <div className="ai-msg-bubble ai-typing-bubble">
               <div className="ai-typing-indicator">
                 <span></span><span></span><span></span>
@@ -514,7 +609,17 @@ const AIChatPanel = ({
       </div>
 
       {/* ── Input Area ── */}
-      <div className="ai-input-area">
+      <div className="ai-input-area" style={{ position: 'relative' }}>
+        {showScrollBtn && (
+          <button
+            className="ai-scroll-bottom-btn"
+            onClick={scrollToBottom}
+            title="Scroll to bottom"
+          >
+            <FaArrowDown />
+          </button>
+        )}
+
         {/* Text input + send */}
         <div className="ai-input-row">
           <textarea
