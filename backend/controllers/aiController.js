@@ -90,18 +90,26 @@ Return your response in this EXACT format (including the markers):
       userMessage = `I need you to rewrite ONLY the question for this flashcard. Do NOT touch the answer.
 
 Your task:
-1. Read the ANSWER carefully and identify ALL distinct concepts, elements, and key points it covers.
-2. The current question may only ask about one or two of these elements. Your job is to rewrite the question so it comprehensively covers EVERYTHING in the answer.
-3. Format the question as a checklist of bold sub-questions using markdown checkboxes.
-4. Generate TWO different versions.
+1. Read the ANSWER carefully and identify the key concepts it covers.
+2. Rewrite the question as a short checklist of sub-questions that test the user's recall WITHOUT revealing the answer.
+3. Generate TWO different versions.
 
-Rules:
-- Each checkbox item should be a clear, specific sub-question
+CRITICAL RULES:
+- NEVER include the answer or any part of the answer inside the question. The question must TEST knowledge, not reveal it.
+  BAD: "- [ ] **Three ways to declare variables (var, let, const)**" ← this reveals the answer!
+  GOOD: "- [ ] **What are the three ways to declare variables?**" ← this tests recall
+- Each sub-question should be SHORT (one line, under 15 words)
+- Use simple phrasing like: "Explain...", "What is the syntax for...", "Give an example of..."
+- Generate between 2 and 5 sub-questions per version (NOT always the same number — adapt to how many distinct concepts the answer covers)
 - Use this exact format: - [ ] **Sub-question here**
-- Cover every concept mentioned in the answer
-- Keep sub-questions concise but specific
-- Aim for 4-7 checkbox items per version
-- V1 and V2 should ask about the same concepts but with different wording
+- V1 and V2 should cover the same concepts but with different wording
+
+Here is an example of the style I want:
+
+If the answer explains prompt() in JavaScript (showing syntax, return value, and an example with age), the rewritten question should be:
+- [ ] **Explain the prompt in JavaScript**
+- [ ] **What is the syntax for prompt?**
+- [ ] **Give an example using prompt to collect user age**
 
 Return your response in this EXACT format:
 ---V1---

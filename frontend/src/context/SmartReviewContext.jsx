@@ -578,7 +578,7 @@ export const SmartReviewProvider = ({ children }) => {
           }
         });
 
-        const reconstructedQuestions = savedState.todaysQuestions
+        let reconstructedQuestions = savedState.todaysQuestions
           .map(id => {
             const idStr = id.toString ? id.toString() : id;
             return questionMap[idStr] || null;
@@ -587,11 +587,32 @@ export const SmartReviewProvider = ({ children }) => {
 
         // --- FIX #2: Apply the ADJUSTED index and reviewed count ---
         // These are computed correctly but were previously ignored.
-        const adjustedReviewedToday = computeReviewedCount(savedState.ratingHistory);
-        const adjustedIndex = computeAdjustedIndex(
+        let adjustedReviewedToday = computeReviewedCount(savedState.ratingHistory);
+        let adjustedIndex = computeAdjustedIndex(
           savedState.currentIndex || 0,
           savedState.ratingHistory
         );
+
+        // --- FIX: FALLBACK when reconstruction fails (ID mismatch) ---
+        // If no questions could be reconstructed from saved IDs but we have
+        // the full remainingQuestions array from the backend, use those instead.
+        if (reconstructedQuestions.length === 0 && questions.length > 0) {
+          console.warn('[SmartReviewContext] Reconstruction failed! Falling back to remainingQuestions directly.');
+          console.warn('[SmartReviewContext] Debug:', {
+            savedIdsCount: savedState.todaysQuestions.length,
+            savedIdsSample: savedState.todaysQuestions.slice(0, 3),
+            questionMapKeysCount: Object.keys(questionMap).length,
+            questionMapKeysSample: Object.keys(questionMap).slice(0, 3),
+          });
+
+          // Use the full remaining questions, offset by currentIndex
+          const savedIndex = savedState.currentIndex || 0;
+          // The remaining questions from the backend represent the FULL session queue.
+          // Slice from the saved index position to get what's left to review.
+          reconstructedQuestions = questions.slice(Math.min(savedIndex, questions.length));
+          adjustedIndex = 0; // We already sliced, so start from 0
+          adjustedReviewedToday = savedState.reviewedToday || 0;
+        }
 
         console.log('[SmartReviewContext] RESUME diagnosis:', {
           savedCurrentIndex: savedState.currentIndex,
