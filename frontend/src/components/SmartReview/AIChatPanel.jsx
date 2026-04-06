@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   FaRobot, FaTimes, FaLightbulb, FaPen, FaPaperPlane,
-  FaSpinner, FaCopy, FaCheck, FaSave, FaTrash, FaStop, FaArrowDown
+  FaSpinner, FaCopy, FaCheck, FaSave, FaTrash, FaStop, FaArrowDown, FaRegQuestionCircle
 } from 'react-icons/fa';
 import { aiService } from '../../services/aiService';
 import ReactMarkdown from 'react-markdown';
@@ -225,7 +225,7 @@ const HtmlRenderMessage = ({ msg, isAlreadySaved, onSaveHtml }) => {
           </div>
         </div>
         <div style={{ padding: '4px', background: 'var(--color-surface)', borderRadius: '8px', overflow: 'hidden', height: '300px', position: 'relative', zIndex: 1 }}>
-          <iframe 
+          <iframe
             srcDoc={`<style>html, body { max-width: 100%; overflow-x: hidden !important; box-sizing: border-box; margin: 0; padding: 8px; word-break: break-word; } *, *::before, *::after { box-sizing: inherit; max-width: 100%; } img, video, canvas, svg, table { max-width: 100%; height: auto; } pre, code { white-space: pre-wrap; word-break: break-word; font-size: 14px; }</style>${msg.htmlContent}`}
             title="Render Preview"
             style={{ width: '100%', height: '100%', border: 'none', background: '#fff' }}
@@ -234,18 +234,18 @@ const HtmlRenderMessage = ({ msg, isAlreadySaved, onSaveHtml }) => {
         </div>
         <button
           className="ai-rewrite-save-btn"
-          style={{ 
-            marginTop: '12px', 
-            position: 'relative', 
+          style={{
+            marginTop: '12px',
+            position: 'relative',
             zIndex: 10,
             cursor: (saving || saved) ? 'not-allowed' : 'pointer',
             opacity: (saving || saved) ? 0.7 : 1,
             pointerEvents: 'auto'
           }}
           onClick={(e) => {
-             e.preventDefault();
-             e.stopPropagation();
-             handleSave();
+            e.preventDefault();
+            e.stopPropagation();
+            handleSave();
           }}
           disabled={saving || saved}
         >
@@ -645,10 +645,10 @@ const AIChatPanel = ({
   const scrollToBottom = useCallback((force = false) => {
     if (messagesEndRef.current) {
       if (force === true) {
-         messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-         return;
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        return;
       }
-      
+
       const scrollParent = messagesEndRef.current.parentElement;
       if (scrollParent) {
         // Is user scrolled up?
@@ -821,7 +821,7 @@ const AIChatPanel = ({
                 whiteSpace: 'nowrap'
               }}
             >
-              <strong>Ask AI🤔</strong>
+              Ask AI <FaRegQuestionCircle />
             </button>
           </div>
         )}
@@ -850,14 +850,14 @@ const AIChatPanel = ({
               try {
                 console.log(`PRE-API CALL: Attempting to save HTML render for questionId: ${question?._id}, htmlRenders length: ${question?.htmlRenders?.length || 0}`);
                 const titleStr = `Html ${question?.htmlRenders?.length + 1 || 1}`;
-                
+
                 const apiCall = aiService.saveHtmlRender(question._id, htmlContent, titleStr);
                 const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("API Timeout after 10000ms")), 10000));
-                
+
                 console.log("Awaiting Promise.race...");
                 const res = await Promise.race([apiCall, timeout]);
                 console.log("Promise.race resolved successfully!");
-                
+
                 console.log("Response from saveHtmlRender API:", res?.data);
                 if (res?.data?.success && res?.data?.data?.question) {
                   console.log("Updating question with new HTML render");

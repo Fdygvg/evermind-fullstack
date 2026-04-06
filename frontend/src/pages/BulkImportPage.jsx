@@ -250,10 +250,7 @@ const BulkImportPage = () => {
       // Reset file inputs
       document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
 
-      // Navigate after 2 seconds
-      setTimeout(() => {
-        navigate(`/sections`);
-      }, 2000);
+      // Success message will remain visible, no redirect
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to import questions');
     } finally {

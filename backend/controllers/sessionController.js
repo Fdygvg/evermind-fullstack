@@ -102,7 +102,7 @@ export const getNextQuestion = async (req, res) => {
     const session = await ReviewSession.findOne({
       userId: req.userId,
       isActive: true
-    }).populate('remainingQuestions');
+    }).sort({ lastUpdated: -1 }).populate('remainingQuestions');
 
     if (!session) {
       return res.status(404).json({
@@ -169,7 +169,7 @@ export const submitAnswer = async (req, res) => {
     const session = await ReviewSession.findOne({
       userId: req.userId,
       isActive: true
-    });
+    }).sort({ lastUpdated: -1 });
 
     if (!session) {
       return res.status(404).json({
@@ -298,7 +298,7 @@ export const endSession = async (req, res) => {
         status: 'completed',
         endTime: new Date()
       },
-      { new: true }
+      { sort: { lastUpdated: -1 }, new: true }
     );
 
     if (!session) {
@@ -393,7 +393,7 @@ export const getCurrentSession = async (req, res) => {
         session: {
           id: session._id,
           cardMode: session.cardMode,
-          currentMode: session.cardMode, // Alias for consistency
+          currentMode: session.currentMode || session.smartReviewState?.mode || session.cardMode, // Use actual mode field
           totalQuestions: session.allQuestions.length,
           sections: session.sectionIds,
           sectionIds: session.sectionIds.map(s => s._id),
@@ -506,7 +506,9 @@ export const updateProgress = async (req, res) => {
         currentIndex: currentIndex || 0,
         answeredQuestionIds: answeredQuestionIds || [],
         smartReviewState: smartReviewState,
-        isActive: true,
+        isActive: status !== 'paused',
+        cardMode: req.body.cardMode || smartReviewState?.cardMode || 'normal',
+        currentMode: req.body.currentMode || smartReviewState?.mode || 'normal',
         allQuestions: smartReviewState?.todaysQuestions || [],
         remainingQuestions: smartReviewState?.todaysQuestions || []
       });
@@ -544,6 +546,14 @@ export const updateProgress = async (req, res) => {
     }
     if (status !== undefined) {
       session.status = status;
+      // Keep isActive in sync with status
+      session.isActive = (status === 'active');
+    }
+    if (req.body.cardMode) {
+      session.cardMode = req.body.cardMode;
+    }
+    if (req.body.currentMode) {
+      session.currentMode = req.body.currentMode;
     }
     if (smartReviewState !== undefined) {
       session.smartReviewState = smartReviewState;
@@ -585,16 +595,24 @@ export const pauseSession = async (req, res) => {
       query._id = sessionId;
     }
 
-    const session = await ReviewSession.findOne(query);
+    // A session might already be paused or active, but we only want to pause it if it exists
+    // The query above only looks for 'active', but if they send a specific ID, let's find it 
+    // regardless of status so we don't throw a 404 for an already paused session
+    if (sessionId) {
+      query = { _id: sessionId, userId: req.userId };
+    }
+
+    const session = await ReviewSession.findOne(query).sort({ lastUpdated: -1 });
 
     if (!session) {
       return res.status(404).json({
         success: false,
-        message: 'No active session found'
+        message: 'No session found to pause'
       });
     }
 
     session.status = 'paused';
+    session.isActive = false; // Paused means not active
     session.lastUpdated = new Date();
     await session.save();
 
@@ -624,8 +642,8 @@ export const getSimplifiedSessions = async (req, res) => {
     const sessions = await ReviewSession.find({
       userId: req.userId,
       isSimplified: true,
-      isActive: true,
       status: { $in: ['active', 'paused'] }
+      // Removed isActive: true because a paused session has isActive: false
     }).select('sectionIds remainingQuestions allQuestions correctCount wrongCount status lastUpdated');
 
     // Build a map: sectionId -> session summary
@@ -666,13 +684,13 @@ export const resumeSimplifiedSession = async (req, res) => {
       _id: sessionId,
       userId: req.userId,
       isSimplified: true,
-      isActive: true
+      status: { $in: ['active', 'paused'] }
     }).populate('remainingQuestions');
 
     if (!session) {
       return res.status(404).json({
         success: false,
-        message: 'No active simplified session found'
+        message: 'No simplified session found'
       });
     }
 
@@ -682,6 +700,7 @@ export const resumeSimplifiedSession = async (req, res) => {
 
     // Just activate the session
     session.status = 'active';
+    session.isActive = true; // Activating a session means it is active again
     session.lastUpdated = new Date();
     await session.save();
 
@@ -726,7 +745,7 @@ export const endSimplifiedSession = async (req, res) => {
     const { sessionId } = req.params;
 
     const session = await ReviewSession.findOneAndUpdate(
-      { _id: sessionId, userId: req.userId, isSimplified: true, isActive: true },
+      { _id: sessionId, userId: req.userId, isSimplified: true, status: { $in: ['active', 'paused'] } },
       { isActive: false, status: 'completed', endTime: new Date() },
       { new: true }
     );
@@ -759,7 +778,7 @@ export const endSimplifiedSession = async (req, res) => {
         session: {
           correct: session.correctCount,
           wrong: session.wrongCount,
-          total: session.allQuestions.length,
+          total: session.allQuestions?.length || 0,
           duration
         }
       }

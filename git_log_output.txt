@@ -1,0 +1,30 @@
+﻿dfea506 HTML Rendering || Automatic Learning || Moved "Ask AI" Down || Add Resume Button || TagMessages
+fc31de1 Result Page Bug || Question Generator Fixed
+568ac22 Highlight Feature || Rewrite Questions || Css Color Issue || Change date to 5days and 7days || Back to bottom BTN in AI Chat
+ebf5fa1 #
+7ccf046 Added Framework
+f8fb59a Converted Ai to Chat||Fixed up MD formatting for good
+f2d5565 Added AI, Fixed Pause Logic, Added Archive
+babe98f Added comment for reviiew session & Hide Answer BTN
+5db7fe6 #
+31296cf Installed remark-gfm library
+8744a80 Installed react-markdown Library
+ed2a120 FH
+0d6f15c #
+e24836a Added Offline Mode ||INCOMPLETE
+3dc3ec9 Fixed Bugs in Pause Logic
+1227d13 Fixed Update Question Logic || Added Edit BTN to Normal Review Mode
+641f2bb #
+6132e9d Fixed Registeration Flow
+45f9ae7 #
+6fb385e Fixed Saved Session Login In Review All Mode || Added Copy Q&A btn To Normal Mode
+8433ba8 Installed zod package
+97edf31 Installed express-rate-lmit package
+48d007a Installed cookie-parser package
+98a79a8 Added Review All Questions Feature
+a905016 UI Tweaks
+0b38358 Fixed NavBar Improved Mobile Responsiveness
+c6065c1 Fixed Elimination Mode
+730cab8 Replaced Emojis In Preferences Page
+f113d31 #
+11a2f21 #

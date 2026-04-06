@@ -88,12 +88,29 @@ const ReviewSessionPage = () => {
   const startSession = async () => {
     if (selectedSections.length === 0) { alert("Please select at least one section"); return; }
 
+    // For normal/flashcard modes: DON'T call startSession() on the backend.
+    // Instead, navigate directly and let SmartReviewWrapper call loadTodaysQuestions()
+    // which uses the proper three-track scheduling system (NEW → PENDING → REVIEW).
+    // Calling startSession() would fetch ALL questions and bypass scheduling entirely.
+    if (selectedMode === 'normal' || selectedMode === 'flashcard') {
+      navigate("/session/start", {
+        state: {
+          sectionIds: selectedSections,
+          cardMode: selectedMode,
+          useSmartReview: true
+          // No sessionData — SmartReviewWrapper will call loadTodaysQuestions()
+        }
+      });
+      return;
+    }
+
+    // For elimination/tiktok modes: still create a backend session
     setLoading(true);
     try {
       const response = await sessionService.startSession({
         sectionIds: selectedSections,
         cardMode: selectedMode,
-        useSmartReview: selectedMode === 'tiktok' || selectedMode === 'elimination'
+        useSmartReview: true
       });
 
       if (response.data.success) {
@@ -102,8 +119,6 @@ const ReviewSessionPage = () => {
           navigate("/elimination", { state: { sectionIds: selectedSections, useSmartReview: true, mode: 'elimination', sessionData } });
         } else if (selectedMode === "tiktok") {
           navigate("/tiktok-review", { state: { sectionIds: selectedSections, useSmartReview: true, mode: 'tiktok-review', sessionData } });
-        } else {
-          navigate("/session/start", { state: { sectionIds: selectedSections, cardMode: selectedMode, useSmartReview: true, sessionData } });
         }
       }
     } catch (error) {

@@ -455,7 +455,7 @@ export const SmartReviewProvider = ({ children }) => {
         dedupedHistory: dedupedHistory
       });
 
-      await sessionService.updateProgress({
+      const response = await sessionService.updateProgress({
         sectionIds: currentState.sectionIds,
         currentIndex: currentState.currentIndex,
         answeredQuestionIds: currentHistory.map(r => r.questionId),
@@ -467,9 +467,11 @@ export const SmartReviewProvider = ({ children }) => {
         sessionId: currentState.sessionId || undefined
       });
 
-      console.log('[SmartReview] Session paused successfully');
+      // Store the returned session ID so resume can find it
+      const returnedSessionId = response?.data?.data?.session?.id || response?.data?.session?.id;
+      console.log('[SmartReview] Session paused successfully, sessionId:', returnedSessionId);
 
-      setState(prev => ({ ...prev, isLoading: false }));
+      setState(prev => ({ ...prev, isLoading: false, sessionId: returnedSessionId || prev.sessionId }));
 
       return { success: true };
     } catch (error) {
@@ -520,6 +522,10 @@ export const SmartReviewProvider = ({ children }) => {
     endSession,
     pauseSession,
     updateQuestionInSession,
+    // Simple setter: store a backend session ID without reloading
+    setSessionId: useCallback((id) => {
+      setState(prev => ({ ...prev, sessionId: id }));
+    }, []),
 
     // Service helpers (optional)
     getPriorityInfo: smartReviewService.getPriorityInfo,

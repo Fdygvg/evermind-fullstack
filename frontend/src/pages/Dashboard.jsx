@@ -75,7 +75,7 @@ const Dashboard = () => {
 
   // Check if there's a valid resumable session (includes Smart Review sessions now)
   const hasResumableSession = activeSession &&
-    activeSession.status === 'paused' &&
+    ['active', 'paused'].includes(activeSession.status) &&
     (activeSession.progress?.total > 0 || activeSession.useSmartReview);
 
   const completedQuestions = activeSession

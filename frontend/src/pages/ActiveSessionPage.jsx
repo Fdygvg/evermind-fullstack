@@ -335,10 +335,12 @@ const ActiveSession = () => {
         mode={mode === 'tiktok' ? 'tiktok' : (isSimplified ? 'simplified' : 'normal')}
         cardMode={cardMode}
         isSimplified={isSimplified}
-        // Both Simplified and Smart Review modes now use initialSession for precise resume
-        // so they reconstruct the exact same session array and question counts.
-        // Quick Play (simplified) also comes with fresh sessionData from backend which we must use!
-        initialSession={sessionData || null}
+        // Only pass initialSession for:
+        //  1. Quick Play (simplified) — needs ALL questions from startSession()
+        //  2. Resume sessions — needs saved session state
+        // Fresh Smart Review sessions must NOT pass initialSession so that
+        // SmartReviewWrapper calls loadTodaysQuestions() with proper scheduling.
+        initialSession={(isSimplified || resumeSession) ? (sessionData || null) : null}
       >
         {({
           currentQuestion: smartQuestion,
@@ -350,7 +352,8 @@ const ActiveSession = () => {
           initialQuestionCount,
           SwipeZoneContainer,
           onSwipeRate,
-          updateQuestionInSession
+          updateQuestionInSession,
+          endSession
         }) => {
           if (isSessionComplete) {
             // Calculate stats from rating history
@@ -360,6 +363,12 @@ const ActiveSession = () => {
                 ratingBreakdown[r.rating]++;
               }
             });
+
+            // NOTE: Do NOT call endSession() here. Natural completion means ALL
+            // questions have been rated — there's nothing unrated to mark as pending.
+            // endSession() reads ratingHistoryRef which hasn't synced the last rating
+            // yet (React refs update in useEffect, AFTER render), causing the last
+            // question to be incorrectly marked as pending.
 
             // Navigate to results page with stats
             navigate("/session/results", {

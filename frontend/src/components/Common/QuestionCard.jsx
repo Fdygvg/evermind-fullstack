@@ -1,9 +1,13 @@
 import BookmarkButton from './BookmarkButton';
 import CodeBlock from './CodeBlock';
 import MarkdownContent from './MarkdownContent';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSound } from '../../hooks/useSound';
-import { FaRegCopy, FaCheck, FaPen, FaCommentDots, FaPlay, FaTrash, FaCode, FaSpinner } from 'react-icons/fa';
+import {
+  FaRegCopy, FaCheck, FaPen, FaCommentDots, FaPlay, FaTrash, FaCode, FaSpinner,
+  FaBook,
+  FaRegQuestionCircle
+} from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { questionService } from '../../services/question';
 import { aiService } from '../../services/aiService';
@@ -61,6 +65,13 @@ const QuestionCard = ({
   const cardRef = useRef(null);
 
   const [highlightData, setHighlightData] = useState(null);
+  const [isDefining, setIsDefining] = useState(false);
+  const [definitionMd, setDefinitionMd] = useState("");
+  const isDefiningRef = useRef(false);
+
+  useEffect(() => {
+    isDefiningRef.current = isDefining;
+  }, [isDefining]);
 
   useEffect(() => {
     let timeoutId;
@@ -73,17 +84,48 @@ const QuestionCard = ({
           if (text.length > 0) {
             const rect = range.getBoundingClientRect();
             const cardRect = cardRef.current.getBoundingClientRect();
-            // Calculate relative positioning
+
+            // Determine which section the text was highlighted in
+            let element = range.commonAncestorContainer;
+            if (element.nodeType === 3) element = element.parentNode;
+            const isQuestionSection = !!element.closest('.question-section');
+            const section = isQuestionSection ? 'question' : 'answer';
+
+            // Check if editing an existing definition
+            const existingDfn = element.closest('.inline-def-wrapper');
+            let isEditingDef = false;
+            let existingDefText = "";
+            let existingDefBase64 = "";
+            let targetTextToDefine = text;
+
+            if (existingDfn) {
+              isEditingDef = true;
+              existingDefBase64 = existingDfn.getAttribute('data-def') || '';
+              const firstChild = existingDfn.firstElementChild;
+              if (firstChild) {
+                targetTextToDefine = firstChild.textContent || text;
+              }
+              try {
+                existingDefText = decodeURIComponent(escape(atob(existingDefBase64)));
+              } catch (e) { }
+            }
+
             setHighlightData({
-              text,
+              text: targetTextToDefine,
               top: rect.bottom - cardRect.top + 5,
-              left: rect.left - cardRect.left + (rect.width / 2)
+              left: cardRect.width / 2, // Horizontally centered perfectly
+              section,
+              isEditingDef,
+              existingDefText,
+              existingDefBase64
             });
             return;
           }
         }
       }
-      setHighlightData(null);
+      if (!isDefiningRef.current) {
+        setHighlightData(null);
+      }
     };
 
     const handleSelectionChange = () => {
@@ -121,9 +163,13 @@ const QuestionCard = ({
 
     // Reset highlight
     setHighlightData(null);
+    setIsDefining(false);
+    setDefinitionMd('');
     setActiveHtmlRender(null);
     setShowHtmlPills(false);
   }, [currentQuestion?._id]);
+
+
 
   // Auto-resize textareas
   const autoResize = (ref) => {
@@ -198,6 +244,83 @@ const QuestionCard = ({
     setIsAnnotating(false);
   };
 
+  const handleLiveCodeEdit = useCallback(async (oldCode, newCode) => {
+    console.log('[LiveCodeEdit] === SAVE TRIGGERED ===');
+    console.log('[LiveCodeEdit] oldCode length:', oldCode?.length, 'newCode length:', newCode?.length);
+    console.log('[LiveCodeEdit] oldCode preview:', JSON.stringify(oldCode?.substring(0, 100)));
+    console.log('[LiveCodeEdit] newCode preview:', JSON.stringify(newCode?.substring(0, 100)));
+    setIsSaving(true);
+    setSaveStatus(null);
+    try {
+      let newQuestion = displayQuestion.question || '';
+      let newAnswer = displayQuestion.answer || '';
+      let updated = false;
+
+      // Normalize line endings
+      const normalize = (str) => String(str).replace(/\r\n/g, '\n').replace(/\n$/, '');
+      const normalizedOld = normalize(oldCode);
+      const normalizedNew = normalize(newCode);
+      const normalizedQ = normalize(newQuestion);
+      const normalizedA = normalize(newAnswer);
+
+      console.log('[LiveCodeEdit] Question length:', normalizedQ.length, 'Answer length:', normalizedA.length);
+      console.log('[LiveCodeEdit] Question includes oldCode?', normalizedQ.includes(normalizedOld));
+      console.log('[LiveCodeEdit] Answer includes oldCode?', normalizedA.includes(normalizedOld));
+
+      if (normalizedQ.includes(normalizedOld)) {
+        newQuestion = normalizedQ.replace(normalizedOld, normalizedNew);
+        updated = true;
+        console.log('[LiveCodeEdit] Replaced in QUESTION');
+      } else if (normalizedA.includes(normalizedOld)) {
+        newAnswer = normalizedA.replace(normalizedOld, normalizedNew);
+        updated = true;
+        console.log('[LiveCodeEdit] Replaced in ANSWER');
+      }
+
+      if (!updated) {
+        console.warn('[LiveCodeEdit] FAILED: Could not find oldCode in question or answer.');
+        console.warn('[LiveCodeEdit] normalizedOld:', JSON.stringify(normalizedOld));
+        console.warn('[LiveCodeEdit] normalizedQ:', JSON.stringify(normalizedQ.substring(0, 200)));
+        console.warn('[LiveCodeEdit] normalizedA:', JSON.stringify(normalizedA.substring(0, 200)));
+        setIsSaving(false);
+        return;
+      }
+
+      console.log('[LiveCodeEdit] Calling questionService.updateQuestion...');
+      await questionService.updateQuestion(currentQuestion._id, {
+        question: newQuestion,
+        answer: newAnswer,
+      });
+      console.log('[LiveCodeEdit] API call succeeded!');
+
+      if (onQuestionUpdated) {
+        onQuestionUpdated(currentQuestion._id, { question: newQuestion, answer: newAnswer });
+      }
+      setLocalQuestion({ ...displayQuestion, question: newQuestion, answer: newAnswer });
+      playSound('ding');
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus(null), 2000);
+    } catch (err) {
+      console.error('[LiveCodeEdit] API ERROR:', err);
+      setSaveStatus('error');
+      playSound('error');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [displayQuestion, currentQuestion._id, onQuestionUpdated, playSound]);
+
+  // Listen for code-block-save events from CodeBlock (bypasses memo/useMemo prop chain)
+  useEffect(() => {
+    const handler = (e) => {
+      const { oldCode, newCode } = e.detail;
+      console.log('[QuestionCard] Received code-block-save event');
+      handleLiveCodeEdit(oldCode, newCode);
+    };
+    window.addEventListener('code-block-save', handler);
+    return () => window.removeEventListener('code-block-save', handler);
+  }, [handleLiveCodeEdit]);
+
+
   const handleEditSave = async () => {
     setIsSaving(true);
     setSaveStatus(null);
@@ -229,6 +352,63 @@ const QuestionCard = ({
     }
   };
 
+  const handleSaveDefinition = async () => {
+    if (!definitionMd.trim() || !highlightData) return;
+    setIsSaving(true);
+    setSaveStatus(null);
+    try {
+      const textToDefine = highlightData.text;
+      const encodedDef = btoa(unescape(encodeURIComponent(definitionMd)));
+      const replacement = `<dfn className="inline-def" data-def="${encodedDef}">${textToDefine}</dfn>`;
+
+      const escapedText = textToDefine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escapedText}\\b`);
+
+      let newQuestion = displayQuestion.question || '';
+      let newAnswer = displayQuestion.answer || '';
+
+      if (highlightData.isEditingDef) {
+        // Replacing a pre-existing definition tag exactly!
+        const oldReplacement = `<dfn className="inline-def" data-def="${highlightData.existingDefBase64}">${textToDefine}</dfn>`;
+        if (highlightData.section === 'question') {
+          newQuestion = newQuestion.replace(oldReplacement, replacement);
+        } else {
+          newAnswer = newAnswer.replace(oldReplacement, replacement);
+        }
+      } else {
+        // Creating a new definition
+        const escapedText = textToDefine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b${escapedText}\\b`);
+
+        if (highlightData.section === 'question') {
+          newQuestion = regex.test(newQuestion) ? newQuestion.replace(regex, replacement) : newQuestion.replace(textToDefine, replacement);
+        } else {
+          newAnswer = regex.test(newAnswer) ? newAnswer.replace(regex, replacement) : newAnswer.replace(textToDefine, replacement);
+        }
+      }
+
+      await questionService.updateQuestion(currentQuestion._id, {
+        question: newQuestion,
+        answer: newAnswer,
+      });
+
+      // Update local display immediately
+      if (onQuestionUpdated) {
+        onQuestionUpdated(currentQuestion._id, { question: newQuestion, answer: newAnswer });
+      }
+      setLocalQuestion({ ...displayQuestion, question: newQuestion, answer: newAnswer });
+      playSound('ding');
+      setIsDefining(false);
+      setDefinitionMd('');
+      setHighlightData(null);
+    } catch (err) {
+      console.error('Failed to save definition:', err);
+      playSound('error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div
       id="questionCard"
@@ -248,38 +428,127 @@ const QuestionCard = ({
               top: `${highlightData.top}px`,
               left: `${highlightData.left}px`,
               transform: 'translateX(-50%)',
-              zIndex: 50,
+              zIndex: 999999,
             }}
           >
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault(); // Prevents text selection from clearing
-                e.stopPropagation();
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                window.dispatchEvent(new CustomEvent('open-ai-panel', { detail: { action: 'ask_highlight', text: highlightData.text } }));
-                setHighlightData(null);
-                window.getSelection()?.removeAllRanges();
-              }}
-              style={{
-                background: 'var(--color-primary, #8B5CF6)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                fontWeight: 600,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              Ask AI❓
-            </button>
+            {isDefining ? (
+              <div
+                style={{
+                  background: 'var(--color-surface)',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  border: '1px solid var(--color-border)',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  width: '280px'
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Define: <span style={{ color: 'var(--color-primary)' }}>"{highlightData.text}"</span>
+                </div>
+                <textarea
+                  value={definitionMd}
+                  onChange={(e) => setDefinitionMd(e.target.value)}
+                  placeholder="Enter markdown definition..."
+                  style={{
+                    width: '100%',
+                    minHeight: '60px',
+                    padding: '8px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-surface, rgba(255,255,255,0.05))',
+                    color: 'var(--color-text, inherit)',
+                    fontSize: '0.85rem',
+                    resize: 'vertical'
+                  }}
+                  autoFocus
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
+                  <button
+                    onClick={() => {
+                      setIsDefining(false);
+                      setDefinitionMd('');
+                    }}
+                    style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--text-main)', padding: '4px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveDefinition}
+                    disabled={isSaving}
+                    style={{ background: 'var(--color-primary)', border: 'none', color: '#fff', padding: '4px 12px', borderRadius: '6px', cursor: isSaving ? 'wait' : 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                  >
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '6px', background: 'var(--color-surface)', padding: '6px', borderRadius: '10px', boxShadow: '0 8px 20px rgba(0,0,0,0.15)', border: '1px solid var(--color-border)', alignItems: 'center' }}>
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault(); // Prevents text selection from clearing
+                    e.stopPropagation();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.dispatchEvent(new CustomEvent('open-ai-panel', { detail: { action: 'ask_highlight', text: highlightData.text } }));
+                    setHighlightData(null);
+                    window.getSelection()?.removeAllRanges();
+                  }}
+                  style={{
+                    background: 'var(--color-primary, #8B5CF6)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Ask AI <FaRegQuestionCircle />
+                </button>
+
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDefining(true);
+                    if (highlightData.isEditingDef) {
+                      setDefinitionMd(highlightData.existingDefText);
+                    }
+                  }}
+                  style={{
+                    background: 'var(--color-surface)',
+                    color: 'var(--color-text)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    whiteSpace: 'nowrap'
+                  }}
+                  title={highlightData.isEditingDef ? "Edit Definition" : "Add Definition / Library"}
+                >
+                  {highlightData.isEditingDef ? <FaPen /> : <FaBook />}
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -591,9 +860,9 @@ const QuestionCard = ({
       ) : showAnswer && displayQuestion?.answer ? (
         <div className="answer-section">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
-            <h2 
-              onClick={(e) => { 
-                e.stopPropagation(); 
+            <h2
+              onClick={(e) => {
+                e.stopPropagation();
                 if (showHtmlPills) {
                   setShowHtmlPills(false);
                   setActiveHtmlRender(null);
@@ -603,8 +872,8 @@ const QuestionCard = ({
                   }
                 }
               }}
-              style={{ 
-                cursor: 'pointer', 
+              style={{
+                cursor: 'pointer',
                 margin: 0,
                 opacity: showHtmlPills ? 0.5 : 1,
                 transition: 'opacity 0.2s'
@@ -637,7 +906,7 @@ const QuestionCard = ({
                 >
                   <strong>[{render.title.toUpperCase()}]</strong>
                 </button>
-                
+
                 {activeHtmlRender === idx && (
                   <>
                     <button

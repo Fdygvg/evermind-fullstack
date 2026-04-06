@@ -47,6 +47,26 @@ class SmartReviewService {
                 sectionProgresses.push(progress);
             }
 
+            // 1b. CLEANUP: Clear stale isPending flags on questions that were already rated.
+            // A timing bug in endSession() could mark the last rated question as pending
+            // even though it was properly rated. Clear those before querying.
+            const sectionIdList = sectionProgresses.map(p => p.sectionId);
+            const cleanupResult = await Question.updateMany(
+                {
+                    userId,
+                    sectionId: { $in: sectionIdList },
+                    isPending: true,
+                    // If a question has been rated (timesReviewed > 0 and priority > 0),
+                    // it shouldn't be pending — it has a proper schedule via dueDate.
+                    timesReviewed: { $gt: 0 },
+                    priority: { $gt: 0 }
+                },
+                { isPending: false }
+            );
+            if (cleanupResult.modifiedCount > 0) {
+                console.log(`[DEBUG] Cleaned up ${cleanupResult.modifiedCount} stale isPending flags`);
+            }
+
             // 2. COLLECT QUESTIONS - THREE TRACKS PER SECTION
             const allQuestions = {
                 new: [],      // Priority 0 - UNLIMITED
@@ -71,8 +91,15 @@ class SmartReviewService {
                 });
 
                 // Calculate dynamic maxPerSession: 50% of total questions in section
-                const maxPerSession = Math.ceil(totalQuestionsInSection * SMART_REVIEW_CONFIG.REVIEW_LIMIT_PERCENTAGE);
-                console.log(`[DEBUG] Section ${progress.sectionId}: maxPerSession = ${maxPerSession} (50% of ${totalQuestionsInSection} total questions)`);
+                // BUT set a minimum floor so small sections aren't artificially capped to a tiny number.
+                // A floor of 10 means for sections with <= 20 questions, the limit is locked to 10.
+                // The 50% limit only grows beyond 10 for larger sections (e.g., 50% of 30 = 15).
+                const MIN_PER_SESSION = 10; // At least 10 review+rolled-over questions per session
+                const maxPerSession = Math.max(
+                    MIN_PER_SESSION,
+                    Math.ceil(totalQuestionsInSection * SMART_REVIEW_CONFIG.REVIEW_LIMIT_PERCENTAGE)
+                );
+                console.log(`[DEBUG] Section ${progress.sectionId}: maxPerSession = ${maxPerSession} (50% of ${totalQuestionsInSection}, min ${MIN_PER_SESSION})`);
 
                 // THREE-TIER PRIORITY QUEUE IMPLEMENTATION
                 // Tier 1: New Questions (Priority 0, never reviewed)

@@ -104,7 +104,8 @@ const SmartReviewContent = ({
         // Only attempt backend save when online
         if (isOnline) {
           try {
-            await sessionService.updateProgress({
+            const saveResponse = await sessionService.updateProgress({
+              sectionIds: current.sectionIds,
               currentIndex: current.currentIndex,
               reviewedToday: current.reviewedToday,
               smartReviewState: {
@@ -121,16 +122,20 @@ const SmartReviewContent = ({
                 cardMode: cardMode || 'normal'
               },
               status: 'active',
+              cardMode: cardMode || 'normal',
+              currentMode: mode || 'normal',
               sessionId: current.sessionId || undefined
             });
+            // If a session was created on-demand, store the ID for future saves
+            const newSessionId = saveResponse?.data?.data?.session?.id;
+            if (newSessionId && !current.sessionId) {
+              smartReview.setSessionId?.(newSessionId);
+            }
             console.log('[SmartReviewWrapper] Auto-saved progress to backend', {
               currentIndex: current.currentIndex,
-              reviewedToday: current.reviewedToday,
+              sessionId: newSessionId || current.sessionId,
               todaysQuestionsCount: current.todaysQuestions?.length,
               ratingHistoryCount: current.ratingHistory?.length,
-              initialQuestionCount: current.initialQuestionCount,
-              todaysQuestionIds: (current.todaysQuestions || []).map(q => q._id || q),
-              ratingHistory: (current.ratingHistory || []).map(r => ({ qId: r.questionId, rating: r.rating }))
             });
           } catch (error) {
             console.error('[SmartReviewWrapper] Auto-save to backend failed:', error);
@@ -369,7 +374,10 @@ const SmartReviewContent = ({
         onSwipeRate: onSwipeRate,
 
         // Inline edit support
-        updateQuestionInSession: smartReview.updateQuestionInSession
+        updateQuestionInSession: smartReview.updateQuestionInSession,
+
+        // Session lifecycle
+        endSession: smartReview.endSession
       })}
 
 

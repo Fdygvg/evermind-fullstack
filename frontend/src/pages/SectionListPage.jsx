@@ -82,8 +82,8 @@ const SectionListPage = () => {
       if (response.data.success) {
         const sessionMap = response.data.data.sessionMap || {};
         
-        // Find all paused sessions
-        const pausedEntries = Object.entries(sessionMap).filter(([, info]) => info.status === 'paused');
+        // Find all in-progress or paused sessions
+        const pausedEntries = Object.entries(sessionMap).filter(([, info]) => ['paused', 'active'].includes(info.status));
         
         if (pausedEntries.length > 0) {
           // Sort by lastUpdated descending to find the most recent

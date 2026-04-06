@@ -137,36 +137,52 @@ const recordRating = async (req, res) => {
             });
 
             // Count questions rated in THIS SESSION
-            // Use lastReviewed timestamp from section progress as reference point
-            // Questions rated after the section's last advancement count toward this session
             const sessionStartTime = sectionProgress.lastReviewed || 
                                     sectionProgress.lastSessionDate || 
                                     new Date(Date.now() - 24 * 60 * 60 * 1000); // Fallback: last 24 hours
             
+            // NUMERATOR: How many questions were rated in this session
             const ratedInSession = await Question.countDocuments({
                 userId,
                 sectionId: question.sectionId,
-                priority: { $gt: 0, $lte: 5 },  // Only count REVIEW questions (excludes NEW)
-                isPending: false,                // Exclude PENDING
-                // Questions that are due on or before current session day
-                dueDate: { $lte: currentSessionDay },
-                // Rated since the section's last advancement (or last 24h if no advancement yet)
                 lastReviewedAt: { $gte: sessionStartTime }
             });
 
-            // Calculate completion percentage
-            // Only count REVIEW questions for advancement (NEW and PENDING don't count toward advancement)
-            const reviewQuestions = await Question.countDocuments({
+            // DENOMINATOR: rated + still unrated remaining
+            // "Unrated remaining" = NEW questions + pending + due review questions 
+            // As questions get rated, they leave "unrated" and join "rated" — total stays stable
+            const unratedRemaining = await Question.countDocuments({
                 userId,
                 sectionId: question.sectionId,
-                dueDate: { $lte: currentSessionDay },
-                priority: { $gt: 0, $lte: 5 },
-                isPending: { $ne: true }
+                $or: [
+                    { priority: 0, timesReviewed: 0 },  // NEW (not yet rated)
+                    { isPending: true },                 // PENDING from previous session
+                    { wasRolledOver: true },              // ROLLED OVER
+                    // DUE REVIEW with lastReviewedAt before this session (not yet re-rated)
+                    {
+                        dueDate: { $lte: currentSessionDay },
+                        priority: { $gt: 0, $lte: 5 },
+                        isPending: { $ne: true },
+                        wasRolledOver: { $ne: true },
+                        lastReviewedAt: { $lt: sessionStartTime }
+                    },
+                    // DUE REVIEW never reviewed before (lastReviewedAt is null)
+                    {
+                        dueDate: { $lte: currentSessionDay },
+                        priority: { $gt: 0, $lte: 5 },
+                        isPending: { $ne: true },
+                        wasRolledOver: { $ne: true },
+                        lastReviewedAt: null
+                    }
+                ]
             });
 
-            completionPercentage = reviewQuestions > 0 
-                ? Math.round((ratedInSession / reviewQuestions) * 100)
+            const totalSessionQuestions = ratedInSession + unratedRemaining;
+            completionPercentage = totalSessionQuestions > 0 
+                ? Math.round((ratedInSession / totalSessionQuestions) * 100)
                 : 0;
+
+            console.log(`[ADVANCEMENT] Section ${question.sectionId}: rated=${ratedInSession}, unrated=${unratedRemaining}, total=${totalSessionQuestions}, completion=${completionPercentage}%`);
 
             // Advance if >= 80% complete
             if (completionPercentage >= (SMART_REVIEW_CONFIG.ADVANCEMENT_THRESHOLD * 100)) {
@@ -178,6 +194,7 @@ const recordRating = async (req, res) => {
 
                 sectionAdvanced = true;
                 newSessionDay = sectionProgress.currentSessionDay;
+                console.log(`[ADVANCEMENT] Section ${question.sectionId} advanced to Day ${newSessionDay}`);
             }
         }
 
