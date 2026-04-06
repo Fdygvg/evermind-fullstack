@@ -253,9 +253,17 @@ export const getSectionStats = async (req, res) => {
 
 export const resetAllProgress = async (req, res) => {
   try {
-    // Reset all questions for this user
+    const { sectionIds } = req.body;
+
+    // Build query filter — if specific sections provided, scope to those
+    const questionFilter = { userId: req.userId };
+    if (sectionIds && Array.isArray(sectionIds) && sectionIds.length > 0) {
+      questionFilter.sectionId = { $in: sectionIds };
+    }
+
+    // Reset questions matching the filter
     await Question.updateMany(
-      { userId: req.userId },
+      questionFilter,
       {
         $set: {
           totalCorrect: 0,
@@ -278,13 +286,33 @@ export const resetAllProgress = async (req, res) => {
       }
     );
 
-    // Also delete any existing review sessions for this user so they don't resume old states
+    // Delete SectionProgress for the targeted sections (or all)
     const mongoose = (await import('mongoose')).default;
-    await mongoose.model('ReviewSession').deleteMany({ userId: req.userId });
+    const SectionProgress = mongoose.model('SectionProgress');
+    const progressFilter = { userId: req.userId };
+    if (sectionIds && Array.isArray(sectionIds) && sectionIds.length > 0) {
+      progressFilter.sectionId = { $in: sectionIds };
+    }
+    await SectionProgress.deleteMany(progressFilter);
 
-    res.json({ success: true, message: 'All progress reset to Day 1' });
+    // Delete review sessions scoped to those sections (or all)
+    if (sectionIds && Array.isArray(sectionIds) && sectionIds.length > 0) {
+      // Only delete sessions whose sectionIds overlap with the reset list
+      await mongoose.model('ReviewSession').deleteMany({
+        userId: req.userId,
+        sectionIds: { $in: sectionIds }
+      });
+    } else {
+      await mongoose.model('ReviewSession').deleteMany({ userId: req.userId });
+    }
+
+    const scopeLabel = sectionIds && sectionIds.length > 0
+      ? `${sectionIds.length} section(s)`
+      : 'all sections';
+
+    res.json({ success: true, message: `Progress reset for ${scopeLabel}` });
   } catch (error) {
-    console.error('Reset all progress error:', error);
+    console.error('Reset progress error:', error);
     res.status(500).json({ success: false, message: 'Failed to reset progress' });
   }
 };

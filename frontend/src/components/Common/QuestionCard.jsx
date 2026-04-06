@@ -3,9 +3,10 @@ import CodeBlock from './CodeBlock';
 import MarkdownContent from './MarkdownContent';
 import { useEffect, useState, useRef } from 'react';
 import { useSound } from '../../hooks/useSound';
-import { FaRegCopy, FaCheck, FaPen, FaCommentDots } from 'react-icons/fa';
+import { FaRegCopy, FaCheck, FaPen, FaCommentDots, FaPlay, FaTrash, FaCode, FaSpinner } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { questionService } from '../../services/question';
+import { aiService } from '../../services/aiService';
 import '../css/annotation-bubble.css';
 
 const QuestionCard = ({
@@ -24,6 +25,28 @@ const QuestionCard = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null); // 'saved' | 'error' | null
   const [localQuestion, setLocalQuestion] = useState(null);
+  const [activeHtmlRender, setActiveHtmlRender] = useState(null); // index or null
+  const [showHtmlPills, setShowHtmlPills] = useState(false);
+  const [showRawHtml, setShowRawHtml] = useState(false);
+  const [isDeletingRender, setIsDeletingRender] = useState(false);
+
+  const handleDeleteRender = async (renderId, e) => {
+    e.stopPropagation();
+    if (!window.confirm("Delete this HTML render?")) return;
+    setIsDeletingRender(true);
+    try {
+      const res = await aiService.deleteHtmlRender(displayQuestion._id, renderId);
+      if (res.data?.success && res.data?.data?.question) {
+        if (onQuestionUpdated) onQuestionUpdated(res.data.data.question);
+        setActiveHtmlRender(null);
+        setShowRawHtml(false);
+      }
+    } catch (err) {
+      console.error("Failed to delete html render", err);
+    } finally {
+      setIsDeletingRender(false);
+    }
+  };
 
   // --- Annotation State ---
   const annotationKey = `annotation_${currentQuestion._id}`;
@@ -53,7 +76,7 @@ const QuestionCard = ({
             // Calculate relative positioning
             setHighlightData({
               text,
-              top: rect.top - cardRect.top - 40,
+              top: rect.bottom - cardRect.top + 5,
               left: rect.left - cardRect.left + (rect.width / 2)
             });
             return;
@@ -98,6 +121,8 @@ const QuestionCard = ({
 
     // Reset highlight
     setHighlightData(null);
+    setActiveHtmlRender(null);
+    setShowHtmlPills(false);
   }, [currentQuestion?._id]);
 
   // Auto-resize textareas
@@ -261,6 +286,32 @@ const QuestionCard = ({
 
       {/* Edit, Copy & Bookmark Buttons */}
       <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
+        {/* Render HTML Button */}
+        <motion.button
+          onClick={(e) => {
+            e.stopPropagation();
+            window.dispatchEvent(new CustomEvent('open-ai-panel', { detail: { action: 'render_html' } }));
+          }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={{
+            background: 'var(--color-surface, rgba(255, 255, 255, 0.05))',
+            border: '1px solid var(--color-border, rgba(255, 255, 255, 0.1))',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            padding: '4px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none',
+            color: 'var(--color-primary, #8B5CF6)',
+            transition: 'all 0.2s ease',
+            marginRight: '2px'
+          }}
+          title="Visualize Concept with AI Html"
+        >
+          <FaPlay size={12} />
+        </motion.button>
         {/* Framework Button */}
         <motion.button
           onClick={(e) => {
@@ -539,19 +590,133 @@ const QuestionCard = ({
         </div>
       ) : showAnswer && displayQuestion?.answer ? (
         <div className="answer-section">
-          <h2><strong>Answer</strong></h2>
-          <MarkdownContent content={displayQuestion.answer} />
-          <button
-            className="show-answer-btn"
-            style={{ marginTop: '16px', background: 'transparent', color: 'var(--color-primary, #8B5CF6)', border: '2px solid var(--color-primary, #8B5CF6)' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowAnswer(false);
-              playSound("flip");
-            }}
-          >
-            Hide Answer
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+            <h2 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (showHtmlPills) {
+                  setShowHtmlPills(false);
+                  setActiveHtmlRender(null);
+                } else {
+                  if (displayQuestion?.htmlRenders?.length > 0) {
+                    setShowHtmlPills(true);
+                  }
+                }
+              }}
+              style={{ 
+                cursor: 'pointer', 
+                margin: 0,
+                opacity: showHtmlPills ? 0.5 : 1,
+                transition: 'opacity 0.2s'
+              }}
+            >
+              <strong>Answer</strong>
+            </h2>
+            {showHtmlPills && displayQuestion.htmlRenders && displayQuestion.htmlRenders.map((render, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log("Clicked HTML Tab index:", idx);
+                    if (activeHtmlRender !== idx) {
+                      setShowRawHtml(false);
+                    }
+                    setActiveHtmlRender(idx);
+                  }}
+                  style={{
+                    background: activeHtmlRender === idx ? 'var(--color-primary)' : 'var(--color-surface)',
+                    color: activeHtmlRender === idx ? '#fff' : 'var(--color-text)',
+                    border: `1px solid ${activeHtmlRender === idx ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                    borderRadius: '12px',
+                    padding: '2px 10px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <strong>[{render.title.toUpperCase()}]</strong>
+                </button>
+                
+                {activeHtmlRender === idx && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowRawHtml(!showRawHtml);
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: showRawHtml ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '4px'
+                      }}
+                      title="Toggle Code View"
+                    >
+                      <FaCode size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteRender(render._id, e)}
+                      disabled={isDeletingRender}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--color-danger, #ef4444)',
+                        cursor: isDeletingRender ? 'not-allowed' : 'pointer',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: isDeletingRender ? 0.5 : 1,
+                        borderRadius: '4px'
+                      }}
+                      title="Delete Render"
+                    >
+                      {isDeletingRender ? <FaSpinner className="ai-spinner" size={12} /> : <FaTrash size={12} />}
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {activeHtmlRender !== null ? (
+            <div style={{ width: '100%', height: '400px', borderRadius: '8px', overflow: 'hidden', background: '#fff', border: '1px solid var(--color-border)' }}>
+              {showRawHtml ? (
+                <div style={{ width: '100%', height: '100%', overflow: 'auto', background: '#1e1e1e', padding: '12px', fontSize: '13px' }}>
+                  <CodeBlock text={displayQuestion.htmlRenders[activeHtmlRender].htmlContent} language="html" skipCopy={false} />
+                </div>
+              ) : (
+                <iframe
+                  srcDoc={`<style>html, body { max-width: 100%; overflow-x: hidden !important; box-sizing: border-box; margin: 0; padding: 8px; word-break: break-word; } *, *::before, *::after { box-sizing: inherit; max-width: 100%; } img, video, canvas, svg, table { max-width: 100%; height: auto; } pre, code { white-space: pre-wrap; word-break: break-word; font-size: 14px; }</style>${displayQuestion.htmlRenders[activeHtmlRender].htmlContent}`}
+                  title="HTML Visualization"
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                  sandbox="allow-scripts allow-same-origin"
+                />
+              )}
+            </div>
+          ) : (
+            <MarkdownContent content={displayQuestion.answer} />
+          )}
+
+          <div style={{ marginTop: '16px' }}>
+            <button
+              className="show-answer-btn"
+              style={{ background: 'transparent', color: 'var(--color-primary, #8B5CF6)', border: '2px solid var(--color-primary, #8B5CF6)' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAnswer(false);
+                playSound("flip");
+              }}
+            >
+              Hide Answer
+            </button>
+          </div>
         </div>
       ) : (
         <button

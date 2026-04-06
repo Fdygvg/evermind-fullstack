@@ -337,7 +337,8 @@ const ActiveSession = () => {
         isSimplified={isSimplified}
         // Both Simplified and Smart Review modes now use initialSession for precise resume
         // so they reconstruct the exact same session array and question counts.
-        initialSession={resumeSession ? sessionData : null}
+        // Quick Play (simplified) also comes with fresh sessionData from backend which we must use!
+        initialSession={sessionData || null}
       >
         {({
           currentQuestion: smartQuestion,
@@ -389,7 +390,9 @@ const ActiveSession = () => {
               localStorage.removeItem(`annotation_${questionId}`);
             }
 
-            await rateQuestion(rating, questionId);
+            // For simplified sessions (Quick Play), don't pass questionId so we use pointer logic 
+            // instead of elimination logic. This prevents the remaining questions array from shrinking.
+            await rateQuestion(rating, isSimplified ? null : questionId);
             setShowAnswer(false); // Force reset answer state
           };
 

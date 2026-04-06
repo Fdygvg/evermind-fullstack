@@ -110,6 +110,12 @@ const questionSchema = new mongoose.Schema({
     default: null
   },
 
+  htmlRenders: [{
+    title: { type: String, default: "HTML" },
+    htmlContent: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+  }],
+
   isBookmarked: {
     type: Boolean,
     default: false

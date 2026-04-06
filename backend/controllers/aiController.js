@@ -22,7 +22,23 @@ Your personality:
 - For standard chat messages, keep responses STRICTLY concise (max 3 sentences) unless the user explicitly asks for a long explanation.
 - Always include a practical example or code snippet when relevant
 
-IMPORTANT: Output ONLY your final response. DO NOT include any internal thoughts, reasoning processes, or <think> tags. Deliver the direct answer formatted in Markdown.`;
+IMPORTANT: Output ONLY your final response. DO NOT include any internal thoughts, reasoning processes, or <think> tags. Deliver the direct answer formatted in Markdown.
+
+KNOWLEDGE SUGGESTION RULE:
+When you answer a question and your response introduces a NEW concept that is closely related to the flashcard topic but NOT already covered in the original question/answer — for example, the flashcard is about Promise.all but your answer mentions Promise.race — then AFTER your main answer, append a suggestion block in this EXACT format:
+
+---SUGGESTION---
+---ADD_TO_QUESTION---
+- [ ] **Short checkbox question about the new concept**
+---ADD_TO_ANSWER---
+Brief explanation of the new concept (2-4 sentences max, with a code example if relevant)
+---END_SUGGESTION---
+
+Rules for suggestions:
+- Only suggest if the new concept is GENUINELY new and NOT already in the original question/answer
+- The addition should be concise — one checkbox item for question, brief explanation for answer
+- Do NOT suggest for every response — only when truly new related knowledge appears
+- If in doubt, do NOT suggest`;
 
 /**
  * Helper to remove <think>...</think> tags if the model still generates them.
@@ -50,6 +66,7 @@ export const chatWithSage = async (req, res) => {
     const isRewrite = message === '__REWRITE__';
     const isFramework = message === '__FRAMEWORK__';
     const isQuestionRewrite = message === '__REWRITE_QUESTION__';
+    const isHtmlRender = message === '__RENDER_HTML__';
 
     // Determine user message based on shortcut commands
     let userMessage = message;
@@ -92,7 +109,7 @@ Return your response in this EXACT format (including the markers):
 Your task:
 1. Read the ANSWER carefully and identify the key concepts it covers.
 2. Rewrite the question as a short checklist of sub-questions that test the user's recall WITHOUT revealing the answer.
-3. Generate TWO different versions.
+3. Generate exactly ONE version.
 
 CRITICAL RULES:
 - NEVER include the answer or any part of the answer inside the question. The question must TEST knowledge, not reveal it.
@@ -100,9 +117,8 @@ CRITICAL RULES:
   GOOD: "- [ ] **What are the three ways to declare variables?**" ← this tests recall
 - Each sub-question should be SHORT (one line, under 15 words)
 - Use simple phrasing like: "Explain...", "What is the syntax for...", "Give an example of..."
-- Generate between 2 and 5 sub-questions per version (NOT always the same number — adapt to how many distinct concepts the answer covers)
+- Generate between 2 and 5 sub-questions (adapt to how many distinct concepts the answer covers)
 - Use this exact format: - [ ] **Sub-question here**
-- V1 and V2 should cover the same concepts but with different wording
 
 Here is an example of the style I want:
 
@@ -111,16 +127,7 @@ If the answer explains prompt() in JavaScript (showing syntax, return value, and
 - [ ] **What is the syntax for prompt?**
 - [ ] **Give an example using prompt to collect user age**
 
-Return your response in this EXACT format:
----V1---
-- [ ] **first sub-question**
-- [ ] **second sub-question**
-(etc.)
----V2---
-- [ ] **first sub-question**
-- [ ] **second sub-question**
-(etc.)
----END---`;
+Return ONLY the checklist. No headers, no markers, no extra text. Just the checkbox lines.`;
     } else if (isRewrite) {
       userMessage = `I need you to rewrite this flashcard (both the question AND the answer) in two different styles.
 
@@ -140,6 +147,16 @@ Return your response in this EXACT format (including the markers):
 ---VERSION_B_ANSWER---
 (your concise answer here)
 ---END---`;
+    } else if (isHtmlRender) {
+      userMessage = `I need to visualize the concept(s) discussed in this question/answer. 
+Write a complete, single-file HTML document (containing internal CSS and JS as needed) that demonstrates this specific concept visually and interactively. 
+
+CRITICAL RULES:
+- The output MUST be a single, valid HTML document starting with <!DOCTYPE html> and ending with </html>.
+- Make it look beautiful, colorful, and modern. Add animations, borders, or clear interactive elements (like buttons that toggle classes) if applicable.
+- Ensure the layout fits well within a responsive iframe.
+- Return ONLY the raw HTML code in your response. Do NOT output any markdown blocks (like \`\`\`html).
+- Do NOT include any explanations, greetings, or sign-offs. ONLY the raw HTML.`;
     }
 
     // Build messages array: system + last 5 conversation messages + new user message
@@ -161,8 +178,8 @@ Return your response in this EXACT format (including the markers):
     const chatCompletion = await getGroq().chat.completions.create({
       messages,
       model: 'qwen/qwen3-32b',
-      temperature: isRewrite || isFramework || isQuestionRewrite ? 0.7 : 0.6,
-      max_completion_tokens: isRewrite || isFramework ? 3072 : (isQuestionRewrite ? 2048 : 2048),
+      temperature: isRewrite || isFramework || isQuestionRewrite || isHtmlRender ? 0.7 : 0.6,
+      max_completion_tokens: isRewrite || isFramework || isHtmlRender ? 3072 : (isQuestionRewrite ? 2048 : 2048),
       top_p: 0.95,
       stream: false
     });
@@ -176,30 +193,19 @@ Return your response in this EXACT format (including the markers):
     rawReply = rawReply.replace(/<\/summary>\s*/gi, "</summary>\n\n");
     rawReply = rawReply.replace(/\s*<\/details>\s*/gi, "\n\n</details>\n\n");
 
-    // If question rewrite, parse V1 and V2
+    // If question rewrite, return the single rewritten question
     if (isQuestionRewrite) {
-      let v1Question = '';
-      let v2Question = '';
-
-      const matchV1 = rawReply.match(/---V1---\s*([\s\S]*?)\s*---V2---/);
-      const matchV2 = rawReply.match(/---V2---\s*([\s\S]*?)\s*(?:---END---|$)/);
-
-      if (matchV1) v1Question = matchV1[1].trim();
-      if (matchV2) v2Question = matchV2[1].trim();
-
-      // Fallback if parsing failed
-      if (!v1Question && !v2Question) {
-        v1Question = rawReply;
-        v2Question = rawReply;
-      }
+      // Strip any leftover markers the model might still produce
+      let rewrittenQuestion = rawReply
+        .replace(/---V1---|---V2---|---END---/gi, '')
+        .trim();
 
       return res.json({
         success: true,
         data: {
           type: 'question_rewrite',
-          reply: 'Here are two rewritten versions of your question:',
-          v1Question,
-          v2Question,
+          reply: 'Here is your rewritten question:',
+          rewrittenQuestion,
           originalQuestion: questionContext?.question || ''
         }
       });
@@ -265,9 +271,55 @@ Return your response in this EXACT format (including the markers):
       });
     }
 
+    // If HTML render, strip any markdown blocks if the AI disobeyed
+    if (isHtmlRender) {
+      let finalHtml = rawReply.trim();
+      if (finalHtml.startsWith('```html')) {
+        finalHtml = finalHtml.replace(/^```html\s*/i, '');
+      } else if (finalHtml.startsWith('```')) {
+        finalHtml = finalHtml.replace(/^```\s*/, '');
+      }
+      if (finalHtml.endsWith('```')) {
+        finalHtml = finalHtml.replace(/\s*```$/, '');
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          type: 'html_render',
+          reply: 'Here is an interactive visualization of the concept.',
+          htmlContent: finalHtml.trim()
+        }
+      });
+    }
+
+    // For normal chat responses, check for knowledge suggestions
+    let suggestion = null;
+    let chatReply = rawReply;
+
+    const suggestionMatch = rawReply.match(/---SUGGESTION---\s*([\s\S]*?)\s*---END_SUGGESTION---/);
+    if (suggestionMatch) {
+      // Strip suggestion from the visible reply
+      chatReply = rawReply.replace(/---SUGGESTION---[\s\S]*?---END_SUGGESTION---/, '').trim();
+
+      const addToQuestionMatch = suggestionMatch[1].match(/---ADD_TO_QUESTION---\s*([\s\S]*?)\s*---ADD_TO_ANSWER---/);
+      const addToAnswerMatch = suggestionMatch[1].match(/---ADD_TO_ANSWER---\s*([\s\S]*?)\s*$/);
+
+      if (addToQuestionMatch || addToAnswerMatch) {
+        suggestion = {
+          addToQuestion: addToQuestionMatch ? addToQuestionMatch[1].trim() : '',
+          addToAnswer: addToAnswerMatch ? addToAnswerMatch[1].trim() : ''
+        };
+      }
+    }
+
     res.json({
       success: true,
-      data: { type: 'chat', reply: rawReply }
+      data: {
+        type: 'chat',
+        reply: chatReply,
+        ...(suggestion && { suggestion })
+      }
     });
   } catch (error) {
     console.error('AI Chat error:', error);
@@ -453,6 +505,83 @@ export const saveRewrittenAnswer = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to save answer'
+    });
+  }
+};
+
+/**
+ * POST /api/ai/save-html-render/:questionId
+ * Saves a generated HTML visualization to the question
+ */
+export const saveHtmlRender = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const { htmlContent, title } = req.body;
+
+    if (!htmlContent) {
+      return res.status(400).json({ success: false, message: 'HTML content is required' });
+    }
+
+    const question = await Question.findOneAndUpdate(
+      { _id: questionId, userId: req.userId },
+      { 
+        $push: { 
+          htmlRenders: { 
+            htmlContent, 
+            title: title || 'HTML',
+            createdAt: new Date()
+          } 
+        } 
+      },
+      { new: true }
+    );
+
+    if (!question) {
+      return res.status(404).json({ success: false, message: 'Question not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'HTML render saved successfully',
+      data: { question }
+    });
+  } catch (error) {
+    console.error('Save HTML render error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to save HTML render'
+    });
+  }
+};
+
+/**
+ * DELETE /api/ai/delete-html-render/:questionId/:renderId
+ * Deletes a saved HTML visualization from the question
+ */
+export const deleteHtmlRender = async (req, res) => {
+  try {
+    const { questionId, renderId } = req.params;
+
+    const question = await Question.findOneAndUpdate(
+      { _id: questionId, userId: req.userId },
+      { $pull: { htmlRenders: { _id: renderId } } },
+      { new: true }
+    );
+
+    if (!question) {
+      return res.status(404).json({ success: false, message: 'Question not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'HTML render deleted successfully',
+      data: { question }
+    });
+  } catch (error) {
+    console.error('Delete HTML render error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete HTML render'
     });
   }
 };

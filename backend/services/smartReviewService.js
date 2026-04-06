@@ -93,11 +93,12 @@ class SmartReviewService {
                     ]
                 }).sort({ wasRolledOver: -1, dueDate: 1 }); // wasRolledOver first, then by dueDate
 
-                // Tier 3: Priority Review Questions (dueDate === currentSessionDay, priority > 0)
+                // Tier 3: Priority Review Questions (dueDate <= currentSessionDay, priority > 0)
+                // Uses $lte so overdue questions from past sessions are also included
                 const tier3Review = await Question.find({
                     userId,
                     sectionId: progress.sectionId,
-                    dueDate: currentDay, // Exact match - only questions due today
+                    dueDate: { $lte: currentDay }, // Include overdue + due today
                     priority: { $gt: 0, $lte: 5 },
                     isPending: { $ne: true },
                     wasRolledOver: { $ne: true }
@@ -327,11 +328,18 @@ class SmartReviewService {
                 throw new Error('Question not found');
             }
 
-            // Get the section's current session day
-            const progress = await SectionProgress.findOne({ userId, sectionId });
-            if (!progress) {
-                throw new Error('Section progress not found');
-            }
+            // Get (or create) the section's current session day
+            const progress = await SectionProgress.findOneAndUpdate(
+                { userId, sectionId },
+                {
+                    $setOnInsert: {
+                        currentSessionDay: 1,
+                        totalSessions: 0,
+                        lastSessionDate: new Date()
+                    }
+                },
+                { upsert: true, new: true, setDefaultsOnInsert: true }
+            );
             const currentSessionDay = progress.currentSessionDay;
 
             // Update question with new rating
@@ -490,18 +498,24 @@ class SmartReviewService {
      * @param {Array} ratedQuestionIds - IDs of questions that were rated
      * @returns {Object} - Success status and counts
      */
-    static async markUnratedAsPending(userId, sectionIds, ratedQuestionIds) {
+    static async markUnratedAsPending(userId, sectionIds, ratedQuestionIds, loadedQuestionIds) {
         try {
-            // Find questions that were loaded but not rated in this session
-            // These should be from today's loaded questions
-            const unratedQuestions = await Question.find({
+            // Build the query constraints
+            const query = {
                 userId,
                 sectionId: { $in: sectionIds },
                 _id: { $nin: ratedQuestionIds },
                 priority: { $gte: 0 },
-                // Only mark questions that aren't already pending
-                isPending: false
-            });
+                isPending: false // Only mark questions that aren't already pending
+            };
+
+            // Only mark questions as pending if they were actually loaded in the session!
+            if (loadedQuestionIds && Array.isArray(loadedQuestionIds) && loadedQuestionIds.length > 0) {
+                query._id = { $in: loadedQuestionIds, $nin: ratedQuestionIds };
+            }
+
+            // Find questions that were loaded but not rated in this session
+            const unratedQuestions = await Question.find(query);
 
             if (unratedQuestions.length === 0) {
                 return {

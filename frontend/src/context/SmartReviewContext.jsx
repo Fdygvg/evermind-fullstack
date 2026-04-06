@@ -376,12 +376,13 @@ export const SmartReviewProvider = ({ children }) => {
 
       // Read from stateRef (reliable in React 18)
       const currentSectionIds = stateRef.current.sectionIds;
+      const loadedQuestionIds = stateRef.current.todaysQuestions.map(q => q._id || q.id);
 
       // Use ref to get current rating history
       const ratedIds = ratingHistoryRef.current.map(r => r.questionId);
 
       if (currentSectionIds && currentSectionIds.length > 0) {
-        await smartReviewService.markUnratedAsPending(currentSectionIds, ratedIds);
+        await smartReviewService.markUnratedAsPending(currentSectionIds, ratedIds, loadedQuestionIds);
       }
 
       // Clear all generated AI interactive checkboxes tied to this session

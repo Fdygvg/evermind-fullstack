@@ -151,10 +151,11 @@ export const smartReviewService = {
     /**
      * Mark unrated questions as PENDING for next session
      */
-    markUnratedAsPending: (sectionIds, ratedQuestionIds) => {
+    markUnratedAsPending: (sectionIds, ratedQuestionIds, loadedQuestionIds) => {
         return API.post('/smart-review/mark-pending', {
             sectionIds,
-            ratedQuestionIds
+            ratedQuestionIds,
+            loadedQuestionIds
         });
     }
 };

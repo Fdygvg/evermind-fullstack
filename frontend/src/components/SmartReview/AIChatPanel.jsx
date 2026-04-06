@@ -191,20 +191,84 @@ const FrameworkMessage = ({ msg, onSave }) => {
   );
 };
 
-// ─── Question Rewrite cards (V1 / V2 — question only) ───
-const QuestionRewriteCards = ({ msg, onSave }) => {
-  const [activeTab, setActiveTab] = useState('V1');
+// ─── HTML Render message with Save button ───
+const HtmlRenderMessage = ({ msg, isAlreadySaved, onSaveHtml }) => {
+  console.log("HtmlRenderMessage rendering with msg:", { id: msg.id, role: msg.role, contentLength: msg.content?.length, htmlLength: msg.htmlContent?.length });
   const [saving, setSaving] = useState(false);
-  const [savedVersion, setSavedVersion] = useState(null);
+  const [localSaved, setLocalSaved] = useState(false);
+
+  const saved = isAlreadySaved || localSaved;
 
   const handleSave = async () => {
-    if (saving || savedVersion === activeTab) return;
-    const newQuestion = activeTab === 'V1' ? msg.v1Question : msg.v2Question;
+    console.log("clicked handleSave. saving:", saving, "saved:", saved);
+    if (saving || saved) return;
     setSaving(true);
     try {
-      // Save question only (pass null for answer so it doesn't change)
-      await onSave(null, newQuestion);
-      setSavedVersion(activeTab);
+      console.log("Invoking onSaveHtml with content length:", msg.htmlContent?.length);
+      await onSaveHtml(msg.htmlContent);
+      console.log("onSaveHtml completed successfully");
+      setLocalSaved(true);
+    } catch (err) {
+      console.error('Save render error:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="ai-chat-message assistant">
+      <div className="ai-msg-bubble">
+        <div style={{ marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid var(--color-border)' }}>
+          <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', display: 'block', marginBottom: '4px' }}>HTML Visualization Generated</span>
+          <div className="ai-msg-text">
+            {msg.content}
+          </div>
+        </div>
+        <div style={{ padding: '4px', background: 'var(--color-surface)', borderRadius: '8px', overflow: 'hidden', height: '300px', position: 'relative', zIndex: 1 }}>
+          <iframe 
+            srcDoc={`<style>html, body { max-width: 100%; overflow-x: hidden !important; box-sizing: border-box; margin: 0; padding: 8px; word-break: break-word; } *, *::before, *::after { box-sizing: inherit; max-width: 100%; } img, video, canvas, svg, table { max-width: 100%; height: auto; } pre, code { white-space: pre-wrap; word-break: break-word; font-size: 14px; }</style>${msg.htmlContent}`}
+            title="Render Preview"
+            style={{ width: '100%', height: '100%', border: 'none', background: '#fff' }}
+            sandbox="allow-scripts allow-same-origin"
+          />
+        </div>
+        <button
+          className="ai-rewrite-save-btn"
+          style={{ 
+            marginTop: '12px', 
+            position: 'relative', 
+            zIndex: 10,
+            cursor: (saving || saved) ? 'not-allowed' : 'pointer',
+            opacity: (saving || saved) ? 0.7 : 1,
+            pointerEvents: 'auto'
+          }}
+          onClick={(e) => {
+             e.preventDefault();
+             e.stopPropagation();
+             handleSave();
+          }}
+          disabled={saving || saved}
+        >
+          {saving ? <FaSpinner className="ai-spinner" /> :
+            saved ? <><FaCheck /> Saved</> :
+              <><FaSave /> Save HTML Render</>}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Question Rewrite card (single version — question only) ───
+const QuestionRewriteCards = ({ msg, onSave }) => {
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    if (saving || saved) return;
+    setSaving(true);
+    try {
+      await onSave(null, msg.rewrittenQuestion);
+      setSaved(true);
     } catch (err) {
       console.error('Save error:', err);
     } finally {
@@ -212,52 +276,98 @@ const QuestionRewriteCards = ({ msg, onSave }) => {
     }
   };
 
-  const currentQuestion = activeTab === 'V1' ? msg.v1Question : msg.v2Question;
-  const isCurrentlySaved = savedVersion === activeTab;
-
   return (
     <div className="ai-chat-message assistant">
       <div className="ai-msg-bubble ai-rewrite-bubble">
         <div className="ai-msg-text" style={{ marginBottom: '12px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-          📝 Here are two rewritten versions of your question:
+          📝 Here is your rewritten question:
         </div>
-        <div className={`ai-rewrite-card ${isCurrentlySaved ? 'saved' : ''}`}>
+        <div className={`ai-rewrite-card ${saved ? 'saved' : ''}`}>
           <div className="ai-rewrite-card-body ai-markdown-content">
             <div>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', display: 'block', marginBottom: '4px' }}>Rewritten Question</span>
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlockRenderer }}>
-                {currentQuestion}
+                {msg.rewrittenQuestion}
               </ReactMarkdown>
             </div>
           </div>
-          <div className="ai-rewrite-footer">
-            <div className="ai-rewrite-tabs">
-              <button
-                className={`ai-tab-btn ${activeTab === 'V1' ? 'active' : ''}`}
-                onClick={() => setActiveTab('V1')}
-                title="Version 1"
-              >
-                V1
-              </button>
-              <button
-                className={`ai-tab-btn ${activeTab === 'V2' ? 'active' : ''}`}
-                onClick={() => setActiveTab('V2')}
-                title="Version 2"
-              >
-                V2
-              </button>
-            </div>
+          <div className="ai-rewrite-footer" style={{ justifyContent: 'flex-end' }}>
             <button
               className="ai-rewrite-save-btn"
               onClick={handleSave}
-              disabled={saving || isCurrentlySaved}
+              disabled={saving || saved}
             >
               {saving ? <FaSpinner className="ai-spinner" /> :
-                isCurrentlySaved ? <><FaCheck /> Saved</> :
+                saved ? <><FaCheck /> Saved</> :
                   <><FaSave /> Use This Question</>}
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Knowledge Suggestion card (AI detected new related concept) ───
+const SuggestionCard = ({ msg, question, onApprove }) => {
+  const [approving, setApproving] = useState(false);
+  const [approved, setApproved] = useState(false);
+
+  const handleApprove = async () => {
+    if (approving || approved || !question) return;
+    setApproving(true);
+    try {
+      // Append to existing question and answer
+      const updatedQuestion = (question.question || '') + '\n' + msg.addToQuestion;
+      const updatedAnswer = (question.answer || '') + '\n\n' + msg.addToAnswer;
+      await onApprove(updatedAnswer, updatedQuestion);
+      setApproved(true);
+    } catch (err) {
+      console.error('Failed to approve suggestion:', err);
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  return (
+    <div className="ai-chat-message assistant">
+      <div className="ai-msg-bubble" style={{ border: '1px solid var(--color-primary, #8B5CF6)', background: 'var(--color-surface, rgba(139, 92, 246, 0.05))' }}>
+        <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary, #8B5CF6)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          💡 New Knowledge Detected
+        </div>
+
+        {msg.addToQuestion && (
+          <div style={{ marginBottom: '10px' }}>
+            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Add to Question:</span>
+            <div className="ai-markdown-content" style={{ marginTop: '4px', padding: '8px 10px', background: 'var(--color-surface, rgba(255,255,255,0.03))', borderRadius: '6px', borderLeft: '2px solid var(--color-primary, #8B5CF6)' }}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlockRenderer }}>
+                {msg.addToQuestion}
+              </ReactMarkdown>
+            </div>
+          </div>
+        )}
+
+        {msg.addToAnswer && (
+          <div style={{ marginBottom: '10px' }}>
+            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Add to Answer:</span>
+            <div className="ai-markdown-content" style={{ marginTop: '4px', padding: '8px 10px', background: 'var(--color-surface, rgba(255,255,255,0.03))', borderRadius: '6px', borderLeft: '2px solid #22c55e' }}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlockRenderer }}>
+                {msg.addToAnswer}
+              </ReactMarkdown>
+            </div>
+          </div>
+        )}
+
+        <button
+          className="ai-rewrite-save-btn"
+          onClick={handleApprove}
+          disabled={approving || approved}
+          style={{ marginTop: '4px' }}
+        >
+          {approving ? <FaSpinner className="ai-spinner" /> :
+            approved ? <><FaCheck /> Added to Flashcard</> :
+              <><FaSave /> Approve & Add</>}
+        </button>
       </div>
     </div>
   );
@@ -325,6 +435,7 @@ const AIChatPanel = ({
   const [loading, setLoading] = useState(false);
   const [highlightData, setHighlightData] = useState(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
+  const [quotedText, setQuotedText] = useState(null); // WhatsApp-style quoted highlight
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const panelContentRef = useRef(null);
@@ -346,7 +457,7 @@ const AIChatPanel = ({
             const panelRect = panelContentRef.current.getBoundingClientRect();
             setHighlightData({
               text,
-              top: rect.top - panelRect.top + panelContentRef.current.scrollTop - 40,
+              top: rect.bottom - panelRect.top + panelContentRef.current.scrollTop + 5,
               left: rect.left - panelRect.left + (rect.width / 2)
             });
             return;
@@ -383,6 +494,7 @@ const AIChatPanel = ({
     };
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
+    setQuotedText(null); // Clear quote after sending
     setLoading(true);
 
     // Create a new AbortController for this request
@@ -422,8 +534,7 @@ const AIChatPanel = ({
           id: `question-rewrite-${Date.now()}`,
           role: 'question_rewrite',
           content: data.reply,
-          v1Question: data.v1Question,
-          v2Question: data.v2Question,
+          rewrittenQuestion: data.rewrittenQuestion,
           originalQuestion: data.originalQuestion,
           timestamp: new Date()
         };
@@ -437,6 +548,15 @@ const AIChatPanel = ({
           timestamp: new Date()
         };
         setMessages(prev => [...prev, fwMsg]);
+      } else if (data.type === 'html_render') {
+        const htmlMsg = {
+          id: `html-${Date.now()}`,
+          role: 'html_render',
+          content: data.reply,
+          htmlContent: data.htmlContent,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, htmlMsg]);
       } else {
         const aiMsg = {
           id: `assistant-${Date.now()}`,
@@ -445,6 +565,18 @@ const AIChatPanel = ({
           timestamp: new Date()
         };
         setMessages(prev => [...prev, aiMsg]);
+
+        // If AI detected a new related concept, show suggestion card
+        if (data.suggestion) {
+          const suggestionMsg = {
+            id: `suggestion-${Date.now()}`,
+            role: 'suggestion',
+            addToQuestion: data.suggestion.addToQuestion,
+            addToAnswer: data.suggestion.addToAnswer,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, suggestionMsg]);
+        }
       }
     } catch (err) {
       if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
@@ -481,7 +613,12 @@ const AIChatPanel = ({
       } else if (actionType === 'rewrite_question') {
         sendMessage('__REWRITE_QUESTION__', '📝 Rewrite question from answer');
       } else if (actionType === 'ask_highlight' && actionText) {
-        sendMessage(`What does this mean:\n\n"${actionText}"\n\n(Context: Please explain this within the context of the current question/answer)`, `🤔 What does "${actionText}" mean?`);
+        // Don't auto-send — set as quoted text so user can type a follow-up
+        setQuotedText(actionText);
+        // Focus the input
+        setTimeout(() => textareaRef.current?.focus(), 100);
+      } else if (actionType === 'render_html') {
+        sendMessage('__RENDER_HTML__', '🎨 Could I get an interactive HTML visualization for this?');
       }
     }
 
@@ -493,7 +630,11 @@ const AIChatPanel = ({
       } else if (action === 'rewrite_question') {
         sendMessage('__REWRITE_QUESTION__', '📝 Rewrite question from answer');
       } else if (action === 'ask_highlight' && text) {
-        sendMessage(`What does this mean:\n\n"${text}"\n\n(Context: Please explain this within the context of the current question/answer)`, `🤔 What does "${text}" mean?`);
+        // Don't auto-send — set as quoted text so user can type a follow-up
+        setQuotedText(text);
+        setTimeout(() => textareaRef.current?.focus(), 100);
+      } else if (action === 'render_html') {
+        sendMessage('__RENDER_HTML__', '🎨 Could I get an interactive HTML visualization for this?');
       }
     };
     window.addEventListener('ai-panel-command', handlePanelCommand);
@@ -579,7 +720,7 @@ const AIChatPanel = ({
       // Desktop: Enter sends, Shift+Enter newline
       if (!e.shiftKey) {
         e.preventDefault();
-        sendMessage(inputText);
+        handleSendWithQuote();
       }
     }
   };
@@ -591,6 +732,23 @@ const AIChatPanel = ({
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
     }
   }, [inputText]);
+
+  // Send with optional quoted context
+  const handleSendWithQuote = useCallback(() => {
+    if (quotedText && inputText.trim()) {
+      // User typed a follow-up question about the quoted text
+      const fullMessage = `Regarding this text:\n\n"${quotedText}"\n\n${inputText.trim()}\n\n(Context: Please explain within the context of the current question/answer)`;
+      const displayMsg = `🤔 "${quotedText.length > 50 ? quotedText.slice(0, 50) + '...' : quotedText}" — ${inputText.trim()}`;
+      sendMessage(fullMessage, displayMsg);
+    } else if (quotedText) {
+      // User sent directly without typing (just clicked send with the quote)
+      const fullMessage = `What does this mean:\n\n"${quotedText}"\n\n(Context: Please explain this within the context of the current question/answer)`;
+      const displayMsg = `🤔 What does "${quotedText.length > 60 ? quotedText.slice(0, 60) + '...' : quotedText}" mean?`;
+      sendMessage(fullMessage, displayMsg);
+    } else {
+      sendMessage(inputText);
+    }
+  }, [quotedText, inputText, sendMessage]);
 
   return (
     <div className="ai-chat-panel">
@@ -644,10 +802,8 @@ const AIChatPanel = ({
                 const selectedText = highlightData.text;
                 setHighlightData(null);
                 window.getSelection()?.removeAllRanges();
-                sendMessage(
-                  `What does this mean:\n\n"${selectedText}"\n\n(Context: Please explain this within the context of the current question/answer)`,
-                  `🤔 What does "${selectedText}" mean?`
-                );
+                setQuotedText(selectedText);
+                setTimeout(() => textareaRef.current?.focus(), 100);
               }}
               style={{
                 background: 'var(--color-primary, #8B5CF6)',
@@ -688,6 +844,39 @@ const AIChatPanel = ({
           if (msg.role === 'framework') {
             return <FrameworkMessage key={msg.id} msg={msg} onSave={handleSaveRewrite} />;
           }
+          if (msg.role === 'html_render') {
+            const isAlreadySaved = question?.htmlRenders?.some(r => r.htmlContent === msg.htmlContent);
+            return <HtmlRenderMessage key={msg.id} msg={msg} isAlreadySaved={isAlreadySaved} onSaveHtml={async (htmlContent) => {
+              try {
+                console.log(`PRE-API CALL: Attempting to save HTML render for questionId: ${question?._id}, htmlRenders length: ${question?.htmlRenders?.length || 0}`);
+                const titleStr = `Html ${question?.htmlRenders?.length + 1 || 1}`;
+                
+                const apiCall = aiService.saveHtmlRender(question._id, htmlContent, titleStr);
+                const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("API Timeout after 10000ms")), 10000));
+                
+                console.log("Awaiting Promise.race...");
+                const res = await Promise.race([apiCall, timeout]);
+                console.log("Promise.race resolved successfully!");
+                
+                console.log("Response from saveHtmlRender API:", res?.data);
+                if (res?.data?.success && res?.data?.data?.question) {
+                  console.log("Updating question with new HTML render");
+                  if (onAnswerSaved) {
+                    onAnswerSaved(question._id, { htmlRenders: res.data.data.question.htmlRenders });
+                  }
+                } else {
+                  console.warn("API response did not contain success or question:", res?.data);
+                }
+              } catch (e) {
+                console.error("ERROR inside onSaveHtml:", e);
+                console.error("Error details:", e.response?.data);
+                throw e; // rethrow to be caught by handleSave
+              }
+            }} />;
+          }
+          if (msg.role === 'suggestion') {
+            return <SuggestionCard key={msg.id} msg={msg} question={question} onApprove={handleSaveRewrite} />;
+          }
           return <ChatMessage key={msg.id} msg={msg} />;
         })}
 
@@ -716,6 +905,48 @@ const AIChatPanel = ({
           </button>
         )}
 
+        {/* Quoted text bar (WhatsApp-style) */}
+        {quotedText && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '8px',
+            padding: '8px 12px',
+            margin: '0 0 4px 0',
+            background: 'var(--color-surface, rgba(139, 92, 246, 0.08))',
+            borderLeft: '3px solid var(--color-primary, #8B5CF6)',
+            borderRadius: '0 8px 8px 0',
+            fontSize: '0.82rem',
+            color: 'var(--color-text-secondary, #aaa)',
+            lineHeight: 1.4,
+            maxHeight: '80px',
+            overflow: 'hidden'
+          }}>
+            <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <span style={{ fontWeight: 600, color: 'var(--color-primary, #8B5CF6)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Asking about</span>
+              <div style={{ marginTop: '2px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                "{quotedText.length > 120 ? quotedText.slice(0, 120) + '...' : quotedText}"
+              </div>
+            </div>
+            <button
+              onClick={() => setQuotedText(null)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--color-text-secondary)',
+                cursor: 'pointer',
+                padding: '2px',
+                fontSize: '1rem',
+                lineHeight: 1,
+                flexShrink: 0
+              }}
+              title="Remove quote"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {/* Text input + send */}
         <div className="ai-input-row">
           <textarea
@@ -739,8 +970,8 @@ const AIChatPanel = ({
           ) : (
             <button
               className="ai-send-btn"
-              onClick={() => sendMessage(inputText)}
-              disabled={!inputText.trim()}
+              onClick={handleSendWithQuote}
+              disabled={!inputText.trim() && !quotedText}
               title="Send message"
             >
               <FaPaperPlane />

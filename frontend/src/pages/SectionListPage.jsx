@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { sectionService } from "../services/sections";
+import { sessionService } from "../services/sessions";
 import SectionList from "../components/Common/SectionList";
 import "../components/css/sectionList.css";
-import { FaArchive, FaUndo, FaRedo } from "react-icons/fa";
+import { FaArchive, FaUndo, FaRedo, FaPlay } from "react-icons/fa";
 
 const SectionListPage = () => {
   const [sections, setSections] = useState([]);
@@ -20,9 +21,13 @@ const SectionListPage = () => {
   const [restoringId, setRestoringId] = useState(null);
   const [resettingProgress, setResettingProgress] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [lastPausedSession, setLastPausedSession] = useState(null); // { sessionId, sectionId }
+  const [resuming, setResuming] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchSections();
+    fetchLastPausedSession();
   }, []);
 
   useEffect(() => {
@@ -67,6 +72,35 @@ const SectionListPage = () => {
       setError("Failed to load sections. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Find the most recently paused simplified session for the Resume button
+  const fetchLastPausedSession = async () => {
+    try {
+      const response = await sessionService.getSimplifiedSessions();
+      if (response.data.success) {
+        const sessionMap = response.data.data.sessionMap || {};
+        
+        // Find all paused sessions
+        const pausedEntries = Object.entries(sessionMap).filter(([, info]) => info.status === 'paused');
+        
+        if (pausedEntries.length > 0) {
+          // Sort by lastUpdated descending to find the most recent
+          pausedEntries.sort(([, a], [, b]) => {
+            const timeA = new Date(a.lastUpdated || 0).getTime();
+            const timeB = new Date(b.lastUpdated || 0).getTime();
+            return timeB - timeA;
+          });
+          
+          const mostRecentEntry = pausedEntries[0];
+          setLastPausedSession({ sectionId: mostRecentEntry[0], ...mostRecentEntry[1] });
+        } else {
+          setLastPausedSession(null);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check for paused sessions:', error);
     }
   };
 
@@ -127,26 +161,44 @@ const SectionListPage = () => {
     }
   };
 
-  const handleResetAllProgress = async () => {
-    const firstConfirm = window.confirm(
-      '⚠️ Reset ALL progress?\n\nThis will:\n• Reset every question back to Day 1\n• Wipe all review history & stats\n• Delete all paused sessions\n\nYour questions and sections will NOT be deleted.'
-    );
-    if (!firstConfirm) return;
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetSelectedIds, setResetSelectedIds] = useState([]);
 
-    const secondConfirm = window.confirm(
-      '🚨 Are you ABSOLUTELY sure?\n\nType OK to confirm. This cannot be undone.'
+  const toggleResetSection = (id) => {
+    setResetSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
-    if (!secondConfirm) return;
+  };
+
+  const toggleResetAll = () => {
+    if (resetSelectedIds.length === sections.length) {
+      setResetSelectedIds([]);
+    } else {
+      setResetSelectedIds(sections.map(s => s._id));
+    }
+  };
+
+  const handleResetProgress = async () => {
+    if (resetSelectedIds.length === 0) return;
+
+    const isAll = resetSelectedIds.length === sections.length;
+    const label = isAll ? 'ALL sections' : `${resetSelectedIds.length} selected section(s)`;
+
+    const confirmed = window.confirm(
+      `⚠️ Reset progress for ${label}?\n\nThis will:\n• Reset every question back to Day 1\n• Wipe review history & stats\n• Delete paused sessions\n\nYour questions and sections will NOT be deleted.`
+    );
+    if (!confirmed) return;
 
     setResettingProgress(true);
     try {
-      await sectionService.resetAllProgress();
-      // Clear any local session data
+      // Pass undefined for "all" so the backend resets everything; pass IDs for scoped
+      await sectionService.resetAllProgress(isAll ? undefined : resetSelectedIds);
       localStorage.removeItem('smartReviewSession');
       localStorage.removeItem('sessionState');
       setResetSuccess(true);
+      setShowResetModal(false);
+      setResetSelectedIds([]);
       setTimeout(() => setResetSuccess(false), 3000);
-      // Reload sections to refresh question counts / stats
       await fetchSections();
     } catch (error) {
       console.error('Failed to reset progress:', error);
@@ -223,9 +275,54 @@ const SectionListPage = () => {
           </button>
           <button
             className="btn"
-            onClick={handleResetAllProgress}
+            onClick={async () => {
+              if (!lastPausedSession) return;
+              setResuming(true);
+              try {
+                const response = await sessionService.resumeSimplifiedSession(lastPausedSession.sessionId);
+                if (response.data.success) {
+                  const sessionData = response.data.data.session;
+                  navigate('/session/start', {
+                    state: {
+                      sectionIds: [lastPausedSession.sectionId],
+                      cardMode: 'normal',
+                      useSmartReview: false,
+                      isSimplified: true,
+                      resumeSession: true,
+                      sessionData
+                    }
+                  });
+                }
+              } catch (error) {
+                console.error('Failed to resume session:', error);
+                alert('Failed to resume session.');
+              } finally {
+                setResuming(false);
+              }
+            }}
+            disabled={!lastPausedSession || resuming}
+            title={lastPausedSession ? `Resume paused session (${lastPausedSession.remaining}/${lastPausedSession.total} remaining)` : 'No paused session'}
+            style={{
+              background: lastPausedSession ? 'var(--color-primary, #8B5CF6)' : '#555',
+              color: '#fff',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              transition: 'all 0.3s ease',
+              fontWeight: 600,
+              opacity: lastPausedSession ? 1 : 0.5,
+              cursor: lastPausedSession ? 'pointer' : 'not-allowed'
+            }}
+          >
+            <FaPlay style={{ fontSize: '0.85rem' }} />
+            {resuming ? 'Resuming...' : 'Resume'}
+          </button>
+          <button
+            className="btn"
+            onClick={() => { setResetSelectedIds([]); setShowResetModal(true); }}
             disabled={resettingProgress}
-            title="Reset all review progress back to Day 1"
+            title="Reset review progress for selected sections"
             style={{
               background: resettingProgress ? '#666' : resetSuccess ? '#10B981' : '#ef4444',
               color: '#fff',
@@ -415,6 +512,131 @@ const SectionListPage = () => {
               {Math.round(sections.reduce((total, s) => total + (s.questionCount || 0), 0) / sections.length) || 0}
             </span>
             <span className="stat-label">Avg per Section</span>
+          </div>
+        </div>
+      )}
+      {/* Reset Progress Modal */}
+      {showResetModal && (
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 9999
+          }}
+          onClick={() => setShowResetModal(false)}
+        >
+          <div
+            style={{
+              background: 'var(--bg-card, #1a1a2e)',
+              color: 'var(--text-primary, var(--color-text, #333))',
+              borderRadius: '16px',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '440px',
+              maxHeight: '70vh',
+              display: 'flex',
+              flexDirection: 'column',
+              border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 style={{ margin: '0 0 4px 0', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FaRedo style={{ color: 'var(--color-primary, #8B5CF6)' }} /> Reset Progress
+            </h2>
+            <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: 'var(--text-secondary, #666)' }}>
+              Select sections to reset back to Day 1. Questions are preserved.
+            </p>
+
+            {/* Select All toggle */}
+            <label
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '10px 12px', marginBottom: '8px',
+                background: 'var(--color-surface, rgba(255,255,255,0.05))',
+                borderRadius: '10px', cursor: 'pointer', fontWeight: 600,
+                fontSize: '0.9rem',
+                border: resetSelectedIds.length === sections.length
+                  ? '2px solid var(--color-primary, #8B5CF6)'
+                  : '2px solid transparent',
+                transition: 'border 0.2s'
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={resetSelectedIds.length === sections.length && sections.length > 0}
+                onChange={toggleResetAll}
+                style={{ width: '18px', height: '18px', accentColor: 'var(--color-primary, #8B5CF6)', cursor: 'pointer' }}
+              />
+              Select All ({sections.length})
+            </label>
+
+            {/* Section list */}
+            <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
+              {sections.map(section => (
+                <label
+                  key={section._id}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    padding: '10px 12px',
+                    background: resetSelectedIds.includes(section._id)
+                      ? 'rgba(239,68,68,0.1)' : 'var(--color-surface, rgba(255,255,255,0.03))',
+                    borderRadius: '10px', cursor: 'pointer',
+                    border: resetSelectedIds.includes(section._id)
+                      ? '2px solid #ef4444' : '2px solid transparent',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={resetSelectedIds.includes(section._id)}
+                    onChange={() => toggleResetSection(section._id)}
+                    style={{ width: '18px', height: '18px', accentColor: '#ef4444', cursor: 'pointer' }}
+                  />
+                  <span
+                    style={{
+                      width: '10px', height: '10px', borderRadius: '50%',
+                      background: section.color || '#667eea', flexShrink: 0
+                    }}
+                  />
+                  <span style={{ flex: 1, fontSize: '0.9rem', color: 'var(--text-primary, inherit)' }}>{section.name}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #666)' }}>
+                    {section.questionCount || 0} Q
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setShowResetModal(false)}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: '10px',
+                  border: '1px solid var(--color-border, rgba(255,255,255,0.15))',
+                  background: 'transparent', color: 'var(--color-text, #fff)',
+                  fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResetProgress}
+                disabled={resetSelectedIds.length === 0 || resettingProgress}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: '10px',
+                  border: 'none',
+                  background: resetSelectedIds.length === 0 ? '#555' : '#ef4444',
+                  color: '#fff', fontWeight: 600, fontSize: '0.9rem',
+                  cursor: resetSelectedIds.length === 0 ? 'not-allowed' : 'pointer',
+                  opacity: resettingProgress ? 0.6 : 1,
+                  transition: 'all 0.2s'
+                }}
+              >
+                {resettingProgress ? 'Resetting...' : `Reset ${resetSelectedIds.length || ''} Section${resetSelectedIds.length !== 1 ? 's' : ''}`}
+              </button>
+            </div>
           </div>
         </div>
       )}

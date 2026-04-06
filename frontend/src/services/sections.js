@@ -10,5 +10,5 @@ export const sectionService = {
   getSectionStats: (sectionId) => API.get(`/sections/${sectionId}/stats`),
   archiveSection: (id) => API.patch(`/sections/${id}/archive`),
   restoreSection: (id) => API.patch(`/sections/${id}/restore`),
-  resetAllProgress: () => API.post('/sections/reset-progress'),
+  resetAllProgress: (sectionIds) => API.post('/sections/reset-progress', { sectionIds }),
 }

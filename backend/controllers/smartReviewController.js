@@ -26,16 +26,13 @@ const getTodaysQuestions = async (req, res) => {
             ? sectionIds
             : sectionIds.split(',');
 
-        // Reset the alreadyAdvancedThisSession flag ONLY if it's a new calendar day
-        const today = new Date().setHours(0, 0, 0, 0);
+        // Reset the alreadyAdvancedThisSession flag on every new session start
+        // Each call to getTodaysQuestions IS a new session, so the per-session
+        // advancement lock must be cleared to allow the session day to advance.
         await SectionProgress.updateMany(
             { 
                 userId, 
-                sectionId: { $in: sectionArray },
-                $or: [
-                    { lastSessionDate: { $lt: today } },
-                    { lastSessionDate: null }
-                ]
+                sectionId: { $in: sectionArray }
             },
             { 
                 alreadyAdvancedThisSession: false,
@@ -579,7 +576,7 @@ const getSectionProgress = async (req, res) => {
 const markUnratedAsPending = async (req, res) => {
     try {
         const userId = req.userId;
-        const { sectionIds, ratedQuestionIds } = req.body;
+        const { sectionIds, ratedQuestionIds, loadedQuestionIds } = req.body;
 
         if (!sectionIds || !Array.isArray(sectionIds) || sectionIds.length === 0) {
             return res.status(400).json({
@@ -598,7 +595,8 @@ const markUnratedAsPending = async (req, res) => {
         const result = await SmartReviewService.markUnratedAsPending(
             userId,
             sectionIds,
-            ratedQuestionIds
+            ratedQuestionIds,
+            loadedQuestionIds
         );
 
         res.status(200).json({

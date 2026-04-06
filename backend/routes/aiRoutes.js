@@ -1,6 +1,6 @@
 // backend/routes/aiRoutes.js
 import express from 'express';
-import { chatWithSage, explainQuestion, rewriteAnswer, saveRewrittenAnswer } from '../controllers/aiController.js';
+import { chatWithSage, explainQuestion, rewriteAnswer, saveRewrittenAnswer, saveHtmlRender, deleteHtmlRender } from '../controllers/aiController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -11,5 +11,7 @@ router.post('/chat', chatWithSage);
 router.post('/explain', explainQuestion);
 router.post('/rewrite', rewriteAnswer);
 router.put('/save-answer/:questionId', saveRewrittenAnswer);
+router.post('/save-html-render/:questionId', saveHtmlRender);
+router.delete('/delete-html-render/:questionId/:renderId', deleteHtmlRender);
 
 export default router;

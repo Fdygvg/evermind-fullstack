@@ -22,8 +22,9 @@ export const startSession = async (req, res) => {
         { isActive: false, status: 'completed', endTime: new Date() }
       );
     } else {
-      await ReviewSession.findOneAndUpdate(
-        { userId: req.userId, isActive: true },
+      // Only end non-simplified active sessions — leave paused simplified sessions intact
+      await ReviewSession.updateMany(
+        { userId: req.userId, isActive: true, isSimplified: { $ne: true } },
         { isActive: false, status: 'completed', endTime: new Date() }
       );
     }
@@ -483,9 +484,12 @@ export const updateProgress = async (req, res) => {
         status: { $in: ['active', 'paused'] }
       });
     } else {
+      // Fallback: find a non-simplified active/paused session
+      // Scoped to avoid accidentally grabbing a simplified session
       session = await ReviewSession.findOne({
         userId: req.userId,
-        status: { $in: ['active', 'paused'] }
+        status: { $in: ['active', 'paused'] },
+        isSimplified: { $ne: true }
       });
     }
 
@@ -502,7 +506,9 @@ export const updateProgress = async (req, res) => {
         currentIndex: currentIndex || 0,
         answeredQuestionIds: answeredQuestionIds || [],
         smartReviewState: smartReviewState,
-        isActive: true
+        isActive: true,
+        allQuestions: smartReviewState?.todaysQuestions || [],
+        remainingQuestions: smartReviewState?.todaysQuestions || []
       });
 
       await session.save();
@@ -620,7 +626,7 @@ export const getSimplifiedSessions = async (req, res) => {
       isSimplified: true,
       isActive: true,
       status: { $in: ['active', 'paused'] }
-    }).select('sectionIds remainingQuestions allQuestions correctCount wrongCount status');
+    }).select('sectionIds remainingQuestions allQuestions correctCount wrongCount status lastUpdated');
 
     // Build a map: sectionId -> session summary
     const sessionMap = {};
@@ -632,7 +638,8 @@ export const getSimplifiedSessions = async (req, res) => {
           remaining: session.remainingQuestions.length,
           total: session.allQuestions.length,
           correctCount: session.correctCount,
-          wrongCount: session.wrongCount
+          wrongCount: session.wrongCount,
+          lastUpdated: session.lastUpdated || session._id.getTimestamp() // fallback to creation time
         };
       });
     });
