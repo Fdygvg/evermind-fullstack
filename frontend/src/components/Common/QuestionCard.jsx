@@ -410,12 +410,164 @@ const QuestionCard = ({
   };
 
   return (
-    <div
-      id="questionCard"
-      ref={cardRef}
-      className={`question-card ${loading ? 'loading' : ''}`}
-      style={{ position: 'relative' }}
-    >
+    <>
+      {/* ---------------- STICKY TOOLS BAR ---------------- */}
+      <div className="sticky-tools-container" style={{
+        position: 'sticky',
+        top: '16px',
+        zIndex: 100,
+        display: 'flex',
+        justifyContent: 'space-evenly', // Spreads them out completely
+        alignItems: 'center',
+        alignSelf: 'flex-start', // Fixes position: sticky bugs if parent is a flex container
+        margin: '0 auto 16px auto',
+        width: '100%',
+        maxWidth: '600px',
+        padding: '4px 24px', // Reduced height by lowering vertical padding
+        backgroundColor: 'var(--bg-card, #1e293b)',
+        borderRadius: '16px',
+        border: '1px solid var(--border-color, rgba(255,255,255,0.1))',
+        boxShadow: 'var(--shadow-md, 0 10px 15px -3px rgba(0,0,0,0.1))',
+      }}>
+        {/* Render HTML Button */}
+        <motion.button
+          onClick={(e) => {
+            e.stopPropagation();
+            window.dispatchEvent(new CustomEvent('open-ai-panel', { detail: { action: 'render_html' } }));
+          }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={{
+            background: 'var(--color-surface, rgba(255, 255, 255, 0.05))',
+            border: '1px solid var(--color-border, rgba(255, 255, 255, 0.1))',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            padding: '4px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none',
+            color: 'var(--color-primary, #8B5CF6)',
+            transition: 'all 0.2s ease',
+            marginRight: '2px'
+          }}
+          title="Visualize Concept with AI Html"
+        >
+          <FaPlay size={12} />
+        </motion.button>
+        {/* Framework Button */}
+        <motion.button
+          onClick={(e) => {
+            e.stopPropagation();
+            window.dispatchEvent(new CustomEvent('open-ai-panel', { detail: { action: 'framework' } }));
+          }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={{
+            background: 'var(--color-surface, rgba(255, 255, 255, 0.05))',
+            border: '1px solid var(--color-border, rgba(255, 255, 255, 0.1))',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            padding: '4px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none',
+            color: 'var(--color-primary, #8B5CF6)',
+            transition: 'all 0.2s ease',
+            fontWeight: 800,
+            fontSize: '12px',
+            marginRight: '4px'
+          }}
+          title="Apply O(1) Mastery Framework"
+        >
+          F
+        </motion.button>
+        {/* Comment/Annotation Button */}
+        <motion.button
+          onClick={isAnnotating ? handleAnnotationCancel : handleAnnotationStart}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none',
+            color: annotation || isAnnotating ? 'var(--color-primary, #8B5CF6)' : 'var(--color-text-secondary, #6B7280)',
+            transition: 'color 0.2s ease',
+          }}
+          title={isAnnotating ? "Cancel annotation" : "Add/Edit annotation"}
+        >
+          <FaCommentDots size={16} />
+        </motion.button>
+        {/* Edit Button */}
+        <motion.button
+          onClick={isEditing ? handleEditCancel : handleEditStart}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none',
+            color: isEditing ? 'var(--color-primary, #8B5CF6)' : 'var(--color-text-secondary, #6B7280)',
+            transition: 'color 0.2s ease',
+          }}
+          title={isEditing ? "Cancel edit" : "Edit question"}
+        >
+          <FaPen size={16} />
+        </motion.button>
+        {/* Copy Button */}
+        <motion.button
+          onClick={handleCopy}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none',
+            color: copied ? 'var(--color-success, #10B981)' : 'var(--color-text-secondary, #6B7280)',
+            transition: 'color 0.2s ease',
+          }}
+          title={copied ? "Copied!" : "Copy question"}
+        >
+          <AnimatePresence mode="wait">
+            {copied ? (
+              <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
+                <FaCheck size={18} />
+              </motion.div>
+            ) : (
+              <motion.div key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                <FaRegCopy size={18} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.button>
+        <BookmarkButton
+          questionId={currentQuestion._id}
+          initialIsBookmarked={currentQuestion.isBookmarked}
+        />
+      </div>
+
+      <div
+        id="questionCard"
+        ref={cardRef}
+        className={`question-card ${loading ? 'loading' : ''}`}
+        style={{ position: 'relative' }}
+      >
       {/* Ask AI Floating Button */}
       <AnimatePresence>
         {highlightData && (
@@ -552,144 +704,6 @@ const QuestionCard = ({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Edit, Copy & Bookmark Buttons */}
-      <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
-        {/* Render HTML Button */}
-        <motion.button
-          onClick={(e) => {
-            e.stopPropagation();
-            window.dispatchEvent(new CustomEvent('open-ai-panel', { detail: { action: 'render_html' } }));
-          }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          style={{
-            background: 'var(--color-surface, rgba(255, 255, 255, 0.05))',
-            border: '1px solid var(--color-border, rgba(255, 255, 255, 0.1))',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            padding: '4px 8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            outline: 'none',
-            color: 'var(--color-primary, #8B5CF6)',
-            transition: 'all 0.2s ease',
-            marginRight: '2px'
-          }}
-          title="Visualize Concept with AI Html"
-        >
-          <FaPlay size={12} />
-        </motion.button>
-        {/* Framework Button */}
-        <motion.button
-          onClick={(e) => {
-            e.stopPropagation();
-            window.dispatchEvent(new CustomEvent('open-ai-panel', { detail: { action: 'framework' } }));
-          }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          style={{
-            background: 'var(--color-surface, rgba(255, 255, 255, 0.05))',
-            border: '1px solid var(--color-border, rgba(255, 255, 255, 0.1))',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            padding: '4px 8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            outline: 'none',
-            color: 'var(--color-primary, #8B5CF6)',
-            transition: 'all 0.2s ease',
-            fontWeight: 800,
-            fontSize: '12px',
-            marginRight: '4px'
-          }}
-          title="Apply O(1) Mastery Framework"
-        >
-          F
-        </motion.button>
-        {/* Comment/Annotation Button */}
-        <motion.button
-          onClick={isAnnotating ? handleAnnotationCancel : handleAnnotationStart}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            outline: 'none',
-            color: annotation || isAnnotating ? 'var(--color-primary, #8B5CF6)' : 'var(--color-text-secondary, #6B7280)',
-            transition: 'color 0.2s ease',
-          }}
-          title={isAnnotating ? "Cancel annotation" : "Add/Edit annotation"}
-        >
-          <FaCommentDots size={16} />
-        </motion.button>
-
-        {/* Edit Button */}
-        <motion.button
-          onClick={isEditing ? handleEditCancel : handleEditStart}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            outline: 'none',
-            color: isEditing ? 'var(--color-primary, #8B5CF6)' : 'var(--color-text-secondary, #6B7280)',
-            transition: 'color 0.2s ease',
-          }}
-          title={isEditing ? "Cancel edit" : "Edit question"}
-        >
-          <FaPen size={16} />
-        </motion.button>
-
-        {/* Copy Button */}
-        <motion.button
-          onClick={handleCopy}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            outline: 'none',
-            color: copied ? 'var(--color-success, #10B981)' : 'var(--color-text-secondary, #6B7280)',
-            transition: 'color 0.2s ease',
-          }}
-          title={copied ? "Copied!" : "Copy question"}
-        >
-          <AnimatePresence mode="wait">
-            {copied ? (
-              <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-                <FaCheck size={18} />
-              </motion.div>
-            ) : (
-              <motion.div key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                <FaRegCopy size={18} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
-
-        <BookmarkButton
-          questionId={currentQuestion._id}
-          initialIsBookmarked={currentQuestion.isBookmarked}
-        />
-      </div>
 
       {/* Save Status Indicator */}
       <AnimatePresence>
@@ -1000,6 +1014,7 @@ const QuestionCard = ({
         </button>
       )}
     </div>
+    </>
   );
 };
 

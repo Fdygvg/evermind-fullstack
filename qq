@@ -1,0 +1,54 @@
+[33mc7d7bb3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m dictionary || langyage & copy btn in codeblock || edit only codeblock
+[33mdfea506[m HTML Rendering || Automatic Learning || Moved "Ask AI" Down || Add Resume Button || TagMessages
+[33mfc31de1[m Result Page Bug || Question Generator Fixed
+[33m568ac22[m Highlight Feature || Rewrite Questions || Css Color Issue || Change date to 5days and 7days || Back to bottom BTN in AI Chat
+[33mebf5fa1[m #
+[33m7ccf046[m Added Framework
+[33mf8fb59a[m Converted Ai to Chat||Fixed up MD formatting for good
+[33mf2d5565[m Added AI, Fixed Pause Logic, Added Archive
+[33mbabe98f[m Added comment for reviiew session & Hide Answer BTN
+[33m5db7fe6[m #
+[33m31296cf[m Installed remark-gfm library
+[33m8744a80[m Installed react-markdown Library
+[33med2a120[m FH
+[33m0d6f15c[m #
+[33me24836a[m Added Offline Mode ||INCOMPLETE
+[33m3dc3ec9[m Fixed Bugs in Pause Logic
+[33m1227d13[m Fixed Update Question Logic || Added Edit BTN to Normal Review Mode
+[33m641f2bb[m #
+[33m6132e9d[m Fixed Registeration Flow
+[33m45f9ae7[m #
+[33m6fb385e[m Fixed Saved Session Login In Review All Mode || Added Copy Q&A btn To Normal Mode
+[33m8433ba8[m Installed zod package
+[33m97edf31[m Installed express-rate-lmit package
+[33m48d007a[m Installed cookie-parser package
+[33m98a79a8[m Added Review All Questions Feature
+[33ma905016[m UI Tweaks
+[33m0b38358[m Fixed NavBar Improved Mobile Responsiveness
+[33mc6065c1[m Fixed Elimination Mode
+[33m730cab8[m Replaced Emojis In Preferences Page
+[33mf113d31[m #
+[33m11a2f21[m #
+[33mf917233[m Modified Register Controller
+[33m761f76f[m #
+[33mc30af3f[m #
+[33m95f185d[m Added Bookmark||Swipe Logic'||Notes & Full View Mode To FAB
+[33mcee1a8c[m #
+[33m867ec74[m Real Mvp -- Text Display Issues
+[33m2925389[m Refined UI
+[33mff603e7[m All Modes Working
+[33mc6d8187[m UI-Locking Problem && -2 ProgressBar
+[33m0c95f30[m Working Smart-Review System
+[33madbd915[m Edited Qestion Filter Css import
+[33m786f834[m Edited FileStructure Folder
+[33m6531c40[m #
+[33m5e7e5f9[m #
+[33m41f69e2[m Evermind MVP
+[33m8ee34f3[m More UI Stuff :(
+[33m391a9e3[m Fixed UI
+[33m5972b0a[m Added UI Func
+[33m3bed545[m Defined Port In Server
+[33m11b1a25[m Added Functionality To FrontEnd
+[33m5ae7ccc[m All Routes Are now active and functional ||MVP frontend complete
+[33ma2dfdde[m Login||Dashboard Front-End in progress
+[33me7f05c4[m Initial Commit For evermind|| Backend Complete

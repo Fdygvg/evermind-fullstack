@@ -106,7 +106,7 @@ const SwipeZoneContainer = ({
                     position: 'relative',
                     zIndex: 10,
                     borderRadius: '16px',
-                    overflow: 'hidden'
+                    overflow: 'clip'
                 }}
                 onPan={handlePan}
                 onPanEnd={handlePanEnd}

@@ -11,7 +11,7 @@ body {
   background: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%);
   color: #f1f5f9;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip; /* changed from hidden to allow position: sticky on descendants */
 }
 
 :root {
