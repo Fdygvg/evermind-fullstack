@@ -44,9 +44,9 @@ export const startSession = async (req, res) => {
       });
     }
 
-    // Shuffle questions for random order
-    const shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
-    const questionIds = shuffledQuestions.map(q => q._id);
+    // Keep questions in chronological order (first added → last added)
+    const orderedQuestions = [...questions].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    const questionIds = orderedQuestions.map(q => q._id);
 
 
     const session = new ReviewSession({
