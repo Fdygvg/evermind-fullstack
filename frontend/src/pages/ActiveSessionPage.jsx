@@ -9,6 +9,7 @@ import CodeBlock from "../components/Common/CodeBlock";
 import SmartReviewWrapper from "../components/SmartReview/SmartReviewWrapper";
 import RatingButtons from "../components/SmartReview/RatingButtons";
 import RecentRatingsQueue from "../components/SmartReview/RecentRatingsQueue";
+import NavigationBar from "../components/SmartReview/NavigationBar";
 
 const ActiveSession = () => {
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -353,7 +354,14 @@ const ActiveSession = () => {
           SwipeZoneContainer,
           onSwipeRate,
           updateQuestionInSession,
-          endSession
+          endSession,
+          // Navigate mode
+          isNavigating,
+          canNavigateLeft,
+          canNavigateRight,
+          onNavigateLeft,
+          onNavigateRight,
+          onNavigateReturn,
         }) => {
           if (isSessionComplete) {
             // Calculate stats from rating history
@@ -438,8 +446,8 @@ const ActiveSession = () => {
                         <QuestionCard
                           key={`${smartQuestion._id}-${questionKey}`}
                           currentQuestion={smartQuestion}
-                          showAnswer={showAnswer}
-                          setShowAnswer={setShowAnswer}
+                          showAnswer={isNavigating ? true : showAnswer}
+                          setShowAnswer={isNavigating ? () => {} : setShowAnswer}
                           submitAnswer={submitAnswer}
                           loading={isLoading}
                           onQuestionUpdated={updateQuestionInSession}
@@ -474,8 +482,8 @@ const ActiveSession = () => {
                     <QuestionCard
                       key={`${smartQuestion._id}-${questionKey}`}
                       currentQuestion={smartQuestion}
-                      showAnswer={showAnswer}
-                      setShowAnswer={setShowAnswer}
+                      showAnswer={isNavigating ? true : showAnswer}
+                      setShowAnswer={isNavigating ? () => {} : setShowAnswer}
                       submitAnswer={submitAnswer}
                       loading={isLoading}
                       onQuestionUpdated={updateQuestionInSession}
@@ -488,7 +496,7 @@ const ActiveSession = () => {
                     Structure above has them separate in original code.
                     Let's put them below the swipe container for stability, or check logic.
                 */}
-                {cardMode !== "flashcard" && (
+                {cardMode !== "flashcard" && !isNavigating && (
                   <div style={{ marginTop: '1rem' }}>
                     <RatingButtons
                       onRate={handleSmartRate}
@@ -498,6 +506,17 @@ const ActiveSession = () => {
                     />
                     <RecentRatingsQueue ratingHistory={ratingHistory} />
                   </div>
+                )}
+
+                {/* Navigate Mode Bar */}
+                {isNavigating && (
+                  <NavigationBar
+                    onLeft={onNavigateLeft}
+                    onRight={onNavigateRight}
+                    onReturn={onNavigateReturn}
+                    canLeft={canNavigateLeft}
+                    canRight={canNavigateRight}
+                  />
                 )}
               </div>
 

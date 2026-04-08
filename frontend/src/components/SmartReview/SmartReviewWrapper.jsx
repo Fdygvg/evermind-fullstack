@@ -52,6 +52,11 @@ const SmartReviewContent = ({
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [aiInitialAction, setAiInitialAction] = useState(null);
 
+  // ── Navigate Mode State ──
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [navigateIndex, setNavigateIndex] = useState(0);
+  const [originalIndex, setOriginalIndex] = useState(0);
+
   useEffect(() => {
     const handleOpenAIPanel = (e) => {
       const action = e.detail?.action || null;
@@ -345,7 +350,9 @@ const SmartReviewContent = ({
       {/* Render children with Smart Review props */}
       {children({
         // Current state
-        currentQuestion: smartReview.currentQuestion,
+        currentQuestion: isNavigating
+          ? smartReview.todaysQuestions[navigateIndex]
+          : smartReview.currentQuestion,
         todaysQuestions: smartReview.todaysQuestions,
         isSessionComplete: smartReview.isSessionComplete,
         progress: smartReview.progress,
@@ -370,18 +377,29 @@ const SmartReviewContent = ({
         getRatingInfo: smartReview.getRatingInfo,
 
         // Components & Handlers for external wrapping
-        SwipeZoneContainer: SwipeZoneContainer,
+        SwipeZoneContainer: isNavigating ? null : SwipeZoneContainer,
         onSwipeRate: onSwipeRate,
 
         // Inline edit support
         updateQuestionInSession: smartReview.updateQuestionInSession,
 
         // Session lifecycle
-        endSession: smartReview.endSession
+        endSession: smartReview.endSession,
+
+        // ── Navigate Mode Props ──
+        isNavigating,
+        canNavigateLeft: navigateIndex > 0,
+        canNavigateRight: isNavigating && navigateIndex < smartReview.todaysQuestions.length - 1,
+        onNavigateLeft: () => setNavigateIndex(prev => Math.max(0, prev - 1)),
+        onNavigateRight: () => setNavigateIndex(prev => Math.min(smartReview.todaysQuestions.length - 1, prev + 1)),
+        onNavigateReturn: () => {
+          setNavigateIndex(originalIndex);
+          // Don't exit navigate mode, just jump back to current session question
+        },
       })}
 
 
-      {/* Action Button (FAB) — with AI toggle */}
+      {/* Action Button (FAB) — with AI toggle + Navigate */}
       <FabSpeedDial
         mode={mode}
         currentQuestionId={smartReview.currentQuestion?._id}
@@ -391,6 +409,19 @@ const SmartReviewContent = ({
           setShowAIPanel(prev => !prev);
         }}
         showAIPanel={showAIPanel}
+        isNavigating={isNavigating}
+        canNavigate={smartReview.todaysQuestions.length > 0}
+        onToggleNavigate={() => {
+          if (isNavigating) {
+            // Exit: auto-return to original position
+            setIsNavigating(false);
+          } else {
+            // Enter: save current position, jump to last answered
+            setOriginalIndex(smartReview.currentIndex);
+            setNavigateIndex(Math.max(0, smartReview.currentIndex - 1));
+            setIsNavigating(true);
+          }
+        }}
       />
 
       {/* Error Display */}

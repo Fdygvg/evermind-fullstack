@@ -49,6 +49,28 @@
   user-select: none;
 }
 
+.fab-item--active {
+  border-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-surface), var(--color-primary) 5%);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+.fab-item--active .fab-item-label {
+  color: var(--color-primary);
+}
+
+.fab-item--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+.fab-item--disabled:hover {
+  transform: none;
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
 /* Mobile */
 @media (max-width: 768px) {
   .fab-item {

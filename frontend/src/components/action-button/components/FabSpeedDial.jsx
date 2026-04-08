@@ -1,6 +1,6 @@
 // src/components/action-button/components/FabSpeedDial.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { FaPlus, FaTimes, FaRobot } from 'react-icons/fa';
+import { FaPlus, FaTimes, FaRobot, FaCompass } from 'react-icons/fa';
 import FabItem from './FabItem';
 import TimerSetupModal from './TimerSetupModal';
 import NotesModal from './NotesModal';
@@ -10,7 +10,7 @@ import useFabAnimation from '../hooks/useFabAnimation';
 import { useTimer } from '../contexts/TimerContext';
 import '../styles/FabSpeedDial.css';
 
-const FabSpeedDial = ({ mode = 'normal', onToggleAI, showAIPanel = false }) => {
+const FabSpeedDial = ({ mode = 'normal', onToggleAI, showAIPanel = false, isNavigating = false, canNavigate = false, onToggleNavigate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showTimerModal, setShowTimerModal] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
@@ -53,6 +53,14 @@ const FabSpeedDial = ({ mode = 'normal', onToggleAI, showAIPanel = false }) => {
       onClick: () => onToggleAI(),
       active: showAIPanel,
     }] : []),
+    ...(onToggleNavigate ? [{
+      id: 'navigate',
+      label: isNavigating ? 'Exit Navigate' : 'Navigate',
+      icon: () => <FaCompass style={{ color: isNavigating ? '#06b6d4' : undefined }} />,
+      onClick: () => onToggleNavigate(),
+      active: isNavigating,
+      disabled: !isNavigating && !canNavigate,
+    }] : []),
   ];
 
   // Manage Focus Mode Effect and Cleanup
@@ -84,6 +92,7 @@ const FabSpeedDial = ({ mode = 'normal', onToggleAI, showAIPanel = false }) => {
   };
 
   const handleItemClick = (item) => {
+    if (item.disabled) return;
     item.onClick();
     setIsOpen(false);
   };
@@ -104,6 +113,7 @@ const FabSpeedDial = ({ mode = 'normal', onToggleAI, showAIPanel = false }) => {
               onClick={() => handleItemClick(item)}
               isVisible={isOpen}
               active={item.active}
+              disabled={item.disabled}
             />
           </div>
         ))}

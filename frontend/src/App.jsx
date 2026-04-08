@@ -1,11 +1,10 @@
 // src/App.jsx
 import React from "react";
 import {
-  // HashRouter as Router,
-  BrowserRouter as Router,
+  HashRouter as Router,
+  // BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
 } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { SessionProvider } from "./context/SessionContext";
