@@ -5,7 +5,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSound } from '../../hooks/useSound';
 import {
   FaRegCopy, FaCheck, FaPen, FaCommentDots, FaPlay, FaTrash, FaCode, FaSpinner,
-  FaBook,
+  FaBook, FaLightbulb,
   FaRegQuestionCircle
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -483,6 +483,30 @@ const QuestionCard = ({
         >
           F
         </motion.button>
+        {/* Explain Button */}
+        <motion.button
+          onClick={(e) => {
+            e.stopPropagation();
+            window.dispatchEvent(new CustomEvent('open-ai-panel', { detail: { action: 'explain' } }));
+          }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none',
+            color: 'var(--color-text-secondary, #6B7280)',
+            transition: 'color 0.2s ease',
+          }}
+          title="Explain this question with AI"
+        >
+          <FaLightbulb size={16} />
+        </motion.button>
         {/* Comment/Annotation Button */}
         <motion.button
           onClick={isAnnotating ? handleAnnotationCancel : handleAnnotationStart}
@@ -506,7 +530,7 @@ const QuestionCard = ({
         </motion.button>
         {/* Edit Button */}
         <motion.button
-          onClick={isEditing ? handleEditCancel : handleEditStart}
+          onClick={isEditing ? handleEditSave : handleEditStart}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           style={{
@@ -518,12 +542,12 @@ const QuestionCard = ({
             alignItems: 'center',
             justifyContent: 'center',
             outline: 'none',
-            color: isEditing ? 'var(--color-primary, #8B5CF6)' : 'var(--color-text-secondary, #6B7280)',
+            color: isEditing ? 'var(--color-success, #10B981)' : 'var(--color-text-secondary, #6B7280)',
             transition: 'color 0.2s ease',
           }}
-          title={isEditing ? "Cancel edit" : "Edit question"}
+          title={isEditing ? "Save changes" : "Edit question"}
         >
-          <FaPen size={16} />
+          {isEditing ? <FaCheck size={16} /> : <FaPen size={16} />}
         </motion.button>
         {/* Copy Button */}
         <motion.button

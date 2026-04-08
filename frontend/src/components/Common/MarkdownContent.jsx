@@ -58,19 +58,21 @@ const InlineDefinitionPopup = ({ dataDef, children }) => {
                           background: 'var(--color-surface, #1e1e1e)',
                           border: '1px solid var(--color-border)',
                           boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                          padding: '12px',
-                          borderRadius: '8px',
+                          padding: '4px 8px',
+                          borderRadius: '6px',
                           width: 'max-content',
-                          maxWidth: '300px',
+                          maxWidth: '200px',
                           zIndex: 1000,
                           color: 'var(--color-text, #fff)',
-                          fontSize: '0.85rem',
+                          fontSize: '0.65rem',
                           textAlign: 'left'
                       }}
                   >
-                     <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>
-                         {decodedMd}
-                     </ReactMarkdown>
+                     <div className="markdown-body markdown-compact">
+                       <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>
+                           {decodedMd}
+                       </ReactMarkdown>
+                     </div>
                   </motion.div>
               )}
             </AnimatePresence>

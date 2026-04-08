@@ -617,6 +617,8 @@ const AIChatPanel = ({
         setQuotedText(actionText);
         // Focus the input
         setTimeout(() => textareaRef.current?.focus(), 100);
+      } else if (actionType === 'explain') {
+        sendMessage('__EXPLAIN__', '💡 Explain this question');
       } else if (actionType === 'render_html') {
         sendMessage('__RENDER_HTML__', '🎨 Could I get an interactive HTML visualization for this?');
       }
@@ -633,6 +635,8 @@ const AIChatPanel = ({
         // Don't auto-send — set as quoted text so user can type a follow-up
         setQuotedText(text);
         setTimeout(() => textareaRef.current?.focus(), 100);
+      } else if (action === 'explain') {
+        sendMessage('__EXPLAIN__', '💡 Explain this question');
       } else if (action === 'render_html') {
         sendMessage('__RENDER_HTML__', '🎨 Could I get an interactive HTML visualization for this?');
       }
