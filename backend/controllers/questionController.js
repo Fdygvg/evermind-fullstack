@@ -290,3 +290,74 @@ export const toggleBookmark = async (req, res) => {
     });
   }
 };
+
+export const bulkMoveQuestions = async (req, res) => {
+  try {
+    const { questionIds, targetSectionId } = req.body;
+
+    if (!questionIds || !Array.isArray(questionIds) || questionIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No question IDs provided",
+      });
+    }
+
+    if (!targetSectionId) {
+      return res.status(400).json({
+        success: false,
+        message: "Target section ID is required",
+      });
+    }
+
+    // Verify target section belongs to user
+    const targetSection = await Section.findOne({
+      _id: targetSectionId,
+      userId: req.userId,
+    });
+
+    if (!targetSection) {
+      return res.status(404).json({
+        success: false,
+        message: "Target section not found",
+      });
+    }
+
+    // Update all matching questions: move to new section + reset all progress
+    const result = await Question.updateMany(
+      { _id: { $in: questionIds }, userId: req.userId },
+      {
+        $set: {
+          sectionId: targetSectionId,
+          totalCorrect: 0,
+          totalWrong: 0,
+          lastReviewed: null,
+          lastReviewedAt: null,
+          nextReviewDate: new Date(),
+          dueDate: 0,
+          priority: 0,
+          lastRating: null,
+          timesReviewed: 0,
+          easeFactor: 2.5,
+          currentInterval: 0,
+          consecutiveMisses: 0,
+          priorityBoosts: 0,
+          wasRolledOver: false,
+          isPending: false,
+          pendingSessionId: null,
+        },
+      }
+    );
+
+    res.json({
+      success: true,
+      message: `Successfully moved ${result.modifiedCount} question(s) to "${targetSection.name}"`,
+      data: { movedCount: result.modifiedCount },
+    });
+  } catch (error) {
+    console.error("Bulk move questions error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error moving questions",
+    });
+  }
+};

@@ -40,7 +40,9 @@ const QuestionFilter = ({
   onSelectAll,
   isAllSelected,
   viewMode,
-  setViewMode
+  setViewMode,
+  isSelectMode,
+  onToggleSelectMode
 }) => {
   // Filter options
   const filterOptions = [
@@ -181,6 +183,14 @@ const QuestionFilter = ({
               title={allRevealed ? "Hide all answers" : "Reveal all answers"}
             >
               {allRevealed ? <><FaEyeSlash /> Hide All</> : <><FaEye /> Reveal All</>}
+            </button>
+
+            <button
+              className={`select-mode-btn ${isSelectMode ? "active" : ""}`}
+              onClick={onToggleSelectMode}
+              title="Toggle Selection Mode"
+            >
+              {isSelectMode ? "Exit Select Mode" : "Select Mode"}
             </button>
 
             <div className="select-all-container">

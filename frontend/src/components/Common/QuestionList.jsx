@@ -28,6 +28,7 @@ const QuestionList = ({
   onSelect,
   onBookmark, // New prop
   isSelected,
+  isSelectMode,
   viewMode = "list",
   sectionColor = "#667eea"
 }) => {
@@ -49,6 +50,11 @@ const QuestionList = ({
   }, [isRevealed]);
 
   const handleCardClick = () => {
+    if (isSelectMode) {
+      if (onSelect) onSelect();
+      return;
+    }
+    
     if (!isFlipped) {
       setShowAnswer(!showAnswer);
       if (onReveal) onReveal();
@@ -117,13 +123,12 @@ const QuestionList = ({
       data-question-id={question._id}
     >
       {/* Checkbox for selection */}
-      <div className="question-selector">
+      <div className="question-selector" onClick={(e) => e.stopPropagation()}>
         <input
           type="checkbox"
           checked={isSelected}
           onChange={handleSelectClick}
           className="selection-checkbox"
-          onClick={handleSelectClick}
         />
       </div>
 
@@ -350,4 +355,13 @@ const QuestionList = ({
   );
 };
 
-export default QuestionList;
+export default React.memo(QuestionList, (prevProps, nextProps) => {
+  return (
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isRevealed === nextProps.isRevealed &&
+    prevProps.isSelectMode === nextProps.isSelectMode &&
+    prevProps.viewMode === nextProps.viewMode &&
+    prevProps.sectionColor === nextProps.sectionColor &&
+    prevProps.question === nextProps.question
+  );
+});

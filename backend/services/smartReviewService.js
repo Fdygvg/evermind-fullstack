@@ -120,6 +120,34 @@ class SmartReviewService {
                     ]
                 }).sort({ wasRolledOver: -1, dueDate: 1 }); // wasRolledOver first, then by dueDate
 
+                // AUTO-ADVANCE LOGIC (Moved to Pre-Query)
+                // If no rolled-over/pending questions block progress, check if we need to advance to future review questions.
+                // This ensures we catch up to future scheduled reviews even if new questions exist.
+                if (tier2RolledOver.length === 0) {
+                    const nextReviewQuestion = await Question.findOne({
+                        userId,
+                        sectionId: progress.sectionId,
+                        priority: { $gt: 0, $lte: 5 },
+                        isPending: { $ne: true },
+                        wasRolledOver: { $ne: true }
+                    }).sort({ dueDate: 1 });
+
+                    if (nextReviewQuestion && nextReviewQuestion.dueDate > currentDay) {
+                        const targetDay = nextReviewQuestion.dueDate;
+                        console.log(`[AUTO-ADVANCE] Advancing Section ${progress.sectionId} from Day ${currentDay} to Day ${targetDay}`);
+
+                        await SectionProgress.findOneAndUpdate(
+                            { userId, sectionId: progress.sectionId },
+                            {
+                                currentSessionDay: targetDay,
+                                totalSessions: progress.totalSessions + (targetDay - currentDay)
+                            }
+                        );
+                        progress.currentSessionDay = targetDay;
+                        currentDay = targetDay; // Update local variable for Tier 3 query
+                    }
+                }
+
                 // Tier 3: Priority Review Questions (dueDate <= currentSessionDay, priority > 0)
                 // Uses $lte so overdue questions from past sessions are also included
                 const tier3Review = await Question.find({
@@ -230,41 +258,7 @@ class SmartReviewService {
                     totalRolledOver: rolledOverQuestions.length
                 };
 
-                // AUTO-ADVANCE LOGIC: Only advance if no questions available after processing
-                // This ensures we don't process the same session day twice
-                const allAvailableQuestions = [...tier1NewQuestions, ...limitedQuestions];
-                if (includedQuestions.length === 0 && allAvailableQuestions.length === 0) {
-                    // Check if there are future questions to advance to
-                    const nextQuestion = await Question.findOne({
-                        userId,
-                        sectionId: progress.sectionId,
-                        $or: [
-                            { priority: 0, timesReviewed: 0 }, // New questions
-                            { wasRolledOver: true }, // Rolled over
-                            { isPending: true }, // Pending
-                            {
-                                dueDate: { $gt: currentDay },
-                                priority: { $gt: 0, $lte: 5 }
-                            }
-                        ]
-                    }).sort({ dueDate: 1, priority: 1 });
-
-                    if (nextQuestion) {
-                        const targetDay = nextQuestion.dueDate || (currentDay + 1);
-                        console.log(`[AUTO-ADVANCE] No questions for Session Day ${currentDay}. Advancing to Session Day ${targetDay}`);
-
-                        // Atomic advancement: update session day once
-                        await SectionProgress.findOneAndUpdate(
-                            { userId, sectionId: progress.sectionId },
-                            {
-                                currentSessionDay: targetDay,
-                                totalSessions: progress.totalSessions + (targetDay - currentDay)
-                            }
-                        );
-
-                        progress.currentSessionDay = targetDay; // Update in-memory object
-                    }
-                }
+                // (Auto-advance logic has been moved before Tier 3 query)
             }
 
             // 3. BULK UPDATE: Mark rolled over questions (already handled in per-section loop above)

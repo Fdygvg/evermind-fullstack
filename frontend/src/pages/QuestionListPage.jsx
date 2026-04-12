@@ -17,7 +17,11 @@ const QuestionListPage = () => {
   const [error, setError] = useState("");
   const [allRevealed, setAllRevealed] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState(new Set());
+  const [isSelectMode, setIsSelectMode] = useState(false);
   const [viewMode, setViewMode] = useState("list"); // "list" or "grid"
+  const [showMoveDropdown, setShowMoveDropdown] = useState(false);
+  const [allSections, setAllSections] = useState([]);
+  const [moveLoading, setMoveLoading] = useState(false);
 
   // Filter states
   const [filterOption, setFilterOption] = useState({ value: "all", label: "All Questions" });
@@ -249,6 +253,50 @@ const QuestionListPage = () => {
     }
   };
 
+  // Fetch all sections for the move dropdown
+  const fetchAllSections = async () => {
+    try {
+      const response = await sectionService.getSections();
+      const sections = response.data.data.sections || response.data.data || [];
+      // Exclude current section from the list
+      setAllSections(sections.filter(s => s._id !== sectionId));
+    } catch (error) {
+      console.error("Failed to fetch sections:", error);
+    }
+  };
+
+  const handleBulkMove = async (targetSectionId) => {
+    if (selectedQuestions.size === 0) return;
+
+    const targetSection = allSections.find(s => s._id === targetSectionId);
+    if (!targetSection) return;
+
+    if (!window.confirm(
+      `Move ${selectedQuestions.size} question(s) to "${targetSection.name}"?\n\n⚠️ All progress will be reset — these questions will be treated as new in the target section.`
+    )) return;
+
+    setMoveLoading(true);
+    try {
+      const response = await questionService.bulkMove(
+        Array.from(selectedQuestions),
+        targetSectionId
+      );
+
+      if (response.data.success) {
+        // Remove moved questions from current list
+        setQuestions(prev => prev.filter(q => !selectedQuestions.has(q._id)));
+        setSelectedQuestions(new Set());
+        setShowMoveDropdown(false);
+        alert(`✅ ${response.data.data.movedCount} question(s) moved to "${targetSection.name}"`);
+      }
+    } catch (error) {
+      console.error("Failed to move questions:", error);
+      setError("Failed to move questions: " + (error.response?.data?.message || "Unknown error"));
+    } finally {
+      setMoveLoading(false);
+    }
+  };
+
   const difficultyOptions = [
     { value: "easy", label: "Easy", color: "#10B981" },
     { value: "medium", label: "Medium", color: "#F59E0B" },
@@ -387,6 +435,98 @@ const QuestionListPage = () => {
               {allRevealed ? "👁️‍🗨️ Hide All" : "👁️ Reveal All"}
             </button>
 
+            <div className="bulk-move-container" style={{ position: 'relative' }}>
+              <button
+                className="bulk-btn bulk-move"
+                onClick={() => {
+                  if (!showMoveDropdown) fetchAllSections();
+                  setShowMoveDropdown(!showMoveDropdown);
+                }}
+                disabled={moveLoading}
+                style={{
+                  background: 'var(--color-primary)',
+                  color: 'var(--text-inverse)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.5rem 1rem',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                📦 {moveLoading ? 'Moving...' : 'Move to Section'}
+              </button>
+
+              {showMoveDropdown && (
+                <div
+                  className="move-dropdown"
+                  style={{
+                    position: 'absolute',
+                    top: '110%',
+                    left: 0,
+                    background: 'var(--bg-primary, #1a1a2e)',
+                    border: '1px solid var(--border-color, #333)',
+                    borderRadius: '12px',
+                    padding: '0.5rem',
+                    minWidth: '220px',
+                    maxHeight: '280px',
+                    overflowY: 'auto',
+                    zIndex: 1000,
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
+                  }}
+                >
+                  <div style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', color: '#ffffff', opacity: 0.7, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Select target section
+                  </div>
+                  {allSections.length === 0 ? (
+                    <div style={{ padding: '1rem', textAlign: 'center', color: '#ffffff', opacity: 0.6, fontSize: '0.85rem' }}>
+                      No other sections available.
+                      <br />
+                      <span style={{ fontSize: '0.75rem' }}>Create a new section first.</span>
+                    </div>
+                  ) : (
+                    allSections.map(s => (
+                      <button
+                        key={s._id}
+                        onClick={() => handleBulkMove(s._id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.6rem',
+                          width: '100%',
+                          padding: '0.6rem 0.8rem',
+                          border: 'none',
+                          borderRadius: '8px',
+                          background: 'transparent',
+                          color: '#ffffff', // Explicitly white text
+                          cursor: 'pointer',
+                          fontSize: '0.85rem',
+                          textAlign: 'left',
+                          transition: 'background 0.15s'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover, rgba(255,255,255,0.1))'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span style={{
+                          width: '10px',
+                          height: '10px',
+                          borderRadius: '50%',
+                          backgroundColor: s.color || '#667eea',
+                          flexShrink: 0
+                        }} />
+                        {s.name}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
             <button
               className="bulk-btn bulk-export"
               onClick={() => {/* Export logic */ }}
@@ -403,7 +543,7 @@ const QuestionListPage = () => {
 
             <button
               className="bulk-btn bulk-clear"
-              onClick={() => setSelectedQuestions(new Set())}
+              onClick={() => { setSelectedQuestions(new Set()); setShowMoveDropdown(false); }}
             >
               ✕ Clear Selection
             </button>
@@ -430,6 +570,8 @@ const QuestionListPage = () => {
         isAllSelected={selectedQuestions.size === filteredQuestions.length && filteredQuestions.length > 0}
         viewMode={viewMode}
         setViewMode={setViewMode}
+        isSelectMode={isSelectMode}
+        onToggleSelectMode={() => setIsSelectMode(!isSelectMode)}
       />
 
       {/* Questions List/Grid */}
@@ -481,6 +623,7 @@ const QuestionListPage = () => {
               onSelect={() => toggleQuestionSelect(question._id)}
               viewMode={viewMode}
               sectionColor={section?.color}
+              isSelectMode={isSelectMode}
             />
           ))
         )}
@@ -529,6 +672,33 @@ const QuestionListPage = () => {
               </span>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Fixed Selection Indicator */}
+      {(isSelectMode || selectedQuestions.size > 0) && (
+        <div className="select-mode-sticky-banner">
+          <div className="banner-content">
+            <span className={`banner-pulse ${isSelectMode ? 'active' : ''}`}></span>
+            <span className="banner-text">
+              {isSelectMode ? (
+                <>  <span style={{ whiteSpace: 'pre' }}> Active    </span><strong>{selectedQuestions.size}</strong> Selected</>
+              ) : (
+                <><strong>{selectedQuestions.size}</strong> {selectedQuestions.size === 1 ? 'Question' : 'Questions'} Selected</>
+              )}
+            </span>
+          </div>
+          {selectedQuestions.size > 0 && (
+            <button
+              className="btn btn-primary"
+              style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', borderRadius: '20px' }}
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            >
+              Go to Actions
+            </button>
+          )}
         </div>
       )}
     </div>
