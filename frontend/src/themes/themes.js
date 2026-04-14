@@ -239,7 +239,49 @@ export const themes = {
       gradientEnd: '#ff7043',
       shadow: 'rgba(255, 87, 34, 0.3)',
     }
+  },
+  ruby: {
+    name: 'Ruby',
+    description: 'Rich red and crimson tones',
+    colors: {
+      primary: '#c62828',
+      secondary: '#e53935',
+      accent: '#ff5252',
+      background: '#8e0000',
+      surface: '#fff5f5',
+      text: '#3e0000',
+      textSecondary: '#7f0000',
+      border: '#ffcdd2',
+      error: '#b71c1c',
+      success: '#2e7d32',
+      warning: '#f9a825',
+      gradientStart: '#c62828',
+      gradientEnd: '#e53935',
+      shadow: 'rgba(142, 0, 0, 0.3)',
+    }
+  },
+  rose: {
+    name: 'Rose',
+    description: 'Soft pink and rose tones',
+    colors: {
+      primary: '#e91e63',
+      secondary: '#f06292',
+      accent: '#ff80ab',
+      background: '#fff0f3',
+      surface: '#ffffff',
+      text: '#880e4f',
+      textSecondary: '#ad1457',
+      border: '#f8bbd0',
+      error: '#c2185b',
+      success: '#4caf50',
+      warning: '#ffc107',
+      gradientStart: '#e91e63',
+      gradientEnd: '#f06292',
+      shadow: 'rgba(233, 30, 99, 0.15)',
+    }
   }
+
+
 };
 
 export const defaultTheme = 'blackWhite';
